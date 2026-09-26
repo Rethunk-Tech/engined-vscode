@@ -12,20 +12,22 @@ import {
   COMPLETIONS_PATH,
   extractCompletionText,
   extractCompletionUsage,
-  pickCompletionsModel,
   sliceContext,
 } from './completions.ts'
 import {
   getCompletionsEnabled,
-  getCompletionsModel,
+  getDefaultModel,
   getNeighbourContextEnabled,
   getPollSeconds,
   getReasoningEffort,
   getReasoningEffortByModel,
   getUrl,
+  setDefaultModel,
   setReasoningEffort,
 } from './config.ts'
-import type { EnginedModelInfo, ReasoningLevel } from './door.ts'
+import type { DefaultModelResolution, ModelRole } from './defaultModels.ts'
+import { qualifyingRows, ROLE_PATH, resolveDefaultModel } from './defaultModels.ts'
+import type { EnginedModelInfo, EnginedModelRow, ReasoningLevel } from './door.ts'
 import { REASONING_LEVELS } from './door.ts'
 import {
   DoorHttpError,
@@ -61,13 +63,13 @@ import {
   buildSpeakRequest,
   buildTranscribeRequest,
   confirmationMessage,
-  pickRoute,
-  pickVisionRoute,
   ToolRouteError,
 } from './toolRequests.ts'
 
 const LOADING_TICK_MS = 300
 const RECENT_DOCUMENTS_CAP = 10
+/** Every setting a saved defaultModel reason was logged for, so a repeated request logs it once per change rather than once per call. */
+const loggedUnusableReasons = new Map<ModelRole, string>()
 
 let output: vscode.OutputChannel
 let poller: ModelPoller
@@ -239,6 +241,38 @@ function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
+// --- default-model selection (engined.defaultModels.*) ---------------------
+
+/** Logs an unusable configured id once per change, never once per call. */
+function logUnusableIfChanged(role: ModelRole, reason: string | undefined): void {
+  if (reason === undefined) {
+    loggedUnusableReasons.delete(role)
+    return
+  }
+  if (loggedUnusableReasons.get(role) === reason) {
+    return
+  }
+  loggedUnusableReasons.set(role, reason)
+  log(`engined.defaultModels.${role}: ${reason}`)
+}
+
+/** The role's resolved row, or throws `ToolRouteError` naming the role when nothing qualifies at all. */
+function resolveRoleRow(role: ModelRole, path?: string): EnginedModelRow {
+  const resolved: DefaultModelResolution = resolveDefaultModel(
+    poller.rows,
+    role,
+    getDefaultModel(role),
+    path,
+  )
+  logUnusableIfChanged(role, resolved.unusableReason)
+  if (resolved.row === undefined) {
+    throw new ToolRouteError(
+      `no installed engined route serves ${role} (${path ?? ROLE_PATH[role]})`,
+    )
+  }
+  return resolved.row
+}
+
 // --- inline completions (ghost text) ---------------------------------------
 
 const COMPLETIONS_DEBOUNCE_MS = 250
@@ -266,7 +300,13 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
     if (vscode.window.activeTextEditor?.selection.isEmpty === false) {
       return undefined
     }
-    const model = pickCompletionsModel(poller.rows, getCompletionsModel())
+    const completionModel = resolveDefaultModel(
+      poller.rows,
+      'completion',
+      getDefaultModel('completion'),
+    )
+    logUnusableIfChanged('completion', completionModel.unusableReason)
+    const model = completionModel.row
     if (model === undefined) {
       return undefined
     }
@@ -443,6 +483,7 @@ async function showQuickPick(chatProvider: EnginedChatProvider): Promise<void> {
       { label: 'Refresh models', action: 'refresh' as const },
       { label: 'Set reasoning effort (global)', action: 'effort-global' as const },
       { label: 'Set reasoning effort for a model', action: 'effort-model' as const },
+      { label: 'Choose default models', action: 'default-models' as const },
       { label: 'Show engined log', action: 'log' as const },
     ],
     { title: 'engined' },
@@ -457,6 +498,8 @@ async function showQuickPick(chatProvider: EnginedChatProvider): Promise<void> {
     output.show()
   } else if (pick.action === 'effort-global') {
     await pickAndSetEffort()
+  } else if (pick.action === 'default-models') {
+    await chooseDefaultModels()
   } else {
     const model = await vscode.window.showQuickPick(
       poller.models.map((m) => m.name),
@@ -476,6 +519,43 @@ async function pickAndSetEffort(modelId?: string): Promise<void> {
   if (level !== undefined) {
     await setReasoningEffort(level as ReasoningLevel, modelId)
   }
+}
+
+const DEFAULT_MODEL_ROLES: { role: ModelRole; label: string; path?: string }[] = [
+  { role: 'image', label: 'Image generation/edit' },
+  { role: 'ocr', label: 'OCR (vision: read)' },
+  { role: 'vision', label: 'Describe image (vision: describe)' },
+  { role: 'completion', label: 'Inline completions' },
+  { role: 'speech', label: 'Text-to-speech' },
+  { role: 'transcription', label: 'Audio transcription' },
+]
+
+/** `engined.chooseDefaultModels`: pick a role, then a qualifying row (or Automatic), and write `engined.defaultModels.<role>` at user scope. */
+async function chooseDefaultModels(): Promise<void> {
+  const rolePick = await vscode.window.showQuickPick(
+    DEFAULT_MODEL_ROLES.map((r) => ({ label: r.label, role: r.role })),
+    { title: 'engined: Choose default models -- role' },
+  )
+  if (rolePick === undefined) {
+    return
+  }
+  const qualifying = qualifyingRows(poller.rows, rolePick.role)
+  const items = [
+    { label: 'Automatic', description: '', id: '' },
+    ...qualifying.map((row) => ({
+      label: row.display_name ?? row.id,
+      description: `${row.id} · ${row.egress ?? 'unknown'} egress`,
+      id: row.id,
+    })),
+  ]
+  const modelPick = await vscode.window.showQuickPick(items, {
+    title: `engined: Choose default models -- ${rolePick.label}`,
+  })
+  if (modelPick === undefined) {
+    return
+  }
+  await setDefaultModel(rolePick.role, modelPick.id)
+  loggedUnusableReasons.delete(rolePick.role)
 }
 
 // --- tools ------------------------------------------------------------------
@@ -517,6 +597,10 @@ interface GenerateImageInput {
   sourcePath?: string
 }
 
+function imagePath(sourcePath: string | undefined): string {
+  return sourcePath !== undefined ? '/openai/v1/images/edits' : '/openai/v1/images/generations'
+}
+
 const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   async invoke(options) {
     try {
@@ -524,7 +608,8 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
         options.input.sourcePath !== undefined
           ? new Blob([await readWorkspaceFile(options.input.sourcePath)])
           : undefined
-      const req = buildImageRequest(poller.rows, {
+      const row = resolveRoleRow('image', imagePath(options.input.sourcePath))
+      const req = buildImageRequest(row, {
         prompt: options.input.prompt,
         size: options.input.size,
         source,
@@ -550,13 +635,7 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
     }
   },
   prepareInvocation(options) {
-    const row = pickRoute(
-      poller.rows,
-      options.input.sourcePath !== undefined
-        ? '/openai/v1/images/edits'
-        : '/openai/v1/images/generations',
-      'image generation',
-    )
+    const row = resolveRoleRow('image', imagePath(options.input.sourcePath))
     return {
       confirmationMessages: {
         title: 'Generate image',
@@ -584,7 +663,8 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
   async invoke(options) {
     try {
       const bytes = await readWorkspaceFile(options.input.path)
-      const req = buildReadImageRequest(poller.rows, {
+      const row = resolveRoleRow(options.input.mode === 'ocr' ? 'ocr' : 'vision')
+      const req = buildReadImageRequest(row, {
         mode: options.input.mode,
         question: options.input.question,
         mimeType: mimeTypeFor(options.input.path),
@@ -603,7 +683,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
     }
   },
   prepareInvocation(options) {
-    const row = pickVisionRoute(poller.rows, options.input.mode)
+    const row = resolveRoleRow(options.input.mode === 'ocr' ? 'ocr' : 'vision')
     return {
       confirmationMessages: {
         title: 'Read image',
@@ -625,7 +705,8 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
   async invoke(options) {
     try {
       const bytes = await readWorkspaceFile(options.input.path)
-      const req = buildTranscribeRequest(poller.rows, {
+      const row = resolveRoleRow('transcription', transcriptionPath(options.input.translate))
+      const req = buildTranscribeRequest(row, {
         audio: new Blob([bytes]),
         translate: options.input.translate,
       })
@@ -643,13 +724,7 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
     }
   },
   prepareInvocation(options) {
-    const row = pickRoute(
-      poller.rows,
-      options.input.translate === true
-        ? '/openai/v1/audio/translations'
-        : '/openai/v1/audio/transcriptions',
-      'audio transcription',
-    )
+    const row = resolveRoleRow('transcription', transcriptionPath(options.input.translate))
     return {
       confirmationMessages: {
         title: 'Transcribe audio',
@@ -657,6 +732,10 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       },
     }
   },
+}
+
+function transcriptionPath(translate: boolean | undefined): string {
+  return translate === true ? '/openai/v1/audio/translations' : '/openai/v1/audio/transcriptions'
 }
 
 interface SpeakInput {
@@ -668,7 +747,8 @@ interface SpeakInput {
 const speakTool: vscode.LanguageModelTool<SpeakInput> = {
   async invoke(options) {
     try {
-      const req = buildSpeakRequest(poller.rows, {
+      const row = resolveRoleRow('speech')
+      const req = buildSpeakRequest(row, {
         text: options.input.text,
         voice: options.input.voice,
       })
@@ -682,7 +762,7 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
     }
   },
   prepareInvocation() {
-    const row = pickRoute(poller.rows, '/openai/v1/audio/speech', 'text-to-speech')
+    const row = resolveRoleRow('speech')
     return {
       confirmationMessages: {
         title: 'Speak text',
@@ -737,6 +817,7 @@ export function activate(context: vscode.ExtensionContext): void {
       chatProvider.fire()
     }),
     vscode.commands.registerCommand('engined.showQuickPick', () => showQuickPick(chatProvider)),
+    vscode.commands.registerCommand('engined.chooseDefaultModels', () => chooseDefaultModels()),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('engined.pollSeconds') || e.affectsConfiguration('engined.url')) {
         restartPollTimer()

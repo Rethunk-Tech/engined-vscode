@@ -9,9 +9,13 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/door.ts` | `/openai/v1/models` row -> `EnginedModelInfo` mapping, poll-change serialization, reasoning-level ordering/snapping. No `vscode` import. |
 | `src/chatStream.ts` | SSE reader for `/openai/v1/chat/completions`, ported from engined's own `src/cursorChat.ts`. No `vscode` import. |
 | `src/requestBuilder.ts` | Plain VS Code-shaped messages -> the OpenAI chat request body; token estimation. No `vscode` import. |
-| `src/toolRequests.ts` | Route picking and request shapes for the four `engined_*` tools. No `vscode` import. |
+| `src/toolRequests.ts` | Request shapes for the four `engined_*` tools, built against an already-resolved row. No `vscode` import. |
+| `src/defaultModels.ts` | `resolveDefaultModel`: the one selection rule behind every `engined.defaultModels.*` setting (configured id if it still qualifies, else the automatic pick). No `vscode` import. |
+| `src/completions.ts` | Prefix/suffix slicing and the `/openai/v1/completions` request/reply shapes. No `vscode` import. |
+| `src/neighbourContext.ts` | Snippet selection for completions' `extra` field (cap, ordering, exclusion). No `vscode` import. |
+| `src/status.ts` | Status bar text/tooltip formatting and the route-header-vs-fallback resolution. No `vscode` import. |
 | `src/pathGuard.ts` | The workspace-folder trust boundary every tool path crosses. No `vscode` import. |
-| `src/polling.ts` | `ModelPoller`: fires only on an actual list change, empties after 3 consecutive failures. No `vscode` import. |
+| `src/polling.ts` | `ModelPoller`: tracks both the chat-only model list and every answerable row; fires only on an actual change, empties after 3 consecutive failures. No `vscode` import. |
 | `src/doorClient.ts` | The only file that calls `fetch` against the door. No `vscode` import. |
 | `src/config.ts` | Reads/writes `engined.*` settings. The only file besides `extension.ts` that imports `vscode`. |
 | `src/extension.ts` | The adapter: registers the chat provider, tools, status bar, and log; converts real `vscode` values to/from the plain shapes above. Everything decision-shaped belongs in the files above, not here. |
@@ -21,6 +25,8 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 - No request to engined that would load a model just to answer a *listing* question — `GET /openai/v1/models` is always safe to poll; nothing else is called from the poller.
 - Never send `tools`/`tool_choice` to a model row whose `tools` is `false` — the door refuses it anyway (engined `src/responses.ts:133-147`), but this extension must not rely on that refusal.
 - Every tool input/output path resolves inside an open workspace folder (`pathGuard.ts`) before it touches the filesystem.
+- A tool, the completions picker, and `engined: Choose Default Models` all pick a route through `defaultModels.ts`'s `resolveDefaultModel` -- there is no second picking rule anywhere else.
+- A tool picks its route from `ModelPoller.rows` (every answerable row), never from `.models` (the chat-only subset) -- a comfy, TTS, or STT row never serves chat.
 - The "engined" output channel never logs request or response content — only poll failures, HTTP status + door error text, and state changes.
 - `reasoning_effort` is sent only when a row's `capabilities.reasoning` is non-empty, snapped to a level that row actually lists.
 

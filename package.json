@@ -215,15 +215,40 @@
           "default": true,
           "description": "Offer inline completions (ghost text) via engined's /openai/v1/completions."
         },
-        "engined.completions.model": {
-          "type": "string",
-          "default": "",
-          "description": "Model id to use for inline completions. Empty uses the first polled model that serves /openai/v1/completions."
-        },
         "engined.completions.neighbourContext": {
           "type": "boolean",
           "default": true,
           "description": "Send snippets from other open/recent editors as completions context. Only sent to a local (egress: none) completions route."
+        },
+        "engined.defaultModels.image": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_generateImage` (needs `/openai/v1/images/generations` or `/openai/v1/images/edits`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.defaultModels.ocr": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_readImage` in `mode: \"ocr\"` (needs `/openai/v1/chat/completions` with `vision: \"read\"`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.defaultModels.vision": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_readImage` in `mode: \"describe\"` (needs `/openai/v1/chat/completions` with `vision: \"describe\"`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.defaultModels.completion": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for inline completions (needs `/openai/v1/completions`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.defaultModels.speech": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_speak` (needs `/openai/v1/audio/speech`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.defaultModels.transcription": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_transcribe` (needs `/openai/v1/audio/transcriptions`, and also used to translate when that row serves `/openai/v1/audio/translations`). Empty is automatic. `engined: Choose default models` lists valid ids."
         }
       }
     },
@@ -231,6 +256,10 @@
       {
         "command": "engined.refreshModels",
         "title": "engined: Refresh Models"
+      },
+      {
+        "command": "engined.chooseDefaultModels",
+        "title": "engined: Choose Default Models"
       }
     ]
   },

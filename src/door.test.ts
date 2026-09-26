@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveDefaultModel } from './defaultModels.ts'
 import {
   mapAnswerableRows,
   mapModelRow,
@@ -9,7 +10,6 @@ import {
   reasoningLevelsFor,
   snapReasoningEffort,
 } from './door.ts'
-import { pickRoute } from './toolRequests.ts'
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const models = JSON.parse(readFileSync(join(FIXTURES, 'models.json'), 'utf8'))
@@ -69,15 +69,9 @@ describe('mapAnswerableRows', () => {
   test('keeps every non-unavailable row, chat or not -- what a tool picks a route from', () => {
     const rows = mapAnswerableRows(models)
     expect(rows.length).toBeGreaterThan(mapModels(models).length)
-    expect(pickRoute(rows, '/openai/v1/images/generations', 'image generation').id).toBe(
-      '@/comfy/local',
-    )
-    expect(pickRoute(rows, '/openai/v1/audio/speech', 'text-to-speech').id).toBe(
-      '@/chatterbox-multi/local',
-    )
-    expect(pickRoute(rows, '/openai/v1/audio/transcriptions', 'audio transcription').id).toBe(
-      '@/whisper/medium.en',
-    )
+    expect(resolveDefaultModel(rows, 'image', '').row?.id).toBe('@/comfy/local')
+    expect(resolveDefaultModel(rows, 'speech', '').row?.id).toBe('@/chatterbox-multi/local')
+    expect(resolveDefaultModel(rows, 'transcription', '').row?.id).toBe('@/whisper/medium.en')
 
     // The chat provider's own list must still exclude these -- comfy/TTS/STT never serve chat.
     const chatIds = new Set(mapModels(models).map((m) => m.id))

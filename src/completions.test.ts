@@ -1,17 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import {
   buildCompletionsRequestBody,
-  COMPLETIONS_PATH,
   extractCompletionText,
   extractCompletionUsage,
-  pickCompletionsModel,
   sliceContext,
 } from './completions.ts'
-import type { EnginedModelRow } from './door.ts'
-
-function row(id: string, serves: string[]): EnginedModelRow {
-  return { id, tools: false, serves, state: 'installed', capabilities: {} }
-}
 
 describe('buildCompletionsRequestBody', () => {
   test('carries prefix as prompt, single-line stop, zero temperature, 64 max tokens', () => {
@@ -52,32 +45,6 @@ describe('sliceContext', () => {
     const { suffix } = sliceContext(text, 6)
     expect(suffix).toHaveLength(2000)
     expect(suffix).toBe('b'.repeat(2000))
-  })
-})
-
-describe('pickCompletionsModel', () => {
-  const chatOnly = row('@/local/chat-only', ['/openai/v1/chat/completions'])
-  const ornith = row('@/local/ornith', ['/openai/v1/chat/completions', COMPLETIONS_PATH])
-  const second = row('@/local/second', [COMPLETIONS_PATH])
-
-  test('the configured id wins over the default when it answers completions', () => {
-    expect(pickCompletionsModel([ornith, second], '@/local/second')).toBe(second)
-  })
-
-  test('an empty setting falls back to the first answerable row', () => {
-    expect(pickCompletionsModel([chatOnly, ornith, second], '')).toBe(ornith)
-  })
-
-  test('no row serves completions -> undefined', () => {
-    expect(pickCompletionsModel([chatOnly], '')).toBeUndefined()
-  })
-
-  test('a configured id that answers no completions route -> undefined', () => {
-    expect(pickCompletionsModel([chatOnly, ornith], '@/local/chat-only')).toBeUndefined()
-  })
-
-  test('a completions-only route (never chat) is still picked', () => {
-    expect(pickCompletionsModel([second], '')).toBe(second)
   })
 })
 

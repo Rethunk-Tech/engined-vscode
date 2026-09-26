@@ -4,6 +4,7 @@
  */
 
 import * as vscode from 'vscode'
+import type { ModelRole } from './defaultModels.ts'
 import type { ReasoningLevel } from './door.ts'
 import { REASONING_LEVELS } from './door.ts'
 
@@ -45,13 +46,17 @@ export function getCompletionsEnabled(): boolean {
   return config().get<boolean>('completions.enabled', true)
 }
 
-/** Empty string means "use the first answerable row"; see `completions.ts` `pickCompletionsModel`. */
-export function getCompletionsModel(): string {
-  return config().get<string>('completions.model', '')
-}
-
 export function getNeighbourContextEnabled(): boolean {
   return config().get<boolean>('completions.neighbourContext', true)
+}
+
+/** Empty string means "automatic" -- see `defaultModels.ts` `resolveDefaultModel`. */
+export function getDefaultModel(role: ModelRole): string {
+  return config().get<string>(`defaultModels.${role}`, '')
+}
+
+export async function setDefaultModel(role: ModelRole, modelId: string): Promise<void> {
+  await config().update(`defaultModels.${role}`, modelId, vscode.ConfigurationTarget.Global)
 }
 
 export async function setReasoningEffort(level: ReasoningLevel, modelId?: string): Promise<void> {

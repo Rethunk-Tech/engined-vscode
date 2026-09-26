@@ -1,56 +1,13 @@
 /**
- * Route selection and request shapes for the four `engined_*` tools. Pure:
- * takes the rows already fetched from `/openai/v1/models` and builds the
- * request the adapter sends, or a `ToolRouteError` naming what is missing.
+ * Request shapes for the four `engined_*` tools. Pure: takes the row
+ * `defaultModels.ts` (`resolveDefaultModel`) already chose and builds the
+ * request `extension.ts` sends -- route picking itself lives there, as the
+ * one shared rule behind every `engined.defaultModels.*` setting.
  */
 
 import type { EnginedModelRow } from './door.ts'
 
 export class ToolRouteError extends Error {}
-
-function installedRows(rows: readonly EnginedModelRow[], serves: string): EnginedModelRow[] {
-  return rows.filter((r) => r.state !== 'unavailable' && r.serves.includes(serves))
-}
-
-/** The first installed row serving `serves`, or a `ToolRouteError` naming the missing route. */
-export function pickRoute(
-  rows: readonly EnginedModelRow[],
-  serves: string,
-  label: string,
-): EnginedModelRow {
-  const [row] = installedRows(rows, serves)
-  if (row === undefined) {
-    throw new ToolRouteError(`no installed engined route serves ${label} (${serves})`)
-  }
-  return row
-}
-
-/** The vision row for OCR (`vision: "read"`) or description (`vision: "describe"`), or a `ToolRouteError`. */
-export function pickVisionRoute(
-  rows: readonly EnginedModelRow[],
-  mode: 'ocr' | 'describe',
-): EnginedModelRow {
-  const wanted = mode === 'ocr' ? 'read' : 'describe'
-  const row = installedRows(rows, '/openai/v1/chat/completions').find(
-    (r) => r.role === 'vision' && r.vision === wanted,
-  )
-  if (row === undefined) {
-    throw new ToolRouteError(
-      `no installed engined vision route with vision: "${wanted}" for ${mode}`,
-    )
-  }
-  return row
-}
-
-/** The transcription row: any installed transcriber for a plain transcription, one whose `translate` is true for a translation. */
-export function pickTranscriptionRoute(
-  rows: readonly EnginedModelRow[],
-  translate: boolean,
-): EnginedModelRow {
-  const path = translate ? '/openai/v1/audio/translations' : '/openai/v1/audio/transcriptions'
-  const label = translate ? 'audio translation' : 'audio transcription'
-  return pickRoute(rows, path, label)
-}
 
 export interface ImageGenerationRequest {
   path: '/openai/v1/images/generations'
@@ -62,19 +19,17 @@ export interface ImageEditRequest {
   form: { model: string; prompt: string; image: Blob }
 }
 
-/** No `sourcePath` -> generation; a `sourcePath` -> an edit of it. Both need the `comfy` image route (engined src/images.ts / src/imageEdits.ts). */
+/** No `source` -> generation; a `source` -> an edit of it. Both need the `comfy` image route (engined src/images.ts / src/imageEdits.ts). */
 export function buildImageRequest(
-  rows: readonly EnginedModelRow[],
+  row: EnginedModelRow,
   input: { prompt: string; size?: string; source?: Blob },
 ): ImageGenerationRequest | ImageEditRequest {
   if (input.source !== undefined) {
-    const row = pickRoute(rows, '/openai/v1/images/edits', 'image edits')
     return {
       path: '/openai/v1/images/edits',
       form: { model: row.id, prompt: input.prompt, image: input.source },
     }
   }
-  const row = pickRoute(rows, '/openai/v1/images/generations', 'image generation')
   return {
     path: '/openai/v1/images/generations',
     body: { model: row.id, prompt: input.prompt, size: input.size },
@@ -93,10 +48,9 @@ export interface ReadImageRequest {
 
 /** A one-shot chat completion against the vision row, image as a data URI. */
 export function buildReadImageRequest(
-  rows: readonly EnginedModelRow[],
+  row: EnginedModelRow,
   input: { mode: 'ocr' | 'describe'; question?: string; mimeType: string; base64: string },
 ): ReadImageRequest {
-  const row = pickVisionRoute(rows, input.mode)
   const prompt =
     input.question ??
     (input.mode === 'ocr' ? 'Transcribe every visible character exactly.' : 'Describe this image.')
@@ -123,10 +77,9 @@ export interface TranscribeRequest {
 }
 
 export function buildTranscribeRequest(
-  rows: readonly EnginedModelRow[],
+  row: EnginedModelRow,
   input: { audio: Blob; translate?: boolean },
 ): TranscribeRequest {
-  const row = pickTranscriptionRoute(rows, input.translate === true)
   return {
     path:
       input.translate === true
@@ -142,10 +95,9 @@ export interface SpeakRequest {
 }
 
 export function buildSpeakRequest(
-  rows: readonly EnginedModelRow[],
+  row: EnginedModelRow,
   input: { text: string; voice?: string },
 ): SpeakRequest {
-  const row = pickRoute(rows, '/openai/v1/audio/speech', 'text-to-speech')
   return {
     path: '/openai/v1/audio/speech',
     body: { model: row.id, input: input.text, voice: input.voice },
