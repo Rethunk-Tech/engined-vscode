@@ -51,6 +51,10 @@
           "engined"
         ],
         "displayName": "Generate Image (engined)",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "enginedImage",
+        "userDescription": "Generate or edit an image via engined.",
+        "icon": "$(file-media)",
         "modelDescription": "Generate an image from a text prompt via engined's local image door, optionally starting from a source image.",
         "inputSchema": {
           "type": "object",
@@ -84,6 +88,10 @@
           "engined"
         ],
         "displayName": "Read Image (engined)",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "enginedReadImage",
+        "userDescription": "OCR or describe an image via engined.",
+        "icon": "$(eye)",
         "modelDescription": "OCR or describe an image via engined's local vision route.",
         "inputSchema": {
           "type": "object",
@@ -116,6 +124,10 @@
           "engined"
         ],
         "displayName": "Transcribe Audio (engined)",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "enginedTranscribe",
+        "userDescription": "Transcribe or translate audio via engined.",
+        "icon": "$(mic)",
         "modelDescription": "Transcribe (or translate to English) an audio file via engined's local speech-to-text route.",
         "inputSchema": {
           "type": "object",
@@ -140,6 +152,10 @@
           "engined"
         ],
         "displayName": "Speak Text (engined)",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "enginedSpeak",
+        "userDescription": "Synthesize speech from text via engined.",
+        "icon": "$(unmute)",
         "modelDescription": "Synthesize speech from text via engined's local text-to-speech route.",
         "inputSchema": {
           "type": "object",

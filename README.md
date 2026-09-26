@@ -38,6 +38,8 @@ A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/
 
 Every path a tool reads or writes must resolve inside an open workspace folder; a `..` escape or an absolute path outside every folder is refused.
 
+Each tool can be attached to a chat request by typing `#enginedImage`, `#enginedReadImage`, `#enginedTranscribe`, or `#enginedSpeak`.
+
 ## Privacy
 
 engined logs no request or response content, and this extension follows the same rule: the "engined" output channel records only poll failures, HTTP errors, and state changes — never a prompt, a response, or tool input/output text. A tool's confirmation prompt tells you when its route's `egress` is not local, meaning the content you send it leaves this machine.
