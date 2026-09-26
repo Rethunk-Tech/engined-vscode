@@ -50,6 +50,10 @@ export function getCompletionsModel(): string {
   return config().get<string>('completions.model', '')
 }
 
+export function getNeighbourContextEnabled(): boolean {
+  return config().get<boolean>('completions.neighbourContext', true)
+}
+
 export async function setReasoningEffort(level: ReasoningLevel, modelId?: string): Promise<void> {
   if (modelId === undefined) {
     await config().update('reasoningEffort', level, vscode.ConfigurationTarget.Global)

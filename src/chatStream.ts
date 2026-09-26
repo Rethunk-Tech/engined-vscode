@@ -18,6 +18,7 @@ interface ChatChunk {
       tool_calls?: ToolCallDelta[]
     }
   }[]
+  usage?: { prompt_tokens?: number; completion_tokens?: number }
 }
 
 export interface StitchedToolCall {
@@ -27,8 +28,15 @@ export interface StitchedToolCall {
   arguments: Record<string, unknown> | undefined
 }
 
+export interface ChatUsage {
+  promptTokens?: number
+  completionTokens?: number
+}
+
 export interface StreamSink {
   text(delta: string): void
+  /** The final chunk's `usage` (from `stream_options.include_usage`), when the stream carried one. */
+  usage?(usage: ChatUsage): void
 }
 
 interface ToolCallSlot {
@@ -112,6 +120,12 @@ export async function readChatStream(
         sink.text(delta.content)
       }
       stitchToolCalls(calls, delta?.tool_calls ?? [])
+      if (chunk.usage !== undefined) {
+        sink.usage?.({
+          promptTokens: chunk.usage.prompt_tokens,
+          completionTokens: chunk.usage.completion_tokens,
+        })
+      }
     }
   }
   return calls

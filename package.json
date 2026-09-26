@@ -219,6 +219,11 @@
           "type": "string",
           "default": "",
           "description": "Model id to use for inline completions. Empty uses the first polled model that serves /openai/v1/completions."
+        },
+        "engined.completions.neighbourContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Send snippets from other open/recent editors as completions context. Only sent to a local (egress: none) completions route."
         }
       }
     },

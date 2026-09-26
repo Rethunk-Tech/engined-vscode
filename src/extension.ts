@@ -11,12 +11,14 @@ import {
   buildCompletionsRequestBody,
   COMPLETIONS_PATH,
   extractCompletionText,
+  extractCompletionUsage,
   pickCompletionsModel,
   sliceContext,
 } from './completions.ts'
 import {
   getCompletionsEnabled,
   getCompletionsModel,
+  getNeighbourContextEnabled,
   getPollSeconds,
   getReasoningEffort,
   getReasoningEffortByModel,
@@ -25,7 +27,16 @@ import {
 } from './config.ts'
 import type { EnginedModelInfo, ReasoningLevel } from './door.ts'
 import { REASONING_LEVELS } from './door.ts'
-import { DoorHttpError, fetchModels, postChatCompletion, postForm, postJson } from './doorClient.ts'
+import {
+  DoorHttpError,
+  fetchModels,
+  postChatCompletion,
+  postForm,
+  postJson,
+  postJsonWithHeaders,
+} from './doorClient.ts'
+import type { NeighbourCandidate } from './neighbourContext.ts'
+import { selectSnippets } from './neighbourContext.ts'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 import { ModelPoller } from './polling.ts'
 import type { PlainMessage, PlainMessagePart } from './requestBuilder.ts'
@@ -34,6 +45,16 @@ import {
   estimateMessageTokenCount,
   estimateTokenCount,
 } from './requestBuilder.ts'
+import type { CallRecord } from './status.ts'
+import {
+  buildTooltip,
+  formatCallLine,
+  formatLoadingText,
+  hasExceededLoadingThreshold,
+  isLocalEgress,
+  resolveRoute,
+  unreachableTooltip,
+} from './status.ts'
 import {
   buildImageRequest,
   buildReadImageRequest,
@@ -45,10 +66,20 @@ import {
   ToolRouteError,
 } from './toolRequests.ts'
 
+const LOADING_TICK_MS = 300
+const RECENT_DOCUMENTS_CAP = 10
+
 let output: vscode.OutputChannel
 let poller: ModelPoller
 let statusBarItem: vscode.StatusBarItem
 let pollTimer: ReturnType<typeof setInterval> | undefined
+let doorReachable = true
+let lastChatCall: CallRecord | undefined
+let lastCompletionCall: CallRecord | undefined
+let inFlightChat: { modelId: string; startedAt: number; firstTokenAt?: number } | undefined
+let loadingTimer: ReturnType<typeof setInterval> | undefined
+/** Most-recently-active documents this session, most recent first; excludes whichever is currently active. */
+const recentDocuments: vscode.TextDocument[] = []
 
 function log(line: string): void {
   output.appendLine(`[${new Date().toISOString()}] ${line}`)
@@ -132,16 +163,53 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     })
     const controller = new AbortController()
     token.onCancellationRequested(() => controller.abort())
+    const startedAt = Date.now()
+    inFlightChat = { modelId: model.id, startedAt }
+    startLoadingTimer()
+    renderStatusBar()
     let stream: ReadableStream<Uint8Array>
+    let headers: Headers
     try {
-      stream = await postChatCompletion(getUrl(), body, controller.signal)
+      const res = await postChatCompletion(getUrl(), body, controller.signal)
+      stream = res.body
+      headers = res.headers
     } catch (error) {
       log(`chat completion failed for ${model.id}: ${describeError(error)}`)
+      stopLoadingTimer()
+      renderStatusBar()
       throw asError(error)
     }
-    const toolCalls = await readChatStream(stream, {
-      text: (delta) => progress.report(new vscode.LanguageModelTextPart(delta)),
-    })
+    let usage: { promptTokens?: number; completionTokens?: number } | undefined
+    let toolCalls: Awaited<ReturnType<typeof readChatStream>>
+    try {
+      toolCalls = await readChatStream(stream, {
+        text: (delta) => {
+          if (inFlightChat?.firstTokenAt === undefined && inFlightChat !== undefined) {
+            inFlightChat.firstTokenAt = Date.now()
+          }
+          progress.report(new vscode.LanguageModelTextPart(delta))
+        },
+        usage: (u) => (usage = u),
+      })
+    } finally {
+      stopLoadingTimer()
+    }
+    const resolved = resolveRoute(
+      {
+        route: headers.get('x-engined-route') ?? undefined,
+        egress: headers.get('x-engined-egress') ?? undefined,
+        chain: headers.get('x-engined-chain') ?? undefined,
+      },
+      { id: model.id, egress: model.row.egress },
+    )
+    lastChatCall = {
+      route: resolved.route,
+      egress: resolved.egress,
+      promptTokens: usage?.promptTokens,
+      completionTokens: usage?.completionTokens,
+      wallMs: Date.now() - startedAt,
+    }
+    renderStatusBar()
     for (const call of toolCalls) {
       progress.report(
         new vscode.LanguageModelToolCallPart(call.id, call.name, call.arguments ?? {}),
@@ -209,28 +277,152 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
       return undefined
     }
     const { prefix, suffix } = sliceContext(document.getText(), document.offsetAt(position))
-    const body = buildCompletionsRequestBody(model.id, prefix, suffix)
+    const extra =
+      getNeighbourContextEnabled() && isLocalEgress(model.row.egress)
+        ? selectSnippets(
+            gatherNeighbourCandidates(document),
+            vscode.workspace.asRelativePath(document.uri, false),
+            excludeGlobs(),
+          )
+        : undefined
+    const body = buildCompletionsRequestBody(model.id, prefix, suffix, extra)
+    const startedAt = Date.now()
     let reply: unknown
+    let headers: Headers
     try {
-      reply = await postJson(getUrl(), COMPLETIONS_PATH, body, controller.signal)
+      const res = await postJsonWithHeaders(getUrl(), COMPLETIONS_PATH, body, controller.signal)
+      reply = res.data
+      headers = res.headers
     } catch (error) {
       if (!token.isCancellationRequested) {
         log(`completion failed for ${model.id}: ${describeError(error)}`)
       }
       return undefined
     }
+    const resolved = resolveRoute(
+      {
+        route: headers.get('x-engined-route') ?? undefined,
+        egress: headers.get('x-engined-egress') ?? undefined,
+        chain: headers.get('x-engined-chain') ?? undefined,
+      },
+      { id: model.id, egress: model.row.egress },
+    )
+    const usage = extractCompletionUsage(reply)
+    lastCompletionCall = {
+      route: resolved.route,
+      egress: resolved.egress,
+      promptTokens: usage?.promptTokens,
+      completionTokens: usage?.completionTokens,
+      wallMs: Date.now() - startedAt,
+    }
+    renderStatusBar()
     const text = extractCompletionText(reply)
     return text === undefined ? undefined : [new vscode.InlineCompletionItem(text)]
   }
 }
 
+// --- neighbouring-file context for completions -----------------------------
+
+/** `files.exclude`/`search.exclude` keys whose value is `true` -- the same globs VS Code itself hides. */
+function excludeGlobs(): string[] {
+  const files = vscode.workspace
+    .getConfiguration('files')
+    .get<Record<string, boolean>>('exclude', {})
+  const search = vscode.workspace
+    .getConfiguration('search')
+    .get<Record<string, boolean>>('exclude', {})
+  return Object.entries({ ...files, ...search })
+    .filter(([, enabled]) => enabled)
+    .map(([glob]) => glob)
+}
+
+/** Visible editors first (with a live cursor), then recently active documents this session, current document excluded by the caller (`selectSnippets`). */
+function gatherNeighbourCandidates(current: vscode.TextDocument): NeighbourCandidate[] {
+  const candidates: NeighbourCandidate[] = []
+  for (const editor of vscode.window.visibleTextEditors) {
+    if (editor.document === current) {
+      continue
+    }
+    candidates.push({
+      filename: vscode.workspace.asRelativePath(editor.document.uri, false),
+      scheme: editor.document.uri.scheme,
+      text: editor.document.getText(),
+      cursorOffset: editor.document.offsetAt(editor.selection.active),
+    })
+  }
+  for (const doc of recentDocuments) {
+    if (doc === current || doc.isClosed) {
+      continue
+    }
+    candidates.push({
+      filename: vscode.workspace.asRelativePath(doc.uri, false),
+      scheme: doc.uri.scheme,
+      text: doc.getText(),
+    })
+  }
+  return candidates
+}
+
+function trackActiveEditor(editor: vscode.TextEditor | undefined): void {
+  if (editor === undefined) {
+    return
+  }
+  const doc = editor.document
+  const existing = recentDocuments.indexOf(doc)
+  if (existing !== -1) {
+    recentDocuments.splice(existing, 1)
+  }
+  recentDocuments.unshift(doc)
+  if (recentDocuments.length > RECENT_DOCUMENTS_CAP) {
+    recentDocuments.length = RECENT_DOCUMENTS_CAP
+  }
+}
+
 // --- polling and status bar ------------------------------------------------
 
-function updateStatusBar(reachable: boolean, count: number): void {
-  statusBarItem.text = reachable ? `$(hubot) engined (${count})` : '$(warning) engined unreachable'
-  statusBarItem.tooltip = reachable
-    ? `${count} model(s) available from ${getUrl()}`
-    : `Could not reach engined at ${getUrl()}`
+function isRowWarming(modelId: string): boolean {
+  return poller.models.find((m) => m.id === modelId)?.row.state === 'warming'
+}
+
+function renderStatusBar(): void {
+  if (!doorReachable) {
+    statusBarItem.text = '$(warning) engined unreachable'
+    statusBarItem.tooltip = unreachableTooltip(getUrl())
+    return
+  }
+  if (
+    inFlightChat !== undefined &&
+    inFlightChat.firstTokenAt === undefined &&
+    (hasExceededLoadingThreshold(inFlightChat.startedAt, Date.now()) ||
+      isRowWarming(inFlightChat.modelId))
+  ) {
+    statusBarItem.text = formatLoadingText(inFlightChat.modelId)
+  } else if (lastChatCall !== undefined) {
+    statusBarItem.text = formatCallLine(lastChatCall)
+  } else {
+    statusBarItem.text = `$(server) engined (${poller.models.length})`
+  }
+  statusBarItem.tooltip = buildTooltip({
+    lastChat: lastChatCall,
+    lastCompletion: lastCompletionCall,
+    doorUrl: getUrl(),
+    modelCount: poller.models.length,
+  })
+}
+
+function startLoadingTimer(): void {
+  if (loadingTimer !== undefined) {
+    clearInterval(loadingTimer)
+  }
+  loadingTimer = setInterval(renderStatusBar, LOADING_TICK_MS)
+}
+
+function stopLoadingTimer(): void {
+  if (loadingTimer !== undefined) {
+    clearInterval(loadingTimer)
+    loadingTimer = undefined
+  }
+  inFlightChat = undefined
 }
 
 function restartPollTimer(): void {
@@ -346,9 +538,11 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
       if (png === undefined) {
         throw new Error('engined returned no image data')
       }
-      await writeWorkspaceFile(options.input.outputPath, Buffer.from(png, 'base64'))
+      const bytes = Buffer.from(png, 'base64')
+      await writeWorkspaceFile(options.input.outputPath, bytes)
       return new vscode.LanguageModelToolResult([
         new vscode.LanguageModelTextPart(`Wrote ${options.input.outputPath}`),
+        vscode.LanguageModelDataPart.image(bytes, 'image/png'),
       ])
     } catch (error) {
       return toolError(error)
@@ -398,7 +592,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
           base64: Buffer.from(bytes).toString('base64'),
         },
       )
-      const stream = await postChatCompletion(
+      const { body: stream } = await postChatCompletion(
         getUrl(),
         { ...req, stream: true, stream_options: { include_usage: true } },
         new AbortController().signal,
@@ -525,13 +719,17 @@ export function activate(context: vscode.ExtensionContext): void {
         log(`poll failed: ${describeError(error)}`)
         throw error
       }),
-    (models) => {
-      updateStatusBar(true, models.length)
+    () => {
+      doorReachable = poller.reachable
+      renderStatusBar()
       chatProvider.fire()
     },
   )
 
   restartPollTimer()
+  if (vscode.window.activeTextEditor !== undefined) {
+    trackActiveEditor(vscode.window.activeTextEditor)
+  }
 
   context.subscriptions.push(
     output,
@@ -541,6 +739,7 @@ export function activate(context: vscode.ExtensionContext): void {
       { pattern: '**' },
       new EnginedInlineCompletionProvider(),
     ),
+    vscode.window.onDidChangeActiveTextEditor(trackActiveEditor),
     vscode.lm.registerTool('engined_generateImage', generateImageTool),
     vscode.lm.registerTool('engined_readImage', readImageTool),
     vscode.lm.registerTool('engined_transcribe', transcribeTool),
@@ -568,4 +767,5 @@ export function deactivate(): void {
     clearInterval(pollTimer)
     pollTimer = undefined
   }
+  stopLoadingTimer()
 }

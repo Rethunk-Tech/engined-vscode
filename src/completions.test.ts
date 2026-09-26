@@ -3,6 +3,7 @@ import {
   buildCompletionsRequestBody,
   COMPLETIONS_PATH,
   extractCompletionText,
+  extractCompletionUsage,
   pickCompletionsModel,
   sliceContext,
 } from './completions.ts'
@@ -33,6 +34,13 @@ describe('buildCompletionsRequestBody', () => {
       temperature: 0,
       stop: ['\n'],
     })
+  })
+
+  test('carries extra when given, omits the field when empty or absent', () => {
+    const withExtra = buildCompletionsRequestBody('m', 'p', 's', [{ filename: 'a.ts', text: 'x' }])
+    expect(withExtra.extra).toEqual([{ filename: 'a.ts', text: 'x' }])
+    expect(buildCompletionsRequestBody('m', 'p', 's', []).extra).toBeUndefined()
+    expect(buildCompletionsRequestBody('m', 'p', 's').extra).toBeUndefined()
   })
 })
 
@@ -108,5 +116,20 @@ describe('extractCompletionText', () => {
     expect(extractCompletionText({})).toBeUndefined()
     expect(extractCompletionText(undefined)).toBeUndefined()
     expect(extractCompletionText({ choices: [] })).toBeUndefined()
+  })
+})
+
+describe('extractCompletionUsage', () => {
+  test('reads prompt_tokens/completion_tokens from usage', () => {
+    expect(extractCompletionUsage({ usage: { prompt_tokens: 12, completion_tokens: 5 } })).toEqual({
+      promptTokens: 12,
+      completionTokens: 5,
+    })
+  })
+
+  test('no usage, or a malformed one -> undefined', () => {
+    expect(extractCompletionUsage({})).toBeUndefined()
+    expect(extractCompletionUsage(undefined)).toBeUndefined()
+    expect(extractCompletionUsage({ usage: {} })).toBeUndefined()
   })
 })

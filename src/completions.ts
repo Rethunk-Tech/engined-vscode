@@ -6,6 +6,7 @@
  */
 
 import type { EnginedModelInfo } from './door.ts'
+import type { ExtraFile } from './neighbourContext.ts'
 
 export const COMPLETIONS_PATH = '/openai/v1/completions'
 
@@ -26,6 +27,7 @@ export interface CompletionsRequestBody {
   max_tokens: number
   temperature: number
   stop: string[]
+  extra?: ExtraFile[]
 }
 
 /** The cursor-anchored slice of `text` a completions request sends, trimmed to the door's single-line budget. */
@@ -40,6 +42,7 @@ export function buildCompletionsRequestBody(
   modelId: string,
   prefix: string,
   suffix: string,
+  extra?: ExtraFile[],
 ): CompletionsRequestBody {
   return {
     model: modelId,
@@ -48,6 +51,7 @@ export function buildCompletionsRequestBody(
     max_tokens: MAX_TOKENS,
     temperature: 0,
     stop: STOP,
+    ...(extra !== undefined && extra.length > 0 ? { extra } : {}),
   }
 }
 
@@ -71,4 +75,28 @@ export function extractCompletionText(reply: unknown): string | undefined {
   }
   const trimmed = text.trimEnd()
   return trimmed === '' ? undefined : trimmed
+}
+
+export interface CompletionUsage {
+  promptTokens?: number
+  completionTokens?: number
+}
+
+/** `usage.{prompt_tokens,completion_tokens}` from a completions reply, when it carried one. */
+export function extractCompletionUsage(reply: unknown): CompletionUsage | undefined {
+  const usage = (reply as { usage?: unknown } | undefined)?.usage
+  if (typeof usage !== 'object' || usage === null) {
+    return undefined
+  }
+  const { prompt_tokens: promptTokens, completion_tokens: completionTokens } = usage as {
+    prompt_tokens?: unknown
+    completion_tokens?: unknown
+  }
+  if (typeof promptTokens !== 'number' && typeof completionTokens !== 'number') {
+    return undefined
+  }
+  return {
+    promptTokens: typeof promptTokens === 'number' ? promptTokens : undefined,
+    completionTokens: typeof completionTokens === 'number' ? completionTokens : undefined,
+  }
 }

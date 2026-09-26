@@ -28,6 +28,11 @@ export class ModelPoller {
     return this.#models
   }
 
+  /** False once 3 consecutive polls have failed -- the same threshold that empties `models`. */
+  get reachable(): boolean {
+    return this.#consecutiveFailures < CONSECUTIVE_FAILURES_TO_EMPTY
+  }
+
   /** Poll once. A failed poll keeps the last list; the 3rd straight failure empties it. Fires `onChange` only when the reported list actually differs from last time. */
   async pollNow(): Promise<void> {
     let models: EnginedModelInfo[]

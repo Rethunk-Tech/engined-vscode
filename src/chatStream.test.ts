@@ -32,4 +32,15 @@ describe('readChatStream', () => {
     const calls = await readChatStream(stream, { text: () => {} })
     expect(calls).toEqual([])
   })
+
+  test("reports the final chunk's usage via sink.usage", async () => {
+    const stream = streamFromText(
+      'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n' +
+        'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":12,"completion_tokens":5}}\n\n' +
+        'data: [DONE]\n\n',
+    )
+    let usage: { promptTokens?: number; completionTokens?: number } | undefined
+    await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
+    expect(usage).toEqual({ promptTokens: 12, completionTokens: 5 })
+  })
 })

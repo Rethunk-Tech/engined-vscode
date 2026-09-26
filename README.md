@@ -8,8 +8,9 @@ A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/
 - Polls the model list on a timer and refreshes VS Code's picker only when it actually changes.
 - Forwards tool calls and images to models that support them, and snaps a reasoning-effort setting to whatever level each model actually lists.
 - Adds four chat tools that generate/edit images, OCR or describe an image, transcribe or translate audio, and synthesize speech — each confirms the route it will use and warns when content will leave the machine.
-- Offers inline completions (ghost text) backed by engined's `POST /openai/v1/completions`, for whichever polled model advertises that route.
-- A status bar item shows whether the door is reachable and how many models it offers; click it for a quick pick of common actions.
+- Offers inline completions (ghost text) backed by engined's `POST /openai/v1/completions`, for whichever polled model advertises that route, optionally sending neighbouring-file snippets (`engined.completions.neighbourContext`) to a local route.
+- A status bar item shows the last chat call (route, local/remote egress, token counts, wall time), a loading state, and whether the door is reachable; click it for a quick pick of common actions.
+- `engined_generateImage` returns the generated image inline, alongside the workspace path it wrote.
 
 ## Requirements
 
@@ -26,6 +27,7 @@ A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/
 | `engined.reasoningEffortByModel` | `{}` | Per-model override, keyed by model id (e.g. `"@/claude/sonnet-5": "high"`). |
 | `engined.completions.enabled` | `true` | Offer inline completions (ghost text). |
 | `engined.completions.model` | `""` | Model id for inline completions. Empty uses the first polled model that serves `/openai/v1/completions`. |
+| `engined.completions.neighbourContext` | `true` | Send snippets from other open/recent editors as completions context. Only sent to a local (`egress: none`) completions route. |
 
 ## Tools
 

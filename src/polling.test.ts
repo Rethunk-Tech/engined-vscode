@@ -80,4 +80,24 @@ describe('ModelPoller', () => {
     expect(poller.models).toHaveLength(0) // 3rd failure: emptied
     expect(fires).toBe(2)
   })
+
+  test('reachable flips false only on the 3rd consecutive failure', async () => {
+    let succeed = true
+    const poller = new ModelPoller(
+      () => (succeed ? Promise.resolve([model('a')]) : Promise.reject(new Error('down'))),
+      () => {},
+    )
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+    succeed = false
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+    await poller.pollNow()
+    expect(poller.reachable).toBe(false)
+    succeed = true
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+  })
 })

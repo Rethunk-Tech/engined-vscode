@@ -29,12 +29,17 @@ export async function fetchModels(
   return mapModels(await res.json())
 }
 
-/** POST a chat completion. Non-2xx surfaces the door's own error text (never a generic status message) so the chat view shows what actually went wrong. */
+export interface DoorResponse<T> {
+  data: T
+  headers: Headers
+}
+
+/** POST a chat completion. Non-2xx surfaces the door's own error text (never a generic status message) so the chat view shows what actually went wrong. Headers ride along so the caller can read `x-engined-route`/`-egress`/`-chain`, when engined sends them. */
 export async function postChatCompletion(
   baseUrl: string,
   body: unknown,
   signal: AbortSignal,
-): Promise<ReadableStream<Uint8Array>> {
+): Promise<{ body: ReadableStream<Uint8Array>; headers: Headers }> {
   const res = await fetch(`${baseUrl}/openai/v1/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -44,16 +49,16 @@ export async function postChatCompletion(
   if (!res.ok || res.body === null) {
     throw new DoorHttpError(res.status, await res.text())
   }
-  return res.body
+  return { body: res.body, headers: res.headers }
 }
 
-/** A JSON POST against an arbitrary door path -- image generation/edit request, speech request, completions request. */
-export async function postJson(
+/** A JSON POST against an arbitrary door path, with response headers -- used where a caller needs to read them (route/egress on a completions reply). */
+export async function postJsonWithHeaders(
   baseUrl: string,
   path: string,
   body: unknown,
   signal?: AbortSignal,
-): Promise<unknown> {
+): Promise<DoorResponse<unknown>> {
   const res = await fetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -63,9 +68,20 @@ export async function postJson(
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
-  return res.headers.get('content-type')?.includes('application/json')
-    ? res.json()
-    : res.arrayBuffer()
+  const data = res.headers.get('content-type')?.includes('application/json')
+    ? await res.json()
+    : await res.arrayBuffer()
+  return { data, headers: res.headers }
+}
+
+/** A JSON POST against an arbitrary door path -- image generation/edit request, speech request. */
+export async function postJson(
+  baseUrl: string,
+  path: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  return (await postJsonWithHeaders(baseUrl, path, body, signal)).data
 }
 
 /** A multipart POST -- image edit, transcription. */
