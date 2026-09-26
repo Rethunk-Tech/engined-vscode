@@ -2,7 +2,14 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { mapModelRow, mapModels, reasoningLevelsFor, snapReasoningEffort } from './door.ts'
+import {
+  mapAnswerableRows,
+  mapModelRow,
+  mapModels,
+  reasoningLevelsFor,
+  snapReasoningEffort,
+} from './door.ts'
+import { pickRoute } from './toolRequests.ts'
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const models = JSON.parse(readFileSync(join(FIXTURES, 'models.json'), 'utf8'))
@@ -55,6 +62,33 @@ describe('mapModels', () => {
   test('malformed body maps to an empty list rather than throwing', () => {
     expect(mapModels(undefined)).toEqual([])
     expect(mapModels({})).toEqual([])
+  })
+})
+
+describe('mapAnswerableRows', () => {
+  test('keeps every non-unavailable row, chat or not -- what a tool picks a route from', () => {
+    const rows = mapAnswerableRows(models)
+    expect(rows.length).toBeGreaterThan(mapModels(models).length)
+    expect(pickRoute(rows, '/openai/v1/images/generations', 'image generation').id).toBe(
+      '@/comfy/local',
+    )
+    expect(pickRoute(rows, '/openai/v1/audio/speech', 'text-to-speech').id).toBe(
+      '@/chatterbox-multi/local',
+    )
+    expect(pickRoute(rows, '/openai/v1/audio/transcriptions', 'audio transcription').id).toBe(
+      '@/whisper/medium.en',
+    )
+
+    // The chat provider's own list must still exclude these -- comfy/TTS/STT never serve chat.
+    const chatIds = new Set(mapModels(models).map((m) => m.id))
+    expect(chatIds.has('@/comfy/local')).toBe(false)
+    expect(chatIds.has('@/chatterbox-multi/local')).toBe(false)
+    expect(chatIds.has('@/whisper/medium.en')).toBe(false)
+  })
+
+  test('excludes unavailable rows the same way mapModels does', () => {
+    const unavailable = { ...models.data[0], state: 'unavailable' }
+    expect(mapAnswerableRows({ data: [unavailable] })).toEqual([])
   })
 })
 

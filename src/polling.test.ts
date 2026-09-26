@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import type { EnginedModelInfo } from './door.ts'
-import { ModelPoller } from './polling.ts'
+import type { EnginedModelInfo, EnginedModelRow } from './door.ts'
+import { ModelPoller, type ModelsPoll } from './polling.ts'
 
 function model(id: string): EnginedModelInfo {
   return {
@@ -17,11 +17,19 @@ function model(id: string): EnginedModelInfo {
   }
 }
 
+function row(id: string): EnginedModelRow {
+  return { id, tools: false, serves: [], state: 'installed', capabilities: {} }
+}
+
+function poll(chatModels: EnginedModelInfo[], rows: EnginedModelRow[] = []): ModelsPoll {
+  return { chatModels, rows }
+}
+
 describe('ModelPoller', () => {
   test('an unchanged list does not fire onChange', async () => {
     let fires = 0
     const poller = new ModelPoller(
-      () => Promise.resolve([model('a')]),
+      () => Promise.resolve(poll([model('a')])),
       () => (fires += 1),
     )
     await poller.pollNow()
@@ -33,7 +41,7 @@ describe('ModelPoller', () => {
     let call = 0
     let fires = 0
     const poller = new ModelPoller(
-      () => Promise.resolve(call++ === 0 ? [model('a')] : [model('a'), model('b')]),
+      () => Promise.resolve(call++ === 0 ? poll([model('a')]) : poll([model('a'), model('b')])),
       () => (fires += 1),
     )
     await poller.pollNow()
@@ -42,7 +50,25 @@ describe('ModelPoller', () => {
     expect(poller.models).toHaveLength(2)
   })
 
-  test('3 consecutive failures empties the list and fires once', async () => {
+  test('a changed rows list fires onChange even when chatModels is unchanged', async () => {
+    let call = 0
+    let fires = 0
+    const poller = new ModelPoller(
+      () =>
+        Promise.resolve(
+          call++ === 0
+            ? poll([model('a')], [row('comfy')])
+            : poll([model('a')], [row('comfy'), row('tts')]),
+        ),
+      () => (fires += 1),
+    )
+    await poller.pollNow()
+    await poller.pollNow()
+    expect(fires).toBe(2)
+    expect(poller.rows).toHaveLength(2)
+  })
+
+  test('3 consecutive failures empties the lists and fires once', async () => {
     let fires = 0
     let lastModels: readonly EnginedModelInfo[] = []
     const poller = new ModelPoller(
@@ -58,15 +84,19 @@ describe('ModelPoller', () => {
     await poller.pollNow()
     expect(fires).toBe(1)
     expect(lastModels).toEqual([])
+    expect(poller.rows).toEqual([])
     await poller.pollNow()
     expect(fires).toBe(1) // still empty: no further fire
   })
 
-  test('a failure after a successful poll keeps the last list until the 3rd failure', async () => {
+  test('a failure after a successful poll keeps the last lists until the 3rd failure', async () => {
     let succeed = true
     let fires = 0
     const poller = new ModelPoller(
-      () => (succeed ? Promise.resolve([model('a')]) : Promise.reject(new Error('down'))),
+      () =>
+        succeed
+          ? Promise.resolve(poll([model('a')], [row('comfy')]))
+          : Promise.reject(new Error('down')),
       () => (fires += 1),
     )
     await poller.pollNow()
@@ -75,16 +105,18 @@ describe('ModelPoller', () => {
     await poller.pollNow()
     await poller.pollNow()
     expect(poller.models).toHaveLength(1) // 2 failures: list kept
+    expect(poller.rows).toHaveLength(1)
     expect(fires).toBe(1)
     await poller.pollNow()
     expect(poller.models).toHaveLength(0) // 3rd failure: emptied
+    expect(poller.rows).toHaveLength(0)
     expect(fires).toBe(2)
   })
 
   test('reachable flips false only on the 3rd consecutive failure', async () => {
     let succeed = true
     const poller = new ModelPoller(
-      () => (succeed ? Promise.resolve([model('a')]) : Promise.reject(new Error('down'))),
+      () => (succeed ? Promise.resolve(poll([model('a')])) : Promise.reject(new Error('down'))),
       () => {},
     )
     await poller.pollNow()

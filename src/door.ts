@@ -90,6 +90,23 @@ export function mapModelRow(row: EnginedModelRow): EnginedModelInfo | undefined 
   }
 }
 
+/**
+ * Every answerable row (`state !== "unavailable"`), chat or not -- what the
+ * `engined_*` tools and the completions picker choose a route from. A comfy,
+ * TTS or STT row never serves `/openai/v1/chat/completions`, so picking from
+ * `mapModels`' chat-only list (as the chat provider itself does) would never
+ * find it.
+ */
+export function mapAnswerableRows(body: unknown): EnginedModelRow[] {
+  const data = (body as Partial<ModelsResponse> | undefined)?.data
+  return Array.isArray(data) ? data.filter((row) => row.state !== 'unavailable') : []
+}
+
+/** A stable string a poll can diff `mapAnswerableRows`' output against, ignoring key order. */
+export function serializeRows(rows: readonly EnginedModelRow[]): string {
+  return JSON.stringify(rows.map((r) => ({ id: r.id, state: r.state, serves: r.serves })))
+}
+
 /** The full `/openai/v1/models` response body -> the models this extension exposes. */
 export function mapModels(body: unknown): EnginedModelInfo[] {
   const data = (body as Partial<ModelsResponse> | undefined)?.data

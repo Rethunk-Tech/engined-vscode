@@ -5,7 +5,7 @@
  * text/offset, debounce and abort wiring.
  */
 
-import type { EnginedModelInfo } from './door.ts'
+import type { EnginedModelRow } from './door.ts'
 import type { ExtraFile } from './neighbourContext.ts'
 
 export const COMPLETIONS_PATH = '/openai/v1/completions'
@@ -55,13 +55,20 @@ export function buildCompletionsRequestBody(
   }
 }
 
-/** The configured model if it still answers completions, else the first such row from the existing poll; `undefined` when none do. */
+/**
+ * The configured row if it still answers completions, else the first such
+ * row from the existing poll; `undefined` when none do. Selects from every
+ * answerable row (`ModelPoller.rows`), not only chat models -- a
+ * completions-only route never serves chat and would never appear there.
+ */
 export function pickCompletionsModel(
-  models: readonly EnginedModelInfo[],
+  rows: readonly EnginedModelRow[],
   configuredId: string,
-): EnginedModelInfo | undefined {
-  const answerable = models.filter((m) => m.row.serves.includes(COMPLETIONS_PATH))
-  return configuredId === '' ? answerable[0] : answerable.find((m) => m.id === configuredId)
+): EnginedModelRow | undefined {
+  const answerable = rows.filter(
+    (r) => r.state !== 'unavailable' && r.serves.includes(COMPLETIONS_PATH),
+  )
+  return configuredId === '' ? answerable[0] : answerable.find((r) => r.id === configuredId)
 }
 
 /** `choices[0].text` from a completions reply, trailing whitespace trimmed; `undefined` for empty or malformed. */

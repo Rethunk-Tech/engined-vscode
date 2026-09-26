@@ -266,7 +266,7 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
     if (vscode.window.activeTextEditor?.selection.isEmpty === false) {
       return undefined
     }
-    const model = pickCompletionsModel(poller.models, getCompletionsModel())
+    const model = pickCompletionsModel(poller.rows, getCompletionsModel())
     if (model === undefined) {
       return undefined
     }
@@ -278,7 +278,7 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
     }
     const { prefix, suffix } = sliceContext(document.getText(), document.offsetAt(position))
     const extra =
-      getNeighbourContextEnabled() && isLocalEgress(model.row.egress)
+      getNeighbourContextEnabled() && isLocalEgress(model.egress)
         ? selectSnippets(
             gatherNeighbourCandidates(document),
             vscode.workspace.asRelativePath(document.uri, false),
@@ -305,7 +305,7 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
         egress: headers.get('x-engined-egress') ?? undefined,
         chain: headers.get('x-engined-chain') ?? undefined,
       },
-      { id: model.id, egress: model.row.egress },
+      { id: model.id, egress: model.egress },
     )
     const usage = extractCompletionUsage(reply)
     lastCompletionCall = {
@@ -524,10 +524,11 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
         options.input.sourcePath !== undefined
           ? new Blob([await readWorkspaceFile(options.input.sourcePath)])
           : undefined
-      const req = buildImageRequest(
-        poller.models.map((m) => m.row),
-        { prompt: options.input.prompt, size: options.input.size, source },
-      )
+      const req = buildImageRequest(poller.rows, {
+        prompt: options.input.prompt,
+        size: options.input.size,
+        source,
+      })
       const result =
         req.path === '/openai/v1/images/generations'
           ? ((await postJson(getUrl(), req.path, req.body)) as { data: { b64_json: string }[] })
@@ -550,7 +551,7 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   },
   prepareInvocation(options) {
     const row = pickRoute(
-      poller.models.map((m) => m.row),
+      poller.rows,
       options.input.sourcePath !== undefined
         ? '/openai/v1/images/edits'
         : '/openai/v1/images/generations',
@@ -583,15 +584,12 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
   async invoke(options) {
     try {
       const bytes = await readWorkspaceFile(options.input.path)
-      const req = buildReadImageRequest(
-        poller.models.map((m) => m.row),
-        {
-          mode: options.input.mode,
-          question: options.input.question,
-          mimeType: mimeTypeFor(options.input.path),
-          base64: Buffer.from(bytes).toString('base64'),
-        },
-      )
+      const req = buildReadImageRequest(poller.rows, {
+        mode: options.input.mode,
+        question: options.input.question,
+        mimeType: mimeTypeFor(options.input.path),
+        base64: Buffer.from(bytes).toString('base64'),
+      })
       const { body: stream } = await postChatCompletion(
         getUrl(),
         { ...req, stream: true, stream_options: { include_usage: true } },
@@ -605,10 +603,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
     }
   },
   prepareInvocation(options) {
-    const row = pickVisionRoute(
-      poller.models.map((m) => m.row),
-      options.input.mode,
-    )
+    const row = pickVisionRoute(poller.rows, options.input.mode)
     return {
       confirmationMessages: {
         title: 'Read image',
@@ -630,13 +625,10 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
   async invoke(options) {
     try {
       const bytes = await readWorkspaceFile(options.input.path)
-      const req = buildTranscribeRequest(
-        poller.models.map((m) => m.row),
-        {
-          audio: new Blob([bytes]),
-          translate: options.input.translate,
-        },
-      )
+      const req = buildTranscribeRequest(poller.rows, {
+        audio: new Blob([bytes]),
+        translate: options.input.translate,
+      })
       const form = new FormData()
       form.set('model', req.form.model)
       form.set('file', req.form.file)
@@ -652,7 +644,7 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
   },
   prepareInvocation(options) {
     const row = pickRoute(
-      poller.models.map((m) => m.row),
+      poller.rows,
       options.input.translate === true
         ? '/openai/v1/audio/translations'
         : '/openai/v1/audio/transcriptions',
@@ -676,10 +668,10 @@ interface SpeakInput {
 const speakTool: vscode.LanguageModelTool<SpeakInput> = {
   async invoke(options) {
     try {
-      const req = buildSpeakRequest(
-        poller.models.map((m) => m.row),
-        { text: options.input.text, voice: options.input.voice },
-      )
+      const req = buildSpeakRequest(poller.rows, {
+        text: options.input.text,
+        voice: options.input.voice,
+      })
       const audio = (await postJson(getUrl(), req.path, req.body)) as ArrayBuffer
       await writeWorkspaceFile(options.input.outputPath, new Uint8Array(audio))
       return new vscode.LanguageModelToolResult([
@@ -690,11 +682,7 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
     }
   },
   prepareInvocation() {
-    const row = pickRoute(
-      poller.models.map((m) => m.row),
-      '/openai/v1/audio/speech',
-      'text-to-speech',
-    )
+    const row = pickRoute(poller.rows, '/openai/v1/audio/speech', 'text-to-speech')
     return {
       confirmationMessages: {
         title: 'Speak text',

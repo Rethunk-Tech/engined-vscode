@@ -7,21 +7,10 @@ import {
   pickCompletionsModel,
   sliceContext,
 } from './completions.ts'
-import type { EnginedModelInfo } from './door.ts'
+import type { EnginedModelRow } from './door.ts'
 
-function modelInfo(id: string, serves: string[]): EnginedModelInfo {
-  return {
-    id,
-    name: id,
-    family: 'test',
-    version: id,
-    detail: '',
-    tooltip: '',
-    maxInputTokens: 32768,
-    maxOutputTokens: 8192,
-    capabilities: { toolCalling: false, imageInput: false },
-    row: { id, tools: false, serves, state: 'installed', capabilities: {} },
-  }
+function row(id: string, serves: string[]): EnginedModelRow {
+  return { id, tools: false, serves, state: 'installed', capabilities: {} }
 }
 
 describe('buildCompletionsRequestBody', () => {
@@ -67,9 +56,9 @@ describe('sliceContext', () => {
 })
 
 describe('pickCompletionsModel', () => {
-  const chatOnly = modelInfo('@/local/chat-only', ['/openai/v1/chat/completions'])
-  const ornith = modelInfo('@/local/ornith', ['/openai/v1/chat/completions', COMPLETIONS_PATH])
-  const second = modelInfo('@/local/second', [COMPLETIONS_PATH])
+  const chatOnly = row('@/local/chat-only', ['/openai/v1/chat/completions'])
+  const ornith = row('@/local/ornith', ['/openai/v1/chat/completions', COMPLETIONS_PATH])
+  const second = row('@/local/second', [COMPLETIONS_PATH])
 
   test('the configured id wins over the default when it answers completions', () => {
     expect(pickCompletionsModel([ornith, second], '@/local/second')).toBe(second)
@@ -85,6 +74,10 @@ describe('pickCompletionsModel', () => {
 
   test('a configured id that answers no completions route -> undefined', () => {
     expect(pickCompletionsModel([chatOnly, ornith], '@/local/chat-only')).toBeUndefined()
+  })
+
+  test('a completions-only route (never chat) is still picked', () => {
+    expect(pickCompletionsModel([second], '')).toBe(second)
   })
 })
 

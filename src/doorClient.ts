@@ -5,8 +5,8 @@
  * the network.
  */
 
-import type { EnginedModelInfo } from './door.ts'
-import { mapModels } from './door.ts'
+import type { EnginedModelInfo, EnginedModelRow } from './door.ts'
+import { mapAnswerableRows, mapModels } from './door.ts'
 
 export class DoorHttpError extends Error {
   constructor(
@@ -17,16 +17,21 @@ export class DoorHttpError extends Error {
   }
 }
 
-/** `GET /openai/v1/models`, mapped to what this extension exposes. Never triggers a model load: listing is always safe to poll. */
-export async function fetchModels(
-  baseUrl: string,
-  signal?: AbortSignal,
-): Promise<EnginedModelInfo[]> {
+export interface ModelsPoll {
+  /** The chat-answerable subset -- what the `LanguageModelChatProvider` reports. */
+  chatModels: EnginedModelInfo[]
+  /** Every answerable row, chat or not -- what a tool or the completions picker chooses from. */
+  rows: EnginedModelRow[]
+}
+
+/** `GET /openai/v1/models`, mapped both ways. Never triggers a model load: listing is always safe to poll. */
+export async function fetchModels(baseUrl: string, signal?: AbortSignal): Promise<ModelsPoll> {
   const res = await fetch(`${baseUrl}/openai/v1/models`, { signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
-  return mapModels(await res.json())
+  const body = await res.json()
+  return { chatModels: mapModels(body), rows: mapAnswerableRows(body) }
 }
 
 export interface DoorResponse<T> {
