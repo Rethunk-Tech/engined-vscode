@@ -1,0 +1,222 @@
+{
+  "name": "engined-vscode",
+  "displayName": "engined",
+  "description": "VS Code language model provider for engined, a local inference door.",
+  "version": "0.1.0",
+  "publisher": "rethunk-tech",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "keywords": [
+    "llm",
+    "language-model",
+    "chat",
+    "local-inference",
+    "engined"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rethunk-Tech/engined-vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/Rethunk-Tech/engined-vscode/issues"
+  },
+  "homepage": "https://github.com/Rethunk-Tech/engined-vscode#readme",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguageModelChatProvider:engined"
+  ],
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "engined",
+        "displayName": "engined"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "engined_generateImage",
+        "tags": [
+          "engined"
+        ],
+        "displayName": "Generate Image (engined)",
+        "modelDescription": "Generate an image from a text prompt via engined's local image door, optionally starting from a source image.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "description": "The image prompt."
+            },
+            "outputPath": {
+              "type": "string",
+              "description": "Workspace-relative path to write the PNG to."
+            },
+            "size": {
+              "type": "string",
+              "description": "WIDTHxHEIGHT, e.g. 1024x1024."
+            },
+            "sourcePath": {
+              "type": "string",
+              "description": "Workspace-relative path to an existing image to edit instead of generating fresh."
+            }
+          },
+          "required": [
+            "prompt",
+            "outputPath"
+          ]
+        }
+      },
+      {
+        "name": "engined_readImage",
+        "tags": [
+          "engined"
+        ],
+        "displayName": "Read Image (engined)",
+        "modelDescription": "OCR or describe an image via engined's local vision route.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Workspace-relative path to the image."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "ocr",
+                "describe"
+              ]
+            },
+            "question": {
+              "type": "string",
+              "description": "Optional question to ask about the image."
+            }
+          },
+          "required": [
+            "path",
+            "mode"
+          ]
+        }
+      },
+      {
+        "name": "engined_transcribe",
+        "tags": [
+          "engined"
+        ],
+        "displayName": "Transcribe Audio (engined)",
+        "modelDescription": "Transcribe (or translate to English) an audio file via engined's local speech-to-text route.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Workspace-relative path to the audio file."
+            },
+            "translate": {
+              "type": "boolean",
+              "description": "Render as English rather than the spoken language."
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      },
+      {
+        "name": "engined_speak",
+        "tags": [
+          "engined"
+        ],
+        "displayName": "Speak Text (engined)",
+        "modelDescription": "Synthesize speech from text via engined's local text-to-speech route.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "outputPath": {
+              "type": "string",
+              "description": "Workspace-relative path to write the audio file to."
+            },
+            "voice": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "outputPath"
+          ]
+        }
+      }
+    ],
+    "configuration": {
+      "title": "engined",
+      "properties": {
+        "engined.url": {
+          "type": "string",
+          "default": "http://127.0.0.1:29200",
+          "description": "Base URL of the engined door."
+        },
+        "engined.pollSeconds": {
+          "type": "number",
+          "default": 30,
+          "description": "How often to poll engined's model list. 0 disables polling."
+        },
+        "engined.reasoningEffort": {
+          "type": "string",
+          "enum": [
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "default": "medium",
+          "description": "Default reasoning effort for models that support it."
+        },
+        "engined.reasoningEffortByModel": {
+          "type": "object",
+          "default": {},
+          "description": "Per-model override of engined.reasoningEffort, keyed by model id."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "engined.refreshModels",
+        "title": "engined: Refresh Models"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --outfile dist/extension.js",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test",
+    "package": "bunx @vscode/vsce package --no-dependencies",
+    "setup-hooks": "lefthook install",
+    "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@types/vscode": "1.104.0",
+    "@vscode/vsce": "^4.0.0",
+    "typescript": "^7.0.2"
+  }
+}
