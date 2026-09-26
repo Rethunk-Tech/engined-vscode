@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `engined_generateImage` returns the generated image itself alongside the written-file path.
 - `engined_search`: semantic workspace search over a chunked, embedded index kept in workspace storage, incrementally updated on save/create/delete and reranked when an installed route serves `/openai/v1/rerank`. New settings `engined.defaultModels.embedding`, `engined.search.allowRemote`, `engined.search.maxChunks`.
 - `engined: Warm Model`, `engined: Hold Model` and `engined: Release Hold` commands, and a live subscription to `GET /engined/v1/engines/events` that debounces a model re-poll on every frame and reconnects with backoff on disconnect.
+- An Engines view (its own activity-bar container) listing every engine with state, resource usage on expand, and per-item warm/hold/release/stop/logs/copy-fix actions.
 
 ### Fixed
 

@@ -34,6 +34,48 @@ export async function fetchModels(baseUrl: string, signal?: AbortSignal): Promis
   return { chatModels: mapModels(body), rows: mapAnswerableRows(body) }
 }
 
+/** `GET /engined/v1/engines`, unparsed beyond JSON -- `engineTree.ts` maps it to tree rows. */
+export async function fetchEngines(baseUrl: string, signal?: AbortSignal): Promise<unknown> {
+  const res = await fetch(`${baseUrl}/engined/v1/engines`, { signal })
+  if (!res.ok) {
+    throw new DoorHttpError(res.status, await res.text())
+  }
+  return res.json()
+}
+
+/** `GET /engined/v1/engines/<id>/logs`, the engine's own stdout/stderr lines -- never a prompt or reply. */
+export async function fetchEngineLogs(
+  baseUrl: string,
+  id: string,
+  tail: number,
+  signal?: AbortSignal,
+): Promise<string[]> {
+  const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/logs?tail=${tail}`, { signal })
+  if (!res.ok) {
+    throw new DoorHttpError(res.status, await res.text())
+  }
+  const body = (await res.json()) as { lines?: string[] }
+  return body.lines ?? []
+}
+
+/** `GET /engined/v1/engines/<id>/resources`. `{error}` when the engine is not running -- returned as-is, not thrown, since "not running" is a normal answer here. */
+export async function fetchEngineResources(
+  baseUrl: string,
+  id: string,
+  signal?: AbortSignal,
+): Promise<Record<string, unknown>> {
+  const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/resources`, { signal })
+  if (!res.ok) {
+    throw new DoorHttpError(res.status, await res.text())
+  }
+  return (await res.json()) as Record<string, unknown>
+}
+
+/** `POST /engined/v1/engines/<id>/stop`. */
+export async function stopEngine(baseUrl: string, id: string, signal?: AbortSignal): Promise<void> {
+  await postJson(baseUrl, `/engined/v1/engines/${id}/stop`, {}, signal)
+}
+
 export interface StartRow {
   address: string
   engine: string

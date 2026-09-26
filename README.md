@@ -27,6 +27,10 @@ Four tools reach engined's image, vision and audio routes: `engined_generateImag
 
 `engined_search` (`#enginedSearch`) does semantic search over the open workspace via engined's embeddings route. It builds a chunk+vector index lazily on first use (workspace files, minus `files.exclude`/`search.exclude`, capped at `engined.search.maxChunks` chunks), keeps it current on save/create/delete, and, when an installed route serves `/openai/v1/rerank`, reranks its top candidates before returning `maxResults` snippets. Only a local (`egress: none`) embedding/rerank route is used unless `engined.search.allowRemote` is set.
 
+## Engines view
+
+An "engined" activity-bar container with an Engines tree: every engine `GET /engined/v1/engines` reports, with a state icon and, expanded, its resource usage. Item actions: show logs (a dedicated "engined: `<engine>` logs" output channel, truncated to the last 500 lines -- an engine's own log, never a prompt or reply), warm, hold, release hold, and stop (with a modal confirmation naming the engine). An `unavailable` engine shows its `fix` string as the tooltip, with a "Copy fix command" action. The tree refreshes on the same `GET /engined/v1/engines/events` stream as the model list.
+
 ## Inline completions
 
 Offers inline completions (ghost text) backed by engined's `POST /openai/v1/completions`, for whichever row `engined.defaultModels.completion` resolves to (or the first that serves the route, when unset). Debounced and abortable. When `engined.completions.neighbourContext` is on and the resolved row's egress is local, snippets from other open or recently active editors are sent alongside the prompt (capped, current document and configured exclusions dropped).

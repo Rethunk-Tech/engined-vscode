@@ -42,6 +42,8 @@ import {
   unholdEngine,
 } from './doorClient.ts'
 import { backoffMs, parseSseChunk } from './engineEvents.ts'
+import type { EngineTreeItem } from './engineExplorer.ts'
+import { copyFixCommand, EngineExplorer } from './engineExplorer.ts'
 import type { NeighbourCandidate } from './neighbourContext.ts'
 import { selectSnippets } from './neighbourContext.ts'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
@@ -80,6 +82,7 @@ const loggedUnusableReasons = new Map<ModelRole, string>()
 let output: vscode.OutputChannel
 let poller: ModelPoller
 let searchIndex: SearchIndex
+let engineExplorer: EngineExplorer
 let statusBarItem: vscode.StatusBarItem
 let pollTimer: ReturnType<typeof setInterval> | undefined
 let doorReachable = true
@@ -513,6 +516,7 @@ function scheduleSseRefresh(): void {
   sseRefreshTimer = setTimeout(() => {
     sseRefreshTimer = undefined
     void poller.pollNow()
+    void engineExplorer.refresh()
   }, SSE_REFRESH_DEBOUNCE_MS)
 }
 
@@ -1032,9 +1036,14 @@ export function activate(context: vscode.ExtensionContext): void {
   )
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
 
+  engineExplorer = new EngineExplorer(heldEngineIds, log)
+  void engineExplorer.refresh()
+
   context.subscriptions.push(
     output,
     statusBarItem,
+    engineExplorer,
+    vscode.window.registerTreeDataProvider('engined.engines', engineExplorer),
     vscode.lm.registerLanguageModelChatProvider('engined', chatProvider),
     vscode.languages.registerInlineCompletionItemProvider(
       { pattern: '**' },
@@ -1059,6 +1068,76 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.warmModel', () => warmModel()),
     vscode.commands.registerCommand('engined.holdModel', () => holdModel()),
     vscode.commands.registerCommand('engined.releaseHold', () => releaseHold()),
+    vscode.commands.registerCommand('engined.refreshEngines', () => engineExplorer.refresh()),
+    vscode.commands.registerCommand('engined.showEngineLogs', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return engineExplorer.showLogs(item.node.id)
+      }
+      return undefined
+    }),
+    vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return engineExplorer.stop(item.node.id)
+      }
+      return undefined
+    }),
+    vscode.commands.registerCommand('engined.warmEngine', async (item: EngineTreeItem) => {
+      if (item.kind !== 'engine') {
+        return
+      }
+      const row = poller.rows.find((r) => r.engine === item.node.id)
+      if (row === undefined) {
+        void vscode.window.showErrorMessage(
+          `engined: no known model route for engine "${item.node.id}"`,
+        )
+        return
+      }
+      try {
+        await startModel(getUrl(), row.id)
+      } catch (error) {
+        void vscode.window.showErrorMessage(
+          `engined: warm "${row.id}" failed: ${describeError(error)}`,
+        )
+      }
+      await poller.pollNow()
+      await engineExplorer.refresh()
+    }),
+    vscode.commands.registerCommand('engined.holdEngine', async (item: EngineTreeItem) => {
+      if (item.kind !== 'engine') {
+        return
+      }
+      try {
+        await holdEngine(getUrl(), item.node.id)
+        heldEngineIds.add(item.node.id)
+        renderStatusBar()
+      } catch (error) {
+        void vscode.window.showErrorMessage(
+          `engined: hold "${item.node.id}" failed: ${describeError(error)}`,
+        )
+      }
+      await engineExplorer.refresh()
+    }),
+    vscode.commands.registerCommand('engined.releaseHoldEngine', async (item: EngineTreeItem) => {
+      if (item.kind !== 'engine') {
+        return
+      }
+      try {
+        await unholdEngine(getUrl(), item.node.id)
+        heldEngineIds.delete(item.node.id)
+        renderStatusBar()
+      } catch (error) {
+        void vscode.window.showErrorMessage(
+          `engined: release hold "${item.node.id}" failed: ${describeError(error)}`,
+        )
+      }
+      await engineExplorer.refresh()
+    }),
+    vscode.commands.registerCommand('engined.copyFixCommand', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return copyFixCommand(item.node.fix)
+      }
+      return undefined
+    }),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('engined.pollSeconds')) {
         restartPollTimer()
