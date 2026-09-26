@@ -32,11 +32,16 @@ import { REASONING_LEVELS } from './door.ts'
 import {
   DoorHttpError,
   fetchModels,
+  holdEngine,
+  openEngineEventsStream,
   postChatCompletion,
   postForm,
   postJson,
   postJsonWithHeaders,
+  startModel,
+  unholdEngine,
 } from './doorClient.ts'
+import { backoffMs, parseSseChunk } from './engineEvents.ts'
 import type { NeighbourCandidate } from './neighbourContext.ts'
 import { selectSnippets } from './neighbourContext.ts'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
@@ -84,6 +89,17 @@ let inFlightChat: { modelId: string; startedAt: number; firstTokenAt?: number } 
 let loadingTimer: ReturnType<typeof setInterval> | undefined
 /** Most-recently-active documents this session, most recent first; excludes whichever is currently active. */
 const recentDocuments: vscode.TextDocument[] = []
+
+/** Engine ids this session has itself put on hold -- `GET /engined/v1/engines` reports no held-until field, so a hold placed elsewhere is invisible here. */
+const heldEngineIds = new Set<string>()
+let sseConnected = false
+let sseAbort: AbortController | undefined
+let sseAttempt = 0
+let sseReconnectTimer: ReturnType<typeof setTimeout> | undefined
+let sseRefreshTimer: ReturnType<typeof setTimeout> | undefined
+/** Poll interval floor while the events stream is up -- it is the fallback, not the primary signal, once frames are actually arriving. */
+const CONNECTED_POLL_FLOOR_SECONDS = 300
+const SSE_REFRESH_DEBOUNCE_MS = 500
 
 function log(line: string): void {
   output.appendLine(`[${new Date().toISOString()}] ${line}`)
@@ -449,6 +465,7 @@ function renderStatusBar(): void {
     lastCompletion: lastCompletionCall,
     doorUrl: getUrl(),
     modelCount: poller.models.length,
+    heldEngines: [...heldEngineIds],
   })
 }
 
@@ -467,22 +484,194 @@ function stopLoadingTimer(): void {
   inFlightChat = undefined
 }
 
+/** Effective poll period: the configured one, floored to 5 minutes while the events stream is delivering frames -- polling is then only the fallback. */
+function effectivePollMs(): number {
+  const seconds = getPollSeconds()
+  if (seconds <= 0) {
+    return 0
+  }
+  return (sseConnected ? Math.max(seconds, CONNECTED_POLL_FLOOR_SECONDS) : seconds) * 1000
+}
+
 function restartPollTimer(): void {
   if (pollTimer !== undefined) {
     clearInterval(pollTimer)
     pollTimer = undefined
   }
-  const seconds = getPollSeconds()
-  if (seconds > 0) {
-    pollTimer = setInterval(() => void poller.pollNow(), seconds * 1000)
+  const ms = effectivePollMs()
+  if (ms > 0) {
+    pollTimer = setInterval(() => void poller.pollNow(), ms)
   }
   void poller.pollNow()
+}
+
+/** Re-polls at most every `SSE_REFRESH_DEBOUNCE_MS` -- a burst of events (several engines changing at once) triggers one refetch, not one per frame. */
+function scheduleSseRefresh(): void {
+  if (sseRefreshTimer !== undefined) {
+    clearTimeout(sseRefreshTimer)
+  }
+  sseRefreshTimer = setTimeout(() => {
+    sseRefreshTimer = undefined
+    void poller.pollNow()
+  }, SSE_REFRESH_DEBOUNCE_MS)
+}
+
+function scheduleSseReconnect(): void {
+  if (sseReconnectTimer !== undefined) {
+    return
+  }
+  const delay = backoffMs(sseAttempt)
+  sseAttempt += 1
+  sseReconnectTimer = setTimeout(() => {
+    sseReconnectTimer = undefined
+    void connectEngineEvents()
+  }, delay)
+}
+
+/** Opens `GET /engined/v1/engines/events` and stays connected until it errors or the extension deactivates, reconnecting with backoff either way. */
+async function connectEngineEvents(): Promise<void> {
+  const controller = new AbortController()
+  sseAbort = controller
+  let stream: ReadableStream<Uint8Array>
+  try {
+    stream = await openEngineEventsStream(getUrl(), controller.signal)
+  } catch (error) {
+    if (!controller.signal.aborted) {
+      log(`engine events stream: ${describeError(error)}`)
+      scheduleSseReconnect()
+    }
+    return
+  }
+  sseConnected = true
+  sseAttempt = 0
+  restartPollTimer()
+  const reader = stream.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) {
+        break
+      }
+      buffer += decoder.decode(value, { stream: true })
+      const parsed = parseSseChunk(buffer)
+      buffer = parsed.rest
+      if (parsed.frames.length > 0) {
+        scheduleSseRefresh()
+      }
+    }
+  } catch (error) {
+    if (!controller.signal.aborted) {
+      log(`engine events stream error: ${describeError(error)}`)
+    }
+  }
+  sseConnected = false
+  restartPollTimer()
+  if (!controller.signal.aborted) {
+    scheduleSseReconnect()
+  }
+}
+
+function stopEngineEvents(): void {
+  sseAbort?.abort()
+  sseAbort = undefined
+  sseConnected = false
+  if (sseReconnectTimer !== undefined) {
+    clearTimeout(sseReconnectTimer)
+    sseReconnectTimer = undefined
+  }
+  if (sseRefreshTimer !== undefined) {
+    clearTimeout(sseRefreshTimer)
+    sseRefreshTimer = undefined
+  }
+}
+
+/** `engined: Warm Model`: pick any answerable row and `POST /engined/v1/start` it. */
+async function warmModel(): Promise<void> {
+  const pick = await vscode.window.showQuickPick(
+    poller.rows.map((row) => ({
+      label: row.display_name ?? row.id,
+      description: row.id,
+      id: row.id,
+    })),
+    { title: 'engined: Warm model' },
+  )
+  if (pick === undefined) {
+    return
+  }
+  try {
+    const rows = await startModel(getUrl(), pick.id)
+    log(
+      `warmed ${pick.id}: ${rows.map((r) => `${r.address}=${r.state}`).join(', ') || 'no routes'}`,
+    )
+  } catch (error) {
+    const message = `warm ${pick.id} failed: ${describeError(error)}`
+    log(message)
+    void vscode.window.showErrorMessage(`engined: ${message}`)
+  }
+  await poller.pollNow()
+}
+
+/** Every distinct engine id backing a currently-known row -- there is no separate engine picker in this unit, only the Engines view (later) reads `GET /engined/v1/engines` directly. */
+function knownEngineIds(): string[] {
+  const ids = new Set<string>()
+  for (const row of poller.rows) {
+    if (row.engine !== undefined) {
+      ids.add(row.engine)
+    }
+  }
+  return [...ids].sort()
+}
+
+/** `engined: Hold Model`: stop an engine and keep it stopped so another process can load the same weights. */
+async function holdModel(): Promise<void> {
+  const ids = knownEngineIds()
+  const id = await vscode.window.showQuickPick(ids, { title: 'engined: Hold engine' })
+  if (id === undefined) {
+    return
+  }
+  try {
+    await holdEngine(getUrl(), id)
+    heldEngineIds.add(id)
+    renderStatusBar()
+  } catch (error) {
+    void vscode.window.showErrorMessage(`engined: hold "${id}" failed: ${describeError(error)}`)
+  }
+  await poller.pollNow()
+}
+
+/** `engined: Release Hold`: only offers engines this session itself held. */
+async function releaseHold(): Promise<void> {
+  if (heldEngineIds.size === 0) {
+    void vscode.window.showInformationMessage('engined: no engines are held')
+    return
+  }
+  const id = await vscode.window.showQuickPick([...heldEngineIds].sort(), {
+    title: 'engined: Release hold',
+  })
+  if (id === undefined) {
+    return
+  }
+  try {
+    await unholdEngine(getUrl(), id)
+    heldEngineIds.delete(id)
+    renderStatusBar()
+  } catch (error) {
+    void vscode.window.showErrorMessage(
+      `engined: release hold "${id}" failed: ${describeError(error)}`,
+    )
+  }
+  await poller.pollNow()
 }
 
 async function showQuickPick(chatProvider: EnginedChatProvider): Promise<void> {
   const pick = await vscode.window.showQuickPick(
     [
       { label: 'Refresh models', action: 'refresh' as const },
+      { label: 'Warm model', action: 'warm' as const },
+      { label: 'Hold engine', action: 'hold' as const },
+      { label: 'Release hold', action: 'unhold' as const },
       { label: 'Set reasoning effort (global)', action: 'effort-global' as const },
       { label: 'Set reasoning effort for a model', action: 'effort-model' as const },
       { label: 'Choose default models', action: 'default-models' as const },
@@ -496,6 +685,12 @@ async function showQuickPick(chatProvider: EnginedChatProvider): Promise<void> {
   if (pick.action === 'refresh') {
     await poller.pollNow()
     chatProvider.fire()
+  } else if (pick.action === 'warm') {
+    await warmModel()
+  } else if (pick.action === 'hold') {
+    await holdModel()
+  } else if (pick.action === 'unhold') {
+    await releaseHold()
   } else if (pick.action === 'log') {
     output.show()
   } else if (pick.action === 'effort-global') {
@@ -861,17 +1056,27 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('engined.showQuickPick', () => showQuickPick(chatProvider)),
     vscode.commands.registerCommand('engined.chooseDefaultModels', () => chooseDefaultModels()),
+    vscode.commands.registerCommand('engined.warmModel', () => warmModel()),
+    vscode.commands.registerCommand('engined.holdModel', () => holdModel()),
+    vscode.commands.registerCommand('engined.releaseHold', () => releaseHold()),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration('engined.pollSeconds') || e.affectsConfiguration('engined.url')) {
+      if (e.affectsConfiguration('engined.pollSeconds')) {
         restartPollTimer()
+      }
+      if (e.affectsConfiguration('engined.url')) {
+        stopEngineEvents()
+        restartPollTimer()
+        void connectEngineEvents()
       }
     }),
     new vscode.Disposable(() => {
       if (pollTimer !== undefined) {
         clearInterval(pollTimer)
       }
+      stopEngineEvents()
     }),
   )
+  void connectEngineEvents()
 }
 
 export function deactivate(): void {
@@ -879,5 +1084,6 @@ export function deactivate(): void {
     clearInterval(pollTimer)
     pollTimer = undefined
   }
+  stopEngineEvents()
   stopLoadingTimer()
 }

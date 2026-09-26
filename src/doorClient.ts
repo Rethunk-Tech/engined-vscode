@@ -34,6 +34,62 @@ export async function fetchModels(baseUrl: string, signal?: AbortSignal): Promis
   return { chatModels: mapModels(body), rows: mapAnswerableRows(body) }
 }
 
+export interface StartRow {
+  address: string
+  engine: string
+  upstream: string | null
+  state: string
+  started: boolean
+  fix?: string
+}
+
+/** `POST /engined/v1/start`: starts (or reports) every route `model` resolves to. */
+export async function startModel(
+  baseUrl: string,
+  model: string,
+  signal?: AbortSignal,
+): Promise<StartRow[]> {
+  const data = (await postJson(baseUrl, '/engined/v1/start', { model }, signal)) as {
+    data?: StartRow[]
+  }
+  return data.data ?? []
+}
+
+/** `POST /engined/v1/engines/<id>/hold`, optionally for fewer than engined's own default seconds. */
+export async function holdEngine(
+  baseUrl: string,
+  id: string,
+  seconds?: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  const query = seconds === undefined ? '' : `?seconds=${seconds}`
+  await postJson(baseUrl, `/engined/v1/engines/${id}/hold${query}`, {}, signal)
+}
+
+/** `POST /engined/v1/engines/<id>/unhold`: ends a hold early. */
+export async function unholdEngine(
+  baseUrl: string,
+  id: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  await postJson(baseUrl, `/engined/v1/engines/${id}/unhold`, {}, signal)
+}
+
+/** `GET /engined/v1/engines/events`: the live SSE body, unparsed -- `engineEvents.ts` reads the frames out of it. */
+export async function openEngineEventsStream(
+  baseUrl: string,
+  signal: AbortSignal,
+): Promise<ReadableStream<Uint8Array>> {
+  const res = await fetch(`${baseUrl}/engined/v1/engines/events`, {
+    signal,
+    headers: { accept: 'text/event-stream' },
+  })
+  if (!res.ok || res.body === null) {
+    throw new DoorHttpError(res.status, await res.text())
+  }
+  return res.body
+}
+
 export interface DoorResponse<T> {
   data: T
   headers: Headers

@@ -33,7 +33,11 @@ Offers inline completions (ghost text) backed by engined's `POST /openai/v1/comp
 
 ## Status bar
 
-Shows the last chat call's answering route, local/remote egress, prompt/completion token counts, and wall time; a loading state while a request is in flight or its row is warming up; and whether the door is reachable. The last completion call updates the tooltip only, so ghost text doesn't flicker the status bar text. Click it for a quick pick: refresh models, set reasoning effort, choose default models, or show the log.
+Shows the last chat call's answering route, local/remote egress, prompt/completion token counts, and wall time; a loading state while a request is in flight or its row is warming up; and whether the door is reachable. The last completion call updates the tooltip only, so ghost text doesn't flicker the status bar text. Click it for a quick pick: refresh models, warm a model, hold/release an engine, set reasoning effort, choose default models, or show the log. Engines this session has held are listed in the tooltip.
+
+## Engine control
+
+`engined: Warm Model` resolves a model address (or chain name) through `POST /engined/v1/start`. `engined: Hold Model` and `engined: Release Hold` call an engine's `hold`/`unhold` verb, so another process can load the same weights without racing the door for the GPU. The model list, status bar and (see below) Engines view all refresh live off `GET /engined/v1/engines/events` -- a debounced re-poll on every frame, at most every 500ms -- rather than waiting for the next scheduled poll; the poll timer itself backs off to at most once every 5 minutes while the stream is connected, and resumes its configured interval if the stream drops (reconnecting with exponential backoff, 1s doubling to 60s).
 
 ## Settings
 

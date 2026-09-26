@@ -92,6 +92,8 @@ export interface TooltipInput {
   lastCompletion?: CallRecord
   doorUrl: string
   modelCount: number
+  /** Engines this session has itself put on hold -- see `AGENTS.md`'s Engines-view invariant for why nothing else can be known here. */
+  heldEngines?: readonly string[]
 }
 
 export function buildTooltip(input: TooltipInput): string {
@@ -104,6 +106,9 @@ export function buildTooltip(input: TooltipInput): string {
   }
   lines.push(`Door: ${input.doorUrl}`)
   lines.push(`${input.modelCount} model(s) available`)
+  if (input.heldEngines !== undefined && input.heldEngines.length > 0) {
+    lines.push(`Held: ${input.heldEngines.join(', ')}`)
+  }
   return lines.join('\n')
 }
 
