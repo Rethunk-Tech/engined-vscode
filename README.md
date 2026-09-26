@@ -5,7 +5,7 @@ A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/
 - Local chat models in Copilot's model picker, streamed through engined
 - Four agent tools: generate/edit images, OCR or describe an image, transcribe or translate audio, synthesize speech
 - Inline completions (ghost text), optionally with neighbouring-file context
-- Status bar shows what answered, on which route, at what cost, and a loading state
+- Status bar shows what answered, whether it ran locally, tokens used, and a loading state
 
 Requires **engined** running on the same machine or reached via VS Code Remote-SSH into the machine running it.
 
