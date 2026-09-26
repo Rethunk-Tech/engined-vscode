@@ -8,15 +8,20 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const models = JSON.parse(readFileSync(join(FIXTURES, 'models.json'), 'utf8'))
 
 describe('mapModels', () => {
-  test('keeps only installed chat-completions rows', () => {
+  test('keeps every answerable chat-completions row, running ones included', () => {
     const mapped = mapModels(models)
     expect(mapped.length).toBeGreaterThan(0)
     for (const m of mapped) {
       expect(m.row.serves).toContain('/openai/v1/chat/completions')
-      expect(m.row.state).toBe('installed')
+      expect(m.row.state).not.toBe('unavailable')
     }
-    // running llama routes are excluded: their state is "running", not "installed".
-    expect(mapped.some((m) => m.id === '@/llama/ornith')).toBe(false)
+    // A model in use reports `running`; dropping it made the selected model vanish mid-session.
+    expect(mapped.find((m) => m.id === '@/llama/ornith')?.row.state).toBe('running')
+    const unavailable = {
+      ...models.data.find((r: { id: string }) => r.id === '@/llama/ornith'),
+      state: 'unavailable',
+    }
+    expect(mapModels({ data: [unavailable] })).toEqual([])
   })
 
   test('falls back to id for display name and reports egress as detail', () => {

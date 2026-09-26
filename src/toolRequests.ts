@@ -9,7 +9,7 @@ import type { EnginedModelRow } from './door.ts'
 export class ToolRouteError extends Error {}
 
 function installedRows(rows: readonly EnginedModelRow[], serves: string): EnginedModelRow[] {
-  return rows.filter((r) => r.state === 'installed' && r.serves.includes(serves))
+  return rows.filter((r) => r.state !== 'unavailable' && r.serves.includes(serves))
 }
 
 /** The first installed row serving `serves`, or a `ToolRouteError` naming the missing route. */
