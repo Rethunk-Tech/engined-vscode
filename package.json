@@ -33,7 +33,7 @@
     "url": "https://github.com/Rethunk-Tech/engined-vscode/issues"
   },
   "homepage": "https://github.com/Rethunk-Tech/engined-vscode#readme",
-  "main": "./dist/extension.js",
+  "main": "./dist/extension.cjs",
   "activationEvents": [
     "onLanguageModelChatProvider:engined"
   ],
@@ -204,12 +204,13 @@
     ]
   },
   "scripts": {
-    "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --outfile dist/extension.js",
+    "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --outfile dist/extension.cjs && bun run smoke",
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test",
     "package": "bunx @vscode/vsce package --no-dependencies",
+    "smoke": "node scripts/smoke.cjs",
     "setup-hooks": "lefthook install",
     "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
   },

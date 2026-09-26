@@ -12,7 +12,7 @@ Build, package, and run this extension from source. Contributors: [CONTRIBUTING.
 
 ```bash
 bun install
-bun run build   # dist/extension.js
+bun run build   # dist/extension.cjs
 ```
 
 ## Test
