@@ -1,0 +1,13 @@
+.github/**
+src/**
+.editorconfig
+.gitignore
+biome.json
+lefthook.yml
+tsconfig.json
+bun.lock
+*.vsix
+CONTRIBUTING.md
+HUMANS.md
+AGENTS.md
+CLAUDE.md
