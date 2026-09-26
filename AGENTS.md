@@ -17,7 +17,12 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/pathGuard.ts` | The workspace-folder trust boundary every tool path crosses. No `vscode` import. |
 | `src/polling.ts` | `ModelPoller`: tracks both the chat-only model list and every answerable row; fires only on an actual change, empties after 3 consecutive failures. No `vscode` import. |
 | `src/doorClient.ts` | The only file that calls `fetch` against the door. No `vscode` import. |
-| `src/config.ts` | Reads/writes `engined.*` settings. The only file besides `extension.ts` that imports `vscode`. |
+| `src/search.ts` | Chunking a file into overlapping windows, cosine top-k, index-update planning (which files a refresh must touch), and folding a rerank reply back over the cosine order. No `vscode` import. |
+| `src/engineEvents.ts` | SSE frame parsing for `GET /engined/v1/engines/events` and the reconnect-backoff sequence. No `vscode` import. |
+| `src/engineTree.ts` | `GET /engined/v1/engines` JSON -> the plain tree-item rows the Engines view renders. No `vscode` import. |
+| `src/config.ts` | Reads/writes `engined.*` settings. Imports `vscode`. |
+| `src/searchIndex.ts` | The workspace-scanning/storage half of `engined_search`: finds candidate files, keeps the chunk+vector index in `context.storageUri`, calls `search.ts` for the pure logic. Imports `vscode`. |
+| `src/engineExplorer.ts` | The Engines `TreeDataProvider`, its commands (warm/hold/release/stop/logs/copy-fix), and the live-events subscription that refreshes it. Imports `vscode`. |
 | `src/extension.ts` | The adapter: registers the chat provider, tools, status bar, and log; converts real `vscode` values to/from the plain shapes above. Everything decision-shaped belongs in the files above, not here. |
 
 ## Invariants
@@ -29,6 +34,8 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 - A tool picks its route from `ModelPoller.rows` (every answerable row), never from `.models` (the chat-only subset) -- a comfy, TTS, or STT row never serves chat.
 - The "engined" output channel never logs request or response content — only poll failures, HTTP status + door error text, and state changes.
 - `reasoning_effort` is sent only when a row's `capabilities.reasoning` is non-empty, snapped to a level that row actually lists.
+- `engined_search` only embeds/reranks through a route whose `egress` is `none`, unless `engined.search.allowRemote` is set.
+- The Engines view's "held" flag tracks holds this session itself placed via `engined.holdEngine` -- `GET /engined/v1/engines` reports no held-until field, so a hold placed by another process is invisible until a start attempt hits its 409.
 
 ## Testing
 

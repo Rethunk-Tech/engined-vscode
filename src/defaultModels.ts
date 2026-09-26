@@ -8,7 +8,14 @@
 
 import type { EnginedModelRow } from './door.ts'
 
-export type ModelRole = 'image' | 'ocr' | 'vision' | 'completion' | 'speech' | 'transcription'
+export type ModelRole =
+  | 'image'
+  | 'ocr'
+  | 'vision'
+  | 'completion'
+  | 'speech'
+  | 'transcription'
+  | 'embedding'
 
 /** The door path each role needs. `image` also covers edits -- a caller building an edit passes that path explicitly. */
 export const ROLE_PATH: Record<ModelRole, string> = {
@@ -18,6 +25,7 @@ export const ROLE_PATH: Record<ModelRole, string> = {
   completion: '/openai/v1/completions',
   speech: '/openai/v1/audio/speech',
   transcription: '/openai/v1/audio/transcriptions',
+  embedding: '/openai/v1/embeddings',
 }
 
 function qualifies(row: EnginedModelRow, role: ModelRole, path: string): boolean {

@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Status bar shows the last chat call's answering route, egress, prompt/completion tokens and wall time, plus a loading state while a request is in flight or its row is warming up.
 - Inline completions send neighbouring-file context (`extra`) from other open/recently active editors to a local completions route, gated by `engined.completions.neighbourContext`.
 - `engined_generateImage` returns the generated image itself alongside the written-file path.
+- `engined_search`: semantic workspace search over a chunked, embedded index kept in workspace storage, incrementally updated on save/create/delete and reranked when an installed route serves `/openai/v1/rerank`. New settings `engined.defaultModels.embedding`, `engined.search.allowRemote`, `engined.search.maxChunks`.
 
 ### Fixed
 

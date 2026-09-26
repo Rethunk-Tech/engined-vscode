@@ -147,6 +147,34 @@
         }
       },
       {
+        "name": "engined_search",
+        "tags": [
+          "engined"
+        ],
+        "displayName": "Search Workspace (engined)",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "enginedSearch",
+        "userDescription": "Semantic search over this workspace via engined's local embeddings.",
+        "icon": "$(search)",
+        "modelDescription": "Semantic search over the open workspace's files via a local embeddings model, optionally reranked. Returns ranked snippets with their workspace-relative path and line range.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The search query."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of snippets to return. Defaults to 8."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      {
         "name": "engined_speak",
         "tags": [
           "engined"
@@ -249,6 +277,21 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Model id for `engined_transcribe` (needs `/openai/v1/audio/transcriptions`, and also used to translate when that row serves `/openai/v1/audio/translations`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.defaultModels.embedding": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_search` (needs `/openai/v1/embeddings`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
+        "engined.search.allowRemote": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow engined_search to embed/rerank through a non-local (egress != none) route. Off by default so workspace content never leaves the machine."
+        },
+        "engined.search.maxChunks": {
+          "type": "number",
+          "default": 20000,
+          "description": "Maximum number of chunks the search index will hold. Indexing stops (with a log message) once reached."
         }
       }
     },
@@ -260,8 +303,127 @@
       {
         "command": "engined.chooseDefaultModels",
         "title": "engined: Choose Default Models"
+      },
+      {
+        "command": "engined.warmModel",
+        "title": "engined: Warm Model"
+      },
+      {
+        "command": "engined.holdModel",
+        "title": "engined: Hold Model"
+      },
+      {
+        "command": "engined.releaseHold",
+        "title": "engined: Release Hold"
+      },
+      {
+        "command": "engined.showEngineLogs",
+        "title": "engined: Show Engine Logs",
+        "icon": "$(output)"
+      },
+      {
+        "command": "engined.stopEngine",
+        "title": "engined: Stop Engine",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "engined.warmEngine",
+        "title": "engined: Warm",
+        "icon": "$(flame)"
+      },
+      {
+        "command": "engined.holdEngine",
+        "title": "engined: Hold",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "engined.releaseHoldEngine",
+        "title": "engined: Release Hold",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "engined.copyFixCommand",
+        "title": "engined: Copy Fix Command"
+      },
+      {
+        "command": "engined.refreshEngines",
+        "title": "engined: Refresh Engines",
+        "icon": "$(refresh)"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "engined",
+          "title": "engined",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "engined": [
+        {
+          "id": "engined.engines",
+          "name": "Engines"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "engined.showEngineLogs",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "inline@1"
+        },
+        {
+          "command": "engined.warmEngine",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "inline@2"
+        },
+        {
+          "command": "engined.stopEngine",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "inline@3"
+        },
+        {
+          "command": "engined.showEngineLogs",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "engined@1"
+        },
+        {
+          "command": "engined.warmEngine",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "engined@2"
+        },
+        {
+          "command": "engined.holdEngine",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "engined@3"
+        },
+        {
+          "command": "engined.releaseHoldEngine",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "engined@4"
+        },
+        {
+          "command": "engined.stopEngine",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "engined@5"
+        },
+        {
+          "command": "engined.copyFixCommand",
+          "when": "view == engined.engines && viewItem == engine-unavailable",
+          "group": "engined@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "engined.refreshEngines",
+          "when": "view == engined.engines",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --outfile dist/extension.cjs && bun run smoke",

@@ -3,7 +3,7 @@
 A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/engined), a local inference door.
 
 - Local chat models in Copilot's model picker, streamed through engined
-- Four agent tools: generate/edit images, OCR or describe an image, transcribe or translate audio, synthesize speech
+- Five agent tools: generate/edit images, OCR or describe an image, transcribe or translate audio, synthesize speech, semantic workspace search
 - Inline completions (ghost text), optionally with neighbouring-file context
 - Status bar shows what answered, whether it ran locally, tokens used, and a loading state
 
@@ -22,6 +22,10 @@ Registers an `engined` chat provider (`vendor: "engined"`) backed by engined's `
 ## Agent tools
 
 Four tools reach engined's image, vision and audio routes: `engined_generateImage`, `engined_readImage`, `engined_transcribe`, `engined_speak`. They work under any chat model in the picker, not only engined's own -- the tool itself always runs against engined's local door, but its result goes back to whichever model is running the conversation. Each confirms the route it will use and warns when content will leave the machine. Full parameters and route-selection details: [docs/tools.md](docs/tools.md).
+
+## Search
+
+`engined_search` (`#enginedSearch`) does semantic search over the open workspace via engined's embeddings route. It builds a chunk+vector index lazily on first use (workspace files, minus `files.exclude`/`search.exclude`, capped at `engined.search.maxChunks` chunks), keeps it current on save/create/delete, and, when an installed route serves `/openai/v1/rerank`, reranks its top candidates before returning `maxResults` snippets. Only a local (`egress: none`) embedding/rerank route is used unless `engined.search.allowRemote` is set.
 
 ## Inline completions
 
@@ -47,6 +51,9 @@ Shows the last chat call's answering route, local/remote egress, prompt/completi
 | `engined.defaultModels.completion` | `""` | Model id for inline completions. Empty is automatic. |
 | `engined.defaultModels.speech` | `""` | Model id for `engined_speak`. Empty is automatic. |
 | `engined.defaultModels.transcription` | `""` | Model id for `engined_transcribe`. Empty is automatic. |
+| `engined.defaultModels.embedding` | `""` | Model id for `engined_search`. Empty is automatic. |
+| `engined.search.allowRemote` | `false` | Allow `engined_search` to embed/rerank through a non-local route. |
+| `engined.search.maxChunks` | `20000` | Cap on the search index's chunk count. |
 
 Run **engined: Choose Default Models** (also in the status bar's quick pick) to set any of the `defaultModels.*` settings from a list of the rows that currently qualify. A configured id that stops qualifying falls back to automatic and logs one line to the "engined" output channel.
 

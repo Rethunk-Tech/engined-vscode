@@ -1,0 +1,1764 @@
+{
+    "contract": 6,
+    "commit": "74c55a4b716be9dd89c5734b7bfa150c8a34e128",
+    "engines": [
+        {
+            "id": "llama",
+            "kind": "openai-http",
+            "serves": [
+                "/openai/v1/chat/completions",
+                "/openai/v1/embeddings",
+                "/openai/v1/rerank",
+                "/openai/v1/completions"
+            ],
+            "streaming": true,
+            "capabilities": [
+                {
+                    "model": "ornith",
+                    "serves": [
+                        "/openai/v1/chat/completions",
+                        "/openai/v1/completions"
+                    ],
+                    "role": "chat",
+                    "input": [
+                        "text"
+                    ],
+                    "output": [
+                        "text"
+                    ]
+                },
+                {
+                    "model": "embed",
+                    "serves": [
+                        "/openai/v1/embeddings"
+                    ],
+                    "role": "embedding"
+                },
+                {
+                    "model": "vision",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ],
+                    "role": "vision",
+                    "vision": "describe",
+                    "input": [
+                        "text",
+                        "image"
+                    ],
+                    "output": [
+                        "text"
+                    ]
+                },
+                {
+                    "model": "ocr",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ],
+                    "role": "vision",
+                    "vision": "read",
+                    "input": [
+                        "text",
+                        "image"
+                    ],
+                    "output": [
+                        "text"
+                    ]
+                }
+            ],
+            "state": "installed"
+        },
+        {
+            "id": "claude",
+            "kind": "agentic-cli",
+            "serves": [
+                "/openai/v1/chat/completions"
+            ],
+            "streaming": true,
+            "capabilities": [
+                {
+                    "model": "opus-5-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "fable-5-1",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "sonnet-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ],
+                    "input": [
+                        "text",
+                        "image"
+                    ],
+                    "output": [
+                        "text"
+                    ],
+                    "context_in": 200000,
+                    "context_out": 64000,
+                    "reasoning": [
+                        "none",
+                        "low",
+                        "high"
+                    ]
+                },
+                {
+                    "model": "haiku-4-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "fable-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "opus-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "opus-4-8",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "opus-4-7",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "opus-4-6",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "opus-4-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "sonnet-4-6",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "sonnet-4-5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                }
+            ],
+            "state": "installed"
+        },
+        {
+            "id": "opencode",
+            "kind": "agentic-cli",
+            "serves": [
+                "/openai/v1/chat/completions"
+            ],
+            "streaming": true,
+            "capabilities": [
+                {
+                    "model": "ornith",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                }
+            ],
+            "state": "installed"
+        },
+        {
+            "id": "cursor",
+            "kind": "agentic-cli",
+            "serves": [
+                "/openai/v1/chat/completions"
+            ],
+            "streaming": true,
+            "capabilities": [
+                {
+                    "model": "auto",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.3-codex-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "composer-2.5",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-thinking-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-thinking-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.5-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.5-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.7-flash-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-thinking-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-thinking-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "grok-4.7-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.6-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "composer-2.5-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-5-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-5-thinking-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-8-thinking-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-none",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-none-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-sol-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-none",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-none-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-extra-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.5-extra-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-thinking-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-thinking-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-thinking-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-thinking-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-1-thinking-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-thinking-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-thinking-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-fable-5-thinking-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.5-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.5-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.5-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "cursor-grok-4.5-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.8-flash-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.8-flash-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.8-flash-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.7-flash-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.7-flash-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "muse-spark-1.3-minimal",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "muse-spark-1.3-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "muse-spark-1.3-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "muse-spark-1.3-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "muse-spark-1.3-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "muse-spark-1.3-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-none",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-none-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-terra-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-thinking-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-thinking-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-sonnet-5-thinking-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.6-sonnet-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.6-sonnet-medium-thinking",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-opus-4-7-thinking-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.6-opus-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.6-opus-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.6-opus-high-thinking",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.6-opus-max-thinking",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.5-opus-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.5-opus-high-thinking",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.2-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-none",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-none-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-low-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-medium-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-high-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-xhigh-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.6-luna-max-fast",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.6-flash-minimal",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.6-flash-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.6-flash-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.6-flash-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.1-pro",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-mini-none",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-mini-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-mini-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-mini-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-mini-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-nano-none",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-nano-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-nano-medium",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-nano-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.4-nano-xhigh",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.5-sonnet",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4.5-sonnet-thinking",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.1-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.1",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5.1-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3-flash",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gemini-3.5-flash",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4-sonnet",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "claude-4-sonnet-thinking",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "gpt-5-mini",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "kimi-k3-low",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "kimi-k3-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "kimi-k3-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "kimi-k2.7-code",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "glm-5.2-high",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                },
+                {
+                    "model": "glm-5.2-max",
+                    "serves": [
+                        "/openai/v1/chat/completions"
+                    ]
+                }
+            ],
+            "state": "installed"
+        },
+        {
+            "id": "chatterbox-multi",
+            "kind": "tts",
+            "serves": [
+                "/openai/v1/audio/speech"
+            ],
+            "streaming": true,
+            "state": "installed"
+        },
+        {
+            "id": "chatterbox-en",
+            "kind": "tts",
+            "serves": [
+                "/openai/v1/audio/speech"
+            ],
+            "streaming": true,
+            "state": "installed"
+        },
+        {
+            "id": "kokoro",
+            "kind": "tts",
+            "serves": [
+                "/openai/v1/audio/speech"
+            ],
+            "streaming": true,
+            "state": "installed"
+        },
+        {
+            "id": "piper",
+            "kind": "tts",
+            "serves": [
+                "/openai/v1/audio/speech"
+            ],
+            "streaming": true,
+            "state": "installed"
+        },
+        {
+            "id": "whisper",
+            "kind": "stt",
+            "serves": [
+                "/openai/v1/audio/transcriptions",
+                "/openai/v1/audio/translations"
+            ],
+            "streaming": true,
+            "capabilities": [
+                {
+                    "model": "medium.en",
+                    "serves": [
+                        "/openai/v1/audio/transcriptions"
+                    ]
+                },
+                {
+                    "model": "small.en",
+                    "serves": [
+                        "/openai/v1/audio/transcriptions"
+                    ]
+                },
+                {
+                    "model": "large-v3-turbo",
+                    "serves": [
+                        "/openai/v1/audio/transcriptions",
+                        "/openai/v1/audio/translations"
+                    ]
+                }
+            ],
+            "state": "installed"
+        },
+        {
+            "id": "elevenlabs",
+            "kind": "stt",
+            "serves": [
+                "/openai/v1/audio/transcriptions"
+            ],
+            "streaming": false,
+            "state": "unavailable",
+            "disabled": true,
+            "fix": "set \"disable = false\" on engine \"elevenlabs\" in config.toml"
+        },
+        {
+            "id": "comfy",
+            "kind": "comfy",
+            "serves": [
+                "/openai/v1/images/generations",
+                "/openai/v1/images/edits",
+                "/engined/v1/comfy/:engine/:upstream/object_info/:nodeType",
+                "/engined/v1/comfy/:engine/:upstream/prompt",
+                "/engined/v1/comfy/:engine/:upstream/upload/image",
+                "/engined/v1/comfy/:engine/:upstream/view",
+                "/engined/v1/comfy/:engine/:upstream/ws",
+                "/engined/v1/comfy/:engine/:upstream/history/:promptId",
+                "/engined/v1/comfy/:engine/:upstream/queue",
+                "/engined/v1/comfy/:engine/:upstream/system_stats"
+            ],
+            "streaming": false,
+            "state": "installed"
+        },
+        {
+            "id": "openai",
+            "kind": "openai-http",
+            "serves": [
+                "/openai/v1/chat/completions",
+                "/openai/v1/embeddings",
+                "/openai/v1/rerank"
+            ],
+            "streaming": false,
+            "state": "unavailable",
+            "disabled": true,
+            "fix": "set \"disable = false\" on engine \"openai\" in config.toml"
+        },
+        {
+            "id": "openrouter",
+            "kind": "openai-http",
+            "serves": [
+                "/openai/v1/chat/completions",
+                "/openai/v1/embeddings",
+                "/openai/v1/rerank"
+            ],
+            "streaming": false,
+            "state": "unavailable",
+            "disabled": true,
+            "fix": "set \"disable = false\" on engine \"openrouter\" in config.toml"
+        }
+    ]
+}

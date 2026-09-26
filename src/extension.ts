@@ -47,6 +47,7 @@ import {
   estimateMessageTokenCount,
   estimateTokenCount,
 } from './requestBuilder.ts'
+import { SearchIndex } from './searchIndex.ts'
 import type { CallRecord } from './status.ts'
 import {
   buildTooltip,
@@ -73,6 +74,7 @@ const loggedUnusableReasons = new Map<ModelRole, string>()
 
 let output: vscode.OutputChannel
 let poller: ModelPoller
+let searchIndex: SearchIndex
 let statusBarItem: vscode.StatusBarItem
 let pollTimer: ReturnType<typeof setInterval> | undefined
 let doorReachable = true
@@ -772,6 +774,35 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
   },
 }
 
+interface SearchInput {
+  query: string
+  maxResults?: number
+}
+
+const DEFAULT_SEARCH_MAX_RESULTS = 8
+
+const searchTool: vscode.LanguageModelTool<SearchInput> = {
+  async invoke(options) {
+    try {
+      const hits = await searchIndex.search(
+        options.input.query,
+        options.input.maxResults ?? DEFAULT_SEARCH_MAX_RESULTS,
+      )
+      if (hits.length === 0) {
+        return new vscode.LanguageModelToolResult([
+          new vscode.LanguageModelTextPart('No matching results.'),
+        ])
+      }
+      const text = hits
+        .map((h) => `${h.path}:${h.startLine}-${h.endLine}\n${h.text}`)
+        .join('\n\n---\n\n')
+      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
+    } catch (error) {
+      return toolError(error)
+    }
+  },
+}
+
 // --- activation ---------------------------------------------------------
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -799,6 +830,13 @@ export function activate(context: vscode.ExtensionContext): void {
     trackActiveEditor(vscode.window.activeTextEditor)
   }
 
+  searchIndex = new SearchIndex(
+    context.storageUri ?? context.globalStorageUri,
+    () => poller.rows,
+    log,
+  )
+  const watcher = vscode.workspace.createFileSystemWatcher('**/*')
+
   context.subscriptions.push(
     output,
     statusBarItem,
@@ -812,6 +850,11 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.lm.registerTool('engined_readImage', readImageTool),
     vscode.lm.registerTool('engined_transcribe', transcribeTool),
     vscode.lm.registerTool('engined_speak', speakTool),
+    vscode.lm.registerTool('engined_search', searchTool),
+    watcher,
+    watcher.onDidChange((uri) => void searchIndex.onFileChanged(uri, 'change')),
+    watcher.onDidCreate((uri) => void searchIndex.onFileChanged(uri, 'create')),
+    watcher.onDidDelete((uri) => void searchIndex.onFileChanged(uri, 'delete')),
     vscode.commands.registerCommand('engined.refreshModels', async () => {
       await poller.pollNow()
       chatProvider.fire()

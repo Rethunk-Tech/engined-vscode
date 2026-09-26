@@ -50,6 +50,17 @@ export function getNeighbourContextEnabled(): boolean {
   return config().get<boolean>('completions.neighbourContext', true)
 }
 
+export const DEFAULT_SEARCH_MAX_CHUNKS = 20000
+
+/** Whether `engined_search` may embed/rerank through a non-local route. Off by default -- workspace content otherwise never leaves the machine. */
+export function getSearchAllowRemote(): boolean {
+  return config().get<boolean>('search.allowRemote', false)
+}
+
+export function getSearchMaxChunks(): number {
+  return config().get<number>('search.maxChunks', DEFAULT_SEARCH_MAX_CHUNKS)
+}
+
 /** Empty string means "automatic" -- see `defaultModels.ts` `resolveDefaultModel`. */
 export function getDefaultModel(role: ModelRole): string {
   return config().get<string>(`defaultModels.${role}`, '')

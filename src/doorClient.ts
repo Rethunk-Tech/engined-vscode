@@ -89,6 +89,50 @@ export async function postJson(
   return (await postJsonWithHeaders(baseUrl, path, body, signal)).data
 }
 
+/** `POST /openai/v1/embeddings`, unwrapped to one vector per input string, in `input`'s own order. */
+export async function postEmbeddings(
+  baseUrl: string,
+  model: string,
+  input: readonly string[],
+  signal?: AbortSignal,
+): Promise<(number[] | undefined)[]> {
+  if (input.length === 0) {
+    return []
+  }
+  const data = (await postJson(baseUrl, '/openai/v1/embeddings', { model, input }, signal)) as {
+    data?: { embedding: number[]; index: number }[]
+  }
+  const vectors: (number[] | undefined)[] = new Array(input.length).fill(undefined)
+  for (const row of data.data ?? []) {
+    if (row.index >= 0 && row.index < vectors.length) {
+      vectors[row.index] = row.embedding
+    }
+  }
+  return vectors
+}
+
+export interface RerankResult {
+  index: number
+  score?: number
+}
+
+/** `POST /openai/v1/rerank`: a query against a document list, scored and ordered by the reranker's own reply. */
+export async function postRerank(
+  baseUrl: string,
+  model: string,
+  query: string,
+  documents: readonly string[],
+  signal?: AbortSignal,
+): Promise<RerankResult[]> {
+  const data = (await postJson(
+    baseUrl,
+    '/openai/v1/rerank',
+    { model, query, documents },
+    signal,
+  )) as { results?: RerankResult[] }
+  return data.results ?? []
+}
+
 /** A multipart POST -- image edit, transcription. */
 export async function postForm(baseUrl: string, path: string, form: FormData): Promise<unknown> {
   const res = await fetch(`${baseUrl}${path}`, { method: 'POST', body: form })
