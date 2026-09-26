@@ -193,6 +193,16 @@
           "type": "object",
           "default": {},
           "description": "Per-model override of engined.reasoningEffort, keyed by model id."
+        },
+        "engined.completions.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer inline completions (ghost text) via engined's /openai/v1/completions."
+        },
+        "engined.completions.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model id to use for inline completions. Empty uses the first polled model that serves /openai/v1/completions."
         }
       }
     },

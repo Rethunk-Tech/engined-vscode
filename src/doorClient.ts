@@ -47,12 +47,18 @@ export async function postChatCompletion(
   return res.body
 }
 
-/** A JSON POST against an arbitrary door path -- image generation/edit request, speech request. */
-export async function postJson(baseUrl: string, path: string, body: unknown): Promise<unknown> {
+/** A JSON POST against an arbitrary door path -- image generation/edit request, speech request, completions request. */
+export async function postJson(
+  baseUrl: string,
+  path: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<unknown> {
   const res = await fetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
+    signal,
   })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())

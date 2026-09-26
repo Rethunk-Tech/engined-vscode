@@ -8,6 +8,7 @@ A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/
 - Polls the model list on a timer and refreshes VS Code's picker only when it actually changes.
 - Forwards tool calls and images to models that support them, and snaps a reasoning-effort setting to whatever level each model actually lists.
 - Adds four chat tools that generate/edit images, OCR or describe an image, transcribe or translate audio, and synthesize speech — each confirms the route it will use and warns when content will leave the machine.
+- Offers inline completions (ghost text) backed by engined's `POST /openai/v1/completions`, for whichever polled model advertises that route.
 - A status bar item shows whether the door is reachable and how many models it offers; click it for a quick pick of common actions.
 
 ## Requirements
@@ -23,6 +24,8 @@ A VS Code language model provider for [engined](https://github.com/Rethunk-Tech/
 | `engined.pollSeconds` | `30` | How often to re-poll the model list. `0` disables polling (use the `engined: Refresh Models` command instead). |
 | `engined.reasoningEffort` | `medium` | Default reasoning effort (`none`/`minimal`/`low`/`medium`/`high`/`xhigh`/`max`) for models that support it. |
 | `engined.reasoningEffortByModel` | `{}` | Per-model override, keyed by model id (e.g. `"@/claude/sonnet-5": "high"`). |
+| `engined.completions.enabled` | `true` | Offer inline completions (ghost text). |
+| `engined.completions.model` | `""` | Model id for inline completions. Empty uses the first polled model that serves `/openai/v1/completions`. |
 
 ## Tools
 

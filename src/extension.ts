@@ -8,6 +8,15 @@
 import * as vscode from 'vscode'
 import { readChatStream } from './chatStream.ts'
 import {
+  buildCompletionsRequestBody,
+  COMPLETIONS_PATH,
+  extractCompletionText,
+  pickCompletionsModel,
+  sliceContext,
+} from './completions.ts'
+import {
+  getCompletionsEnabled,
+  getCompletionsModel,
   getPollSeconds,
   getReasoningEffort,
   getReasoningEffortByModel,
@@ -160,6 +169,59 @@ function describeError(error: unknown): string {
 
 function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
+}
+
+// --- inline completions (ghost text) ---------------------------------------
+
+const COMPLETIONS_DEBOUNCE_MS = 250
+
+function delay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms)
+    signal.addEventListener('abort', () => {
+      clearTimeout(timer)
+      resolve()
+    })
+  })
+}
+
+class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProvider {
+  async provideInlineCompletionItems(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    _context: vscode.InlineCompletionContext,
+    token: vscode.CancellationToken,
+  ): Promise<vscode.InlineCompletionItem[] | undefined> {
+    if (!getCompletionsEnabled()) {
+      return undefined
+    }
+    if (vscode.window.activeTextEditor?.selection.isEmpty === false) {
+      return undefined
+    }
+    const model = pickCompletionsModel(poller.models, getCompletionsModel())
+    if (model === undefined) {
+      return undefined
+    }
+    const controller = new AbortController()
+    token.onCancellationRequested(() => controller.abort())
+    await delay(COMPLETIONS_DEBOUNCE_MS, controller.signal)
+    if (token.isCancellationRequested) {
+      return undefined
+    }
+    const { prefix, suffix } = sliceContext(document.getText(), document.offsetAt(position))
+    const body = buildCompletionsRequestBody(model.id, prefix, suffix)
+    let reply: unknown
+    try {
+      reply = await postJson(getUrl(), COMPLETIONS_PATH, body, controller.signal)
+    } catch (error) {
+      if (!token.isCancellationRequested) {
+        log(`completion failed for ${model.id}: ${describeError(error)}`)
+      }
+      return undefined
+    }
+    const text = extractCompletionText(reply)
+    return text === undefined ? undefined : [new vscode.InlineCompletionItem(text)]
+  }
 }
 
 // --- polling and status bar ------------------------------------------------
@@ -475,6 +537,10 @@ export function activate(context: vscode.ExtensionContext): void {
     output,
     statusBarItem,
     vscode.lm.registerLanguageModelChatProvider('engined', chatProvider),
+    vscode.languages.registerInlineCompletionItemProvider(
+      { pattern: '**' },
+      new EnginedInlineCompletionProvider(),
+    ),
     vscode.lm.registerTool('engined_generateImage', generateImageTool),
     vscode.lm.registerTool('engined_readImage', readImageTool),
     vscode.lm.registerTool('engined_transcribe', transcribeTool),

@@ -41,6 +41,15 @@ export function getReasoningEffortByModel(): Record<string, ReasoningLevel> {
   return out
 }
 
+export function getCompletionsEnabled(): boolean {
+  return config().get<boolean>('completions.enabled', true)
+}
+
+/** Empty string means "use the first answerable row"; see `completions.ts` `pickCompletionsModel`. */
+export function getCompletionsModel(): string {
+  return config().get<string>('completions.model', '')
+}
+
 export async function setReasoningEffort(level: ReasoningLevel, modelId?: string): Promise<void> {
   if (modelId === undefined) {
     await config().update('reasoningEffort', level, vscode.ConfigurationTarget.Global)
