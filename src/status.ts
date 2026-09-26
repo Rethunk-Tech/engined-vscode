@@ -94,6 +94,8 @@ export interface TooltipInput {
   modelCount: number
   /** Engines this session has itself put on hold -- see `AGENTS.md`'s Engines-view invariant for why nothing else can be known here. */
   heldEngines?: readonly string[]
+  /** `engined.useForAllChatFeatures` is in effect and `engined.restoreChatSettings` can undo it. */
+  chatSettingsRouted?: boolean
 }
 
 export function buildTooltip(input: TooltipInput): string {
@@ -108,6 +110,9 @@ export function buildTooltip(input: TooltipInput): string {
   lines.push(`${input.modelCount} model(s) available`)
   if (input.heldEngines !== undefined && input.heldEngines.length > 0) {
     lines.push(`Held: ${input.heldEngines.join(', ')}`)
+  }
+  if (input.chatSettingsRouted === true) {
+    lines.push('Chat features routed to engined')
   }
   return lines.join('\n')
 }

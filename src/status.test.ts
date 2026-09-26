@@ -123,6 +123,11 @@ describe('buildTooltip', () => {
     )
   })
 
+  test('says when chat features are routed to engined', () => {
+    const tooltip = buildTooltip({ doorUrl: 'http://x', modelCount: 0, chatSettingsRouted: true })
+    expect(tooltip.split('\n').at(-1)).toBe('Chat features routed to engined')
+  })
+
   test('omits chat/completion lines when there is no call yet', () => {
     expect(buildTooltip({ doorUrl: 'http://x', modelCount: 0 })).toBe(
       ['Door: http://x', '0 model(s) available'].join('\n'),

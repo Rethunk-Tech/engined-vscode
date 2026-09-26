@@ -6,6 +6,8 @@
  */
 
 import * as vscode from 'vscode'
+import type { SavedSetting, SettingWrite } from './chatSettingsPlan.ts'
+import { buildChatSettingsPlan, buildRestorePlan, describePlan } from './chatSettingsPlan.ts'
 import { readChatStream } from './chatStream.ts'
 import {
   buildCompletionsRequestBody,
@@ -79,6 +81,7 @@ const RECENT_DOCUMENTS_CAP = 10
 /** Every setting a saved defaultModel reason was logged for, so a repeated request logs it once per change rather than once per call. */
 const loggedUnusableReasons = new Map<ModelRole, string>()
 
+let extensionContext: vscode.ExtensionContext
 let output: vscode.OutputChannel
 let poller: ModelPoller
 let searchIndex: SearchIndex
@@ -469,7 +472,76 @@ function renderStatusBar(): void {
     doorUrl: getUrl(),
     modelCount: poller.models.length,
     heldEngines: [...heldEngineIds],
+    chatSettingsRouted: savedChatSettings() !== undefined,
   })
+}
+
+const SAVED_CHAT_SETTINGS_KEY = 'engined.savedChatSettings'
+const CHAT_SETTINGS_ROUTED_CONTEXT = 'engined.chatSettingsRouted'
+
+function savedChatSettings(): SavedSetting[] | undefined {
+  return extensionContext.globalState.get<SavedSetting[]>(SAVED_CHAT_SETTINGS_KEY)
+}
+
+async function writeUserSettings(writes: readonly SettingWrite[]): Promise<void> {
+  const config = vscode.workspace.getConfiguration()
+  for (const w of writes) {
+    await config.update(w.key, w.value, vscode.ConfigurationTarget.Global)
+  }
+}
+
+async function useForAllChatFeatures(): Promise<void> {
+  if (savedChatSettings() !== undefined) {
+    void vscode.window.showInformationMessage(
+      'Chat features already route to engined. Run "engined: Restore Previous Chat Settings" first to switch models.',
+    )
+    return
+  }
+  const candidates = [...poller.models].sort(
+    (a, b) =>
+      Number(b.row.egress === 'local' && b.row.tools) -
+      Number(a.row.egress === 'local' && a.row.tools),
+  )
+  const pick = await vscode.window.showQuickPick(
+    candidates.map((m) => ({
+      label: m.name,
+      description: `${m.id} · ${m.row.egress ?? ''}`,
+      model: m,
+    })),
+    { title: 'Route every chat default to which engined model?' },
+  )
+  if (pick === undefined) {
+    return
+  }
+  const config = vscode.workspace.getConfiguration()
+  // A key whose extension isn't installed (e.g. Copilot's) is unregistered and can't be written.
+  const plan = buildChatSettingsPlan(pick.model).filter((w) => config.inspect(w.key) !== undefined)
+  const confirmed = await vscode.window.showWarningMessage(
+    'Write these user settings? Your current values are saved and "engined: Restore Previous Chat Settings" puts them back.',
+    { modal: true, detail: describePlan(plan) },
+    'Write settings',
+  )
+  if (confirmed !== 'Write settings') {
+    return
+  }
+  const saved = plan.map((w) => ({ key: w.key, previous: config.inspect(w.key)?.globalValue }))
+  await extensionContext.globalState.update(SAVED_CHAT_SETTINGS_KEY, saved)
+  await writeUserSettings(plan)
+  await vscode.commands.executeCommand('setContext', CHAT_SETTINGS_ROUTED_CONTEXT, true)
+  log(`routed ${plan.length} chat settings to ${pick.model.id}`)
+  renderStatusBar()
+}
+
+async function restoreChatSettings(): Promise<void> {
+  const saved = savedChatSettings()
+  if (saved === undefined) {
+    return
+  }
+  await writeUserSettings(buildRestorePlan(saved))
+  await extensionContext.globalState.update(SAVED_CHAT_SETTINGS_KEY, undefined)
+  await vscode.commands.executeCommand('setContext', CHAT_SETTINGS_ROUTED_CONTEXT, false)
+  log(`restored ${saved.length} chat settings`)
+  renderStatusBar()
 }
 
 function startLoadingTimer(): void {
@@ -1012,6 +1084,12 @@ const searchTool: vscode.LanguageModelTool<SearchInput> = {
 // --- activation ---------------------------------------------------------
 
 export function activate(context: vscode.ExtensionContext): void {
+  extensionContext = context
+  void vscode.commands.executeCommand(
+    'setContext',
+    CHAT_SETTINGS_ROUTED_CONTEXT,
+    savedChatSettings() !== undefined,
+  )
   output = vscode.window.createOutputChannel('engined')
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
   statusBarItem.command = 'engined.showQuickPick'
@@ -1073,6 +1151,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.showQuickPick', () => showQuickPick(chatProvider)),
     vscode.commands.registerCommand('engined.chooseDefaultModels', () => chooseDefaultModels()),
     vscode.commands.registerCommand('engined.warmModel', () => warmModel()),
+    vscode.commands.registerCommand('engined.useForAllChatFeatures', () => useForAllChatFeatures()),
+    vscode.commands.registerCommand('engined.restoreChatSettings', () => restoreChatSettings()),
     vscode.commands.registerCommand('engined.holdModel', () => holdModel()),
     vscode.commands.registerCommand('engined.releaseHold', () => releaseHold()),
     vscode.commands.registerCommand('engined.refreshEngines', () => engineExplorer.refresh()),

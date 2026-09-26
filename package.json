@@ -349,6 +349,14 @@
         "command": "engined.refreshEngines",
         "title": "engined: Refresh Engines",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "engined.useForAllChatFeatures",
+        "title": "engined: Use engined for All Chat Features"
+      },
+      {
+        "command": "engined.restoreChatSettings",
+        "title": "engined: Restore Previous Chat Settings"
       }
     ],
     "viewsContainers": {
@@ -421,6 +429,12 @@
           "command": "engined.refreshEngines",
           "when": "view == engined.engines",
           "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "engined.restoreChatSettings",
+          "when": "engined.chatSettingsRouted"
         }
       ]
     }
