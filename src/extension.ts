@@ -766,9 +766,10 @@ async function readWorkspaceFile(path: string): Promise<Uint8Array> {
   return vscode.workspace.fs.readFile(vscode.Uri.file(resolved))
 }
 
-async function writeWorkspaceFile(path: string, data: Uint8Array): Promise<void> {
-  const resolved = resolveWorkspacePath(workspaceRoots(), path)
-  await vscode.workspace.fs.writeFile(vscode.Uri.file(resolved), data)
+async function writeWorkspaceFile(path: string, data: Uint8Array): Promise<vscode.Uri> {
+  const uri = vscode.Uri.file(resolveWorkspacePath(workspaceRoots(), path))
+  await vscode.workspace.fs.writeFile(uri, data)
+  return uri
 }
 
 function mimeTypeFor(path: string): string {
@@ -825,11 +826,17 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
       if (png === undefined) {
         throw new Error('engined returned no image data')
       }
-      const bytes = Buffer.from(png, 'base64')
-      await writeWorkspaceFile(options.input.outputPath, bytes)
+      const uri = await writeWorkspaceFile(options.input.outputPath, Buffer.from(png, 'base64'))
+      // The image is shown to the user, not returned to the model: a tool can't tell which
+      // model called it, and Copilot's backend fails the next turn fetching an image part.
+      await vscode.commands.executeCommand('vscode.open', uri, {
+        preview: true,
+        viewColumn: vscode.ViewColumn.Beside,
+      })
       return new vscode.LanguageModelToolResult([
-        new vscode.LanguageModelTextPart(`Wrote ${options.input.outputPath}`),
-        vscode.LanguageModelDataPart.image(bytes, 'image/png'),
+        new vscode.LanguageModelTextPart(
+          `Wrote ${options.input.outputPath}; it is open beside the chat for the user to see.`,
+        ),
       ])
     } catch (error) {
       return toolError(error)
