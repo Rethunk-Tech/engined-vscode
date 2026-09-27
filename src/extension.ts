@@ -8,7 +8,7 @@
 import * as vscode from 'vscode'
 import type { SavedSetting, SettingWrite } from './chatSettingsPlan.ts'
 import { buildChatSettingsPlan, buildRestorePlan, describePlan } from './chatSettingsPlan.ts'
-import { readChatStream } from './chatStream.ts'
+import { buildCopilotUsage, readChatStream } from './chatStream.ts'
 import {
   buildCompletionsRequestBody,
   COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES,
@@ -280,7 +280,14 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       renderStatusBar()
       throw asError(error)
     }
-    let usage: { promptTokens?: number; completionTokens?: number; costUsd?: number } | undefined
+    let usage:
+      | {
+          promptTokens?: number
+          completionTokens?: number
+          costUsd?: number
+          cachedTokens?: number
+        }
+      | undefined
     let toolCalls: Awaited<ReturnType<typeof readChatStream>>
     try {
       toolCalls = await readChatStream(stream, {
@@ -294,6 +301,15 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       })
     } finally {
       stopLoadingTimer()
+    }
+    const copilotUsage = usage === undefined ? undefined : buildCopilotUsage(usage)
+    if (copilotUsage !== undefined) {
+      progress.report(
+        new vscode.LanguageModelDataPart(
+          new TextEncoder().encode(JSON.stringify(copilotUsage)),
+          'usage',
+        ),
+      )
     }
     const resolved = resolveRoute(
       {

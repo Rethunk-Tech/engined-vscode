@@ -7,7 +7,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | Path | Responsibility |
 | --- | --- |
 | `src/door.ts` | `/openai/v1/models` row -> `EnginedModelInfo` mapping, poll-change serialization, reasoning-level ordering/snapping, and door id qualification (`qualifyId`/`splitQualifiedId`/`doorByName`/`qualifiedEngineIds`). No `vscode` import. |
-| `src/chatStream.ts` | SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader in [`Rethunk-Tech/engined`](https://github.com/Rethunk-Tech/engined). No `vscode` import. |
+| `src/chatStream.ts` | SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader in [`Rethunk-Tech/engined`](https://github.com/Rethunk-Tech/engined), and `buildCopilotUsage` (the reader's own `ChatUsage` -> the OpenAI usage JSON Copilot's context-window meter reads). No `vscode` import. |
 | `src/requestBuilder.ts` | Plain VS Code-shaped messages -> the OpenAI chat request body; token estimation. No `vscode` import. |
 | `src/toolRequests.ts` | Request shapes for the four `engined_*` tools, built against an already-resolved row. No `vscode` import. |
 | `src/defaultModels.ts` | `resolveDefaultModel`: the one selection rule behind every `engined.defaultModels.*` setting (configured id if it still qualifies, else the automatic pick). No `vscode` import. |

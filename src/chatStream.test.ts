@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readChatStream } from './chatStream.ts'
+import { buildCopilotUsage, readChatStream } from './chatStream.ts'
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const sse = readFileSync(join(FIXTURES, 'ornith-toolcall.sse'), 'utf8')
@@ -54,5 +54,49 @@ describe('readChatStream', () => {
     let usage: { promptTokens?: number; completionTokens?: number; costUsd?: number } | undefined
     await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
     expect(usage).toEqual({ promptTokens: 12, completionTokens: 5, costUsd: 0.0123 })
+  })
+
+  test('reports prompt_tokens_details.cached_tokens when llama sends one', async () => {
+    const stream = streamFromText(
+      'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":12,"completion_tokens":5,"prompt_tokens_details":{"cached_tokens":8}}}\n\n' +
+        'data: [DONE]\n\n',
+    )
+    let usage: { cachedTokens?: number } | undefined
+    await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
+    expect(usage?.cachedTokens).toBe(8)
+  })
+})
+
+describe('buildCopilotUsage', () => {
+  test('undefined when the door reported no prompt/completion tokens at all', () => {
+    expect(buildCopilotUsage({})).toBeUndefined()
+    expect(buildCopilotUsage({ costUsd: 0.01 })).toBeUndefined()
+  })
+
+  test('sums prompt+completion into total_tokens and defaults cached_tokens to 0', () => {
+    expect(buildCopilotUsage({ promptTokens: 12, completionTokens: 5 })).toEqual({
+      prompt_tokens: 12,
+      completion_tokens: 5,
+      total_tokens: 17,
+      prompt_tokens_details: { cached_tokens: 0 },
+    })
+  })
+
+  test('carries a reported cached_tokens through unchanged', () => {
+    expect(buildCopilotUsage({ promptTokens: 12, completionTokens: 5, cachedTokens: 8 })).toEqual({
+      prompt_tokens: 12,
+      completion_tokens: 5,
+      total_tokens: 17,
+      prompt_tokens_details: { cached_tokens: 8 },
+    })
+  })
+
+  test('a lone completionTokens (no promptTokens) still reports, prompt defaulting to 0', () => {
+    expect(buildCopilotUsage({ completionTokens: 5 })).toEqual({
+      prompt_tokens: 0,
+      completion_tokens: 5,
+      total_tokens: 5,
+      prompt_tokens_details: { cached_tokens: 0 },
+    })
   })
 })

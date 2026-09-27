@@ -18,7 +18,11 @@ interface ChatChunk {
       tool_calls?: ToolCallDelta[]
     }
   }[]
-  usage?: { prompt_tokens?: number; completion_tokens?: number }
+  usage?: {
+    prompt_tokens?: number
+    completion_tokens?: number
+    prompt_tokens_details?: { cached_tokens?: number }
+  }
   /** An agentic hop's own cost, known only once its process exits -- carried on the final chunk since it comes too late for the `x-engined-cost-usd` header (see engined's HTTP API reference, "Answering-route headers"). */
   engined?: { cost_usd?: number }
 }
@@ -34,6 +38,8 @@ export interface ChatUsage {
   promptTokens?: number
   completionTokens?: number
   costUsd?: number
+  /** `prompt_tokens_details.cached_tokens`, when the engine (llama) reported one. */
+  cachedTokens?: number
 }
 
 export interface StreamSink {
@@ -86,6 +92,29 @@ function parseArgs(json: string): Record<string, unknown> | undefined {
   }
 }
 
+/** The OpenAI usage shape Copilot's extension-model endpoint reads off a `LanguageModelDataPart` with mimeType `'usage'` (`CustomDataPartMimeTypes.Usage`). */
+export interface CopilotUsage {
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+  prompt_tokens_details: { cached_tokens: number }
+}
+
+/** `undefined` when the door never reported prompt/completion tokens at all -- reporting nothing then is honest, not a fabricated 0/0. */
+export function buildCopilotUsage(usage: ChatUsage): CopilotUsage | undefined {
+  if (usage.promptTokens === undefined && usage.completionTokens === undefined) {
+    return undefined
+  }
+  const promptTokens = usage.promptTokens ?? 0
+  const completionTokens = usage.completionTokens ?? 0
+  return {
+    prompt_tokens: promptTokens,
+    completion_tokens: completionTokens,
+    total_tokens: promptTokens + completionTokens,
+    prompt_tokens_details: { cached_tokens: usage.cachedTokens ?? 0 },
+  }
+}
+
 /** Split on newlines, holding back a trailing partial line for the next chunk. */
 function splitLines(buffer: string): [string[], string] {
   const lines = buffer.split('\n')
@@ -127,6 +156,7 @@ export async function readChatStream(
       if (chunk.usage !== undefined) {
         usage.promptTokens = chunk.usage.prompt_tokens
         usage.completionTokens = chunk.usage.completion_tokens
+        usage.cachedTokens = chunk.usage.prompt_tokens_details?.cached_tokens
       }
       if (chunk.engined?.cost_usd !== undefined) {
         usage.costUsd = chunk.engined.cost_usd
