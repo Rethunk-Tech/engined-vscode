@@ -357,6 +357,10 @@
       {
         "command": "engined.restoreChatSettings",
         "title": "engined: Restore Previous Chat Settings"
+      },
+      {
+        "command": "engined.showLog",
+        "title": "engined: Show Log"
       }
     ],
     "viewsContainers": {

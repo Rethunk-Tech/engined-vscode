@@ -61,11 +61,11 @@ import type { CallRecord } from './status.ts'
 import {
   buildTooltip,
   formatCallLine,
-  formatLoadingText,
+  formatWaitingText,
   hasExceededLoadingThreshold,
   isLocalEgress,
   resolveRoute,
-  unreachableTooltip,
+  TOOLTIP_COMMANDS,
 } from './status.ts'
 import {
   buildImageRequest,
@@ -89,9 +89,13 @@ let engineExplorer: EngineExplorer
 let statusBarItem: vscode.StatusBarItem
 let pollTimer: ReturnType<typeof setInterval> | undefined
 let doorReachable = true
+/** Shown once per session, on the first failed poll -- never repeated even if the door stays down. */
+let unreachableNoticeShown = false
 let lastChatCall: CallRecord | undefined
 let lastCompletionCall: CallRecord | undefined
-let inFlightChat: { modelId: string; startedAt: number; firstTokenAt?: number } | undefined
+let inFlightChat:
+  | { modelId: string; startedAt: number; promptTokenEstimate: number; firstTokenAt?: number }
+  | undefined
 let loadingTimer: ReturnType<typeof setInterval> | undefined
 /** Most-recently-active documents this session, most recent first; excludes whichever is currently active. */
 const recentDocuments: vscode.TextDocument[] = []
@@ -190,7 +194,11 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     const controller = new AbortController()
     token.onCancellationRequested(() => controller.abort())
     const startedAt = Date.now()
-    inFlightChat = { modelId: model.id, startedAt }
+    const promptTokenEstimate = plainMessages.reduce(
+      (sum, m) => sum + estimateMessageTokenCount(m),
+      0,
+    )
+    inFlightChat = { modelId: model.id, startedAt, promptTokenEstimate }
     startLoadingTimer()
     renderStatusBar()
     let stream: ReadableStream<Uint8Array>
@@ -205,7 +213,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       renderStatusBar()
       throw asError(error)
     }
-    let usage: { promptTokens?: number; completionTokens?: number } | undefined
+    let usage: { promptTokens?: number; completionTokens?: number; costUsd?: number } | undefined
     let toolCalls: Awaited<ReturnType<typeof readChatStream>>
     try {
       toolCalls = await readChatStream(stream, {
@@ -234,6 +242,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       promptTokens: usage?.promptTokens,
       completionTokens: usage?.completionTokens,
       wallMs: Date.now() - startedAt,
+      costUsd: usage?.costUsd ?? costUsdHeader(headers),
     }
     renderStatusBar()
     for (const call of toolCalls) {
@@ -263,6 +272,16 @@ function describeError(error: unknown): string {
 
 function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
+}
+
+/** `x-engined-cost-usd`, parsed -- absent or unparseable means no cost was reported, not zero. */
+function costUsdHeader(headers: Headers): number | undefined {
+  const raw = headers.get('x-engined-cost-usd')
+  if (raw === null) {
+    return undefined
+  }
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
 // --- default-model selection (engined.defaultModels.*) ---------------------
@@ -378,6 +397,7 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
       promptTokens: usage?.promptTokens,
       completionTokens: usage?.completionTokens,
       wallMs: Date.now() - startedAt,
+      costUsd: costUsdHeader(headers),
     }
     renderStatusBar()
     const text = extractCompletionText(reply)
@@ -444,36 +464,87 @@ function trackActiveEditor(editor: vscode.TextEditor | undefined): void {
 
 // --- polling and status bar ------------------------------------------------
 
-function isRowWarming(modelId: string): boolean {
-  return poller.models.find((m) => m.id === modelId)?.row.state === 'warming'
+function rowState(modelId: string): string | undefined {
+  return poller.models.find((m) => m.id === modelId)?.row.state
+}
+
+/** Scrolls the shipped README to its Troubleshooting section -- no network round trip needed for a local doc. */
+async function revealReadmeTroubleshooting(): Promise<void> {
+  const uri = vscode.Uri.joinPath(extensionContext.extensionUri, 'README.md')
+  const doc = await vscode.workspace.openTextDocument(uri)
+  const editor = await vscode.window.showTextDocument(doc)
+  const line = doc
+    .getText()
+    .split('\n')
+    .findIndex((l) => l.startsWith('## Troubleshooting'))
+  if (line !== -1) {
+    const pos = new vscode.Position(line, 0)
+    editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.AtTop)
+  }
+}
+
+/** The first poll after activation failing gets one notice; every later failure (door still down, or down again) stays silent. */
+function maybeShowUnreachableNotice(): void {
+  if (unreachableNoticeShown) {
+    return
+  }
+  unreachableNoticeShown = true
+  void vscode.window
+    .showInformationMessage(`engined isn't reachable at ${getUrl()}`, 'How to start it', 'Settings')
+    .then((choice) => {
+      if (choice === 'How to start it') {
+        void revealReadmeTroubleshooting()
+      } else if (choice === 'Settings') {
+        void vscode.commands.executeCommand('workbench.action.openSettings', 'engined.url')
+      }
+    })
+}
+
+function tooltipMarkdown(): vscode.MarkdownString {
+  const md = new vscode.MarkdownString(
+    buildTooltip({
+      doorReachable,
+      lastChat: lastChatCall,
+      lastCompletion: lastCompletionCall,
+      doorUrl: getUrl(),
+      modelCount: poller.models.length,
+      defaults: DEFAULT_MODEL_TOOLTIP_ROLES.map((r) => ({
+        label: r.label,
+        modelName: resolveDefaultModel(poller.rows, r.role, getDefaultModel(r.role)).row
+          ?.display_name,
+      })),
+      heldEngines: [...heldEngineIds],
+      chatSettingsRouted: savedChatSettings() !== undefined,
+    }),
+  )
+  md.supportThemeIcons = true
+  md.isTrusted = { enabledCommands: Object.values(TOOLTIP_COMMANDS) }
+  return md
 }
 
 function renderStatusBar(): void {
   if (!doorReachable) {
     statusBarItem.text = '$(warning) engined unreachable'
-    statusBarItem.tooltip = unreachableTooltip(getUrl())
+    statusBarItem.tooltip = tooltipMarkdown()
     return
   }
   if (
     inFlightChat !== undefined &&
     inFlightChat.firstTokenAt === undefined &&
     (hasExceededLoadingThreshold(inFlightChat.startedAt, Date.now()) ||
-      isRowWarming(inFlightChat.modelId))
+      rowState(inFlightChat.modelId) !== 'running')
   ) {
-    statusBarItem.text = formatLoadingText(inFlightChat.modelId)
+    statusBarItem.text = formatWaitingText(
+      rowState(inFlightChat.modelId),
+      inFlightChat.modelId,
+      inFlightChat.promptTokenEstimate,
+    )
   } else if (lastChatCall !== undefined) {
     statusBarItem.text = formatCallLine(lastChatCall)
   } else {
     statusBarItem.text = `$(server) engined (${poller.models.length})`
   }
-  statusBarItem.tooltip = buildTooltip({
-    lastChat: lastChatCall,
-    lastCompletion: lastCompletionCall,
-    doorUrl: getUrl(),
-    modelCount: poller.models.length,
-    heldEngines: [...heldEngineIds],
-    chatSettingsRouted: savedChatSettings() !== undefined,
-  })
+  statusBarItem.tooltip = tooltipMarkdown()
 }
 
 const SAVED_CHAT_SETTINGS_KEY = 'engined.savedChatSettings'
@@ -803,6 +874,17 @@ const DEFAULT_MODEL_ROLES: { role: ModelRole; label: string; path?: string }[] =
   { role: 'transcription', label: 'Audio transcription' },
 ]
 
+/** One compact tooltip line per role, in `engined.defaultModels.*`'s own order (`package.json` configuration). */
+const DEFAULT_MODEL_TOOLTIP_ROLES: { role: ModelRole; label: string }[] = [
+  { role: 'image', label: 'Image' },
+  { role: 'ocr', label: 'OCR' },
+  { role: 'vision', label: 'Vision' },
+  { role: 'completion', label: 'Completion' },
+  { role: 'speech', label: 'Speech' },
+  { role: 'transcription', label: 'Transcription' },
+  { role: 'embedding', label: 'Embedding' },
+]
+
 /** `engined.chooseDefaultModels`: pick a role, then a qualifying row (or Automatic), and write `engined.defaultModels.<role>` at user scope. */
 async function chooseDefaultModels(): Promise<void> {
   const rolePick = await vscode.window.showQuickPick(
@@ -998,7 +1080,11 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
         typeof result === 'object' && result !== null && 'text' in result
           ? (result.text ?? '')
           : String(result)
-      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
+      const note =
+        options.input.translate === true
+          ? '\n\nNote: speech translation on this route is measured unreliable (it can return fluent but wrong English); prefer transcribing and translating the text.'
+          : ''
+      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text + note)])
     } catch (error) {
       return toolError(error)
     }
@@ -1100,6 +1186,7 @@ export function activate(context: vscode.ExtensionContext): void {
     () =>
       fetchModels(getUrl()).catch((error) => {
         log(`poll failed: ${describeError(error)}`)
+        maybeShowUnreachableNotice()
         throw error
       }),
     () => {
@@ -1153,6 +1240,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.warmModel', () => warmModel()),
     vscode.commands.registerCommand('engined.useForAllChatFeatures', () => useForAllChatFeatures()),
     vscode.commands.registerCommand('engined.restoreChatSettings', () => restoreChatSettings()),
+    vscode.commands.registerCommand('engined.showLog', () => output.show()),
     vscode.commands.registerCommand('engined.holdModel', () => holdModel()),
     vscode.commands.registerCommand('engined.releaseHold', () => releaseHold()),
     vscode.commands.registerCommand('engined.refreshEngines', () => engineExplorer.refresh()),

@@ -62,20 +62,49 @@ export interface CallRecord {
   promptTokens?: number
   completionTokens?: number
   wallMs: number
+  /** Only an agentic-CLI hop reports one (engined `x-engined-cost-usd`/streamed `engined.cost_usd`); absent for every other engine. */
+  costUsd?: number
 }
 
-/** `$(server) sonnet-5 · local · 1.2k→340 · 2.3s`; `$(cloud)` when egress is not local. */
+/** `$0.0123`, four decimal places -- these are per-call agentic-CLI costs, always sub-dollar. */
+function formatCostUsd(costUsd: number): string {
+  return `$${costUsd.toFixed(4)}`
+}
+
+/** `$(server) sonnet-5 · local · 1.2k→340 · 2.3s`; `$(cloud)` when egress is not local; cost appended only when the hop reported one. */
 export function formatCallLine(call: CallRecord): string {
   const local = isLocalEgress(call.egress)
   const glyph = local ? '$(server)' : '$(cloud)'
   const inTokens = call.promptTokens === undefined ? '?' : abbreviateTokenCount(call.promptTokens)
   const outTokens =
     call.completionTokens === undefined ? '?' : abbreviateTokenCount(call.completionTokens)
-  return `${glyph} ${shortModelName(call.route)} · ${local ? 'local' : 'remote'} · ${inTokens}→${outTokens} · ${formatSeconds(call.wallMs)}`
+  const cost = call.costUsd === undefined ? '' : ` · ${formatCostUsd(call.costUsd)}`
+  return `${glyph} ${shortModelName(call.route)} · ${local ? 'local' : 'remote'} · ${inTokens}→${outTokens} · ${formatSeconds(call.wallMs)}${cost}`
 }
 
 export function formatLoadingText(modelId: string): string {
   return `$(loading~spin) loading ${shortModelName(modelId)}…`
+}
+
+/** `~31k-token prompt` -- the estimate is already a deliberate over-count (`requestBuilder.ts`), so a finer unit would be false precision. */
+export function formatProcessingText(promptTokenEstimate: number): string {
+  return `$(loading~spin) processing ~${Math.round(promptTokenEstimate / 1000)}k-token prompt…`
+}
+
+/**
+ * A row already `warming` (or not resolved to a row at all, e.g. still
+ * starting) is honestly "loading"; a `running` row that just hasn't answered
+ * yet is processing the prompt it was given, not loading the model.
+ */
+export function formatWaitingText(
+  rowState: string | undefined,
+  modelId: string,
+  promptTokenEstimate: number,
+): string {
+  if (rowState === undefined || rowState === 'warming') {
+    return formatLoadingText(modelId)
+  }
+  return formatProcessingText(promptTokenEstimate)
 }
 
 /** The 1.5s "no first token yet" rule, as a pure function of two timestamps. */
@@ -87,36 +116,85 @@ export function hasExceededLoadingThreshold(
   return nowMs - startedAtMs >= thresholdMs
 }
 
+export interface DefaultModelLine {
+  /** e.g. "Image" */
+  label: string
+  /** `undefined` when nothing installed qualifies for the role. */
+  modelName: string | undefined
+}
+
 export interface TooltipInput {
-  lastChat?: CallRecord
-  lastCompletion?: CallRecord
+  doorReachable: boolean
   doorUrl: string
   modelCount: number
+  lastChat?: CallRecord
+  lastCompletion?: CallRecord
+  defaults: readonly DefaultModelLine[]
   /** Engines this session has itself put on hold -- see `AGENTS.md`'s Engines-view invariant for why nothing else can be known here. */
   heldEngines?: readonly string[]
   /** `engined.useForAllChatFeatures` is in effect and `engined.restoreChatSettings` can undo it. */
   chatSettingsRouted?: boolean
 }
 
-export function buildTooltip(input: TooltipInput): string {
-  const lines: string[] = []
-  if (input.lastChat !== undefined) {
-    lines.push(`Last chat: ${formatCallLine(input.lastChat)}`)
-  }
-  if (input.lastCompletion !== undefined) {
-    lines.push(`Last completion: ${formatCallLine(input.lastCompletion)}`)
-  }
-  lines.push(`Door: ${input.doorUrl}`)
-  lines.push(`${input.modelCount} model(s) available`)
-  if (input.heldEngines !== undefined && input.heldEngines.length > 0) {
-    lines.push(`Held: ${input.heldEngines.join(', ')}`)
-  }
-  if (input.chatSettingsRouted === true) {
-    lines.push('Chat features routed to engined')
-  }
-  return lines.join('\n')
+/** Every command id `buildTooltip`'s links use -- what an `isTrusted.enabledCommands` allowlist must carry. */
+export const TOOLTIP_COMMANDS = {
+  refresh: 'engined.refreshModels',
+  defaultModels: 'engined.chooseDefaultModels',
+  warm: 'engined.warmModel',
+  engines: 'engined.engines.focus',
+  useForAll: 'engined.useForAllChatFeatures',
+  restore: 'engined.restoreChatSettings',
+  log: 'engined.showLog',
+} as const
+
+function commandLink(label: string, command: string): string {
+  return `[${label}](command:${command})`
 }
 
-export function unreachableTooltip(doorUrl: string): string {
-  return `Could not reach engined at ${doorUrl}\nStart it with: systemctl --user start engined`
+/**
+ * The rich status popup, as Markdown -- codicons and command links only
+ * work once `extension.ts` wraps this in a `MarkdownString` with
+ * `supportThemeIcons: true` and `isTrusted.enabledCommands` set to
+ * `Object.values(TOOLTIP_COMMANDS)`.
+ */
+export function buildTooltip(input: TooltipInput): string {
+  const header = [
+    '**engined**',
+    input.doorReachable
+      ? '$(pass-filled) reachable'
+      : '$(error) unreachable -- start it with `systemctl --user start engined`',
+    `${input.modelCount} model(s)`,
+  ]
+  if (input.heldEngines !== undefined && input.heldEngines.length > 0) {
+    header.push(`held: ${input.heldEngines.join(', ')}`)
+  }
+  if (input.chatSettingsRouted === true) {
+    header.push('Chat features routed to engined')
+  }
+
+  const sections = [header.join(' · ')]
+  if (input.lastChat !== undefined) {
+    sections.push(`**Last chat**\n\n${formatCallLine(input.lastChat)}`)
+  }
+  if (input.lastCompletion !== undefined) {
+    sections.push(`**Last completion**\n\n${formatCallLine(input.lastCompletion)}`)
+  }
+  if (input.defaults.length > 0) {
+    const lines = input.defaults.map((d) => `${d.label}: ${d.modelName ?? 'automatic'}`)
+    sections.push(`**Defaults**\n\n${lines.join('  \n')}`)
+  }
+
+  const actions = [
+    commandLink('Refresh', TOOLTIP_COMMANDS.refresh),
+    commandLink('Default models', TOOLTIP_COMMANDS.defaultModels),
+    commandLink('Warm up', TOOLTIP_COMMANDS.warm),
+    commandLink('Engines', TOOLTIP_COMMANDS.engines),
+    input.chatSettingsRouted === true
+      ? commandLink('Restore', TOOLTIP_COMMANDS.restore)
+      : commandLink('Use engined everywhere', TOOLTIP_COMMANDS.useForAll),
+    commandLink('Log', TOOLTIP_COMMANDS.log),
+  ]
+  sections.push(actions.join(' · '))
+
+  return sections.join('\n\n---\n\n')
 }

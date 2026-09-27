@@ -43,4 +43,16 @@ describe('readChatStream', () => {
     await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
     expect(usage).toEqual({ promptTokens: 12, completionTokens: 5 })
   })
+
+  test("reports an agentic hop's cost from the final chunk's engined.cost_usd, once its usage is already known", async () => {
+    const stream = streamFromText(
+      'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n' +
+        'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":12,"completion_tokens":5}}\n\n' +
+        'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"engined":{"cost_usd":0.0123}}\n\n' +
+        'data: [DONE]\n\n',
+    )
+    let usage: { promptTokens?: number; completionTokens?: number; costUsd?: number } | undefined
+    await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
+    expect(usage).toEqual({ promptTokens: 12, completionTokens: 5, costUsd: 0.0123 })
+  })
 })

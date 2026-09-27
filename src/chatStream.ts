@@ -19,6 +19,8 @@ interface ChatChunk {
     }
   }[]
   usage?: { prompt_tokens?: number; completion_tokens?: number }
+  /** An agentic hop's own cost, known only once its process exits -- carried on the final chunk since it comes too late for the `x-engined-cost-usd` header (`docs/http-api.md` "Answering-route headers"). */
+  engined?: { cost_usd?: number }
 }
 
 export interface StitchedToolCall {
@@ -31,6 +33,7 @@ export interface StitchedToolCall {
 export interface ChatUsage {
   promptTokens?: number
   completionTokens?: number
+  costUsd?: number
 }
 
 export interface StreamSink {
@@ -101,6 +104,7 @@ export async function readChatStream(
   const reader = body.getReader()
   const decoder = new TextDecoder()
   const calls: ToolCallSlot[] = []
+  const usage: ChatUsage = {}
   let buffer = ''
   for (;;) {
     const { done, value } = await reader.read()
@@ -121,10 +125,14 @@ export async function readChatStream(
       }
       stitchToolCalls(calls, delta?.tool_calls ?? [])
       if (chunk.usage !== undefined) {
-        sink.usage?.({
-          promptTokens: chunk.usage.prompt_tokens,
-          completionTokens: chunk.usage.completion_tokens,
-        })
+        usage.promptTokens = chunk.usage.prompt_tokens
+        usage.completionTokens = chunk.usage.completion_tokens
+      }
+      if (chunk.engined?.cost_usd !== undefined) {
+        usage.costUsd = chunk.engined.cost_usd
+      }
+      if (chunk.usage !== undefined || chunk.engined?.cost_usd !== undefined) {
+        sink.usage?.({ ...usage })
       }
     }
   }
