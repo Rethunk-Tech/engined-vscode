@@ -58,6 +58,8 @@ import type { NeighbourCandidate } from './neighbourContext.ts'
 import { selectSnippets } from './neighbourContext.ts'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 import { ModelPoller } from './polling.ts'
+import type { FingerprintInput } from './promptFingerprint.ts'
+import { describeFingerprint, fingerprint } from './promptFingerprint.ts'
 import type { PlainMessage, PlainMessagePart } from './requestBuilder.ts'
 import {
   buildChatRequestBody,
@@ -92,6 +94,8 @@ const RECENT_DOCUMENTS_CAP = 10
 const loggedUnusableReasons = new Map<ModelRole, string>()
 
 let extensionContext: vscode.ExtensionContext
+/** The last tool-carrying chat request, in memory only, to locate where the next one diverges. */
+let lastChatPrint: FingerprintInput | undefined
 let output: vscode.OutputChannel
 let poller: ModelPoller
 let searchIndex: SearchIndex
@@ -220,6 +224,20 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       reasoningEffort: getReasoningEffort(),
       reasoningEffortByModel: getReasoningEffortByModel(),
     })
+    if (hadTools) {
+      const print: FingerprintInput = {
+        messages: body.messages.map((m) => JSON.stringify(m)),
+        tools: JSON.stringify(body.tools ?? []),
+      }
+      const previous = lastChatPrint
+      log(
+        describeFingerprint(
+          fingerprint(print, previous),
+          previous && fingerprint(previous).toolsHash,
+        ),
+      )
+      lastChatPrint = print
+    }
     const controller = new AbortController()
     token.onCancellationRequested(() => controller.abort())
     const startedAt = Date.now()
