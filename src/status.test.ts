@@ -9,8 +9,10 @@ import {
   formatWaitingText,
   hasExceededLoadingThreshold,
   isLocalEgress,
+  meterDataUri,
   resolveRoute,
   shortModelName,
+  TOOLTIP_COMMANDS,
 } from './status.ts'
 
 describe('isLocalEgress', () => {
@@ -136,52 +138,164 @@ describe('hasExceededLoadingThreshold', () => {
   })
 })
 
-describe('buildTooltip', () => {
-  test('lists header, last chat, last completion, and defaults, separated by rules', () => {
-    const tooltip = buildTooltip({
-      doors: [{ name: 'local', url: 'http://x', reachable: true }],
-      modelCount: 5,
-      lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 1000 },
-      lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
-      defaults: [{ label: 'Completion', resolvedName: 'ornith', configured: true }],
-    })
-    const sections = tooltip.split('\n\n---\n\n')
-    expect(sections[0]).toBe('**engined** · $(pass-filled) reachable · 5 model(s)')
-    expect(sections[1]).toBe('**Last chat**\n\n$(server) ornith · local · ?→? · 1.0s')
-    expect(sections[2]).toBe('**Last completion**\n\n$(server) ornith · local · ?→? · 0.1s')
-    expect(sections[3]).toBe('**Defaults**\n\nCompletion: ornith')
-    expect(sections[4]).toContain('[Refresh](command:engined.refreshModels)')
-    expect(sections[4]).toContain('[Use engined everywhere](command:engined.useForAllChatFeatures)')
-  })
+/**
+ * VS Code's sanitizer keeps `style=` on a `<span>` only when it matches this
+ * exact pattern (microsoft/vscode `src/vs/base/browser/markdownRenderer.ts`,
+ * the `attributeName: 'style'` `shouldKeep`, read at HEAD 2026-09) -- copied
+ * here, not imported, so this test fails the moment `status.ts` emits
+ * something the real sanitizer would silently strip.
+ */
+const VSCODE_SPAN_STYLE_RE =
+  /^(color:(#[0-9a-fA-F]+|var\(--vscode(-[a-zA-Z0-9]+)+\));)?(background-color:(#[0-9a-fA-F]+|var\(--vscode(-[a-zA-Z0-9]+)+\));)?(display:inline-block;)?(border-radius:[0-9]+px;)?$/
 
-  test('shows a tool-less background call separately from the last agent chat call', () => {
+function everySpanStyle(html: string): string[] {
+  return [...html.matchAll(/<span style="([^"]*)"/g)].map((m) => m[1] ?? '')
+}
+
+describe('buildTooltip', () => {
+  const baseInput = {
+    doors: [{ name: 'local', url: 'http://x', reachable: true }],
+    modelCount: 5,
+    defaults: [],
+  }
+
+  test('every emitted span style survives the real VS Code sanitizer regex', () => {
     const tooltip = buildTooltip({
-      doors: [{ name: 'local', url: 'http://x', reachable: true }],
-      modelCount: 1,
+      ...baseInput,
       lastChat: {
         route: '@/claude/sonnet-5',
         egress: 'remote',
-        promptTokens: 31000,
+        promptTokens: 25300,
+        completionTokens: 900,
         wallMs: 54000,
+        costUsd: 0.0123,
+        promptTokenMax: 262144,
       },
-      lastBackground: {
-        route: '@/claude/sonnet-5',
-        egress: 'remote',
-        promptTokens: 268,
-        completionTokens: 149,
-        wallMs: 54000,
-      },
-      defaults: [],
+      lastBackground: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
+      lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
+      defaults: [
+        { label: 'Image', resolvedName: '@/comfy/local', configured: true },
+        { label: 'OCR', resolvedName: '@/llama/ocr', configured: false },
+        {
+          label: 'Speech',
+          resolvedName: '@/chatterbox-en/local',
+          configured: true,
+          unusableConfigured: '@/whisper/x',
+        },
+      ],
+      heldEngines: ['@/llama/ocr'],
+      chatSettingsRouted: true,
+      todayUsage: { requests: 12, promptTokens: 4000, completionTokens: 900 },
+      themeKind: 'light' as const,
     })
-    const sections = tooltip.split('\n\n---\n\n')
-    expect(sections[1]).toBe('**Last chat**\n\n$(cloud) sonnet-5 · remote · 31.0k→? · 54s')
-    expect(sections[2]).toBe('**Last background**\n\n$(cloud) sonnet-5 · remote · 268→149 · 54s')
+    const styles = everySpanStyle(tooltip)
+    expect(styles.length).toBeGreaterThan(0)
+    for (const style of styles) {
+      expect(VSCODE_SPAN_STYLE_RE.test(style)).toBe(true)
+    }
   })
 
-  test('default-model lines: configured and usable, empty setting, and unusable-configured', () => {
+  test('header is a table-free chip line naming reachability and model count', () => {
+    const tooltip = buildTooltip(baseInput)
+    const header = tooltip.split('\n\n<hr>\n\n')[0]
+    expect(header).toContain('<b>engined</b>')
+    expect(header).toContain('$(pass-filled) reachable')
+    expect(header).toContain('5 model(s)')
+  })
+
+  test('unreachable single door names the fix command, still uncolored code span', () => {
     const tooltip = buildTooltip({
-      doors: [{ name: 'local', url: 'http://x', reachable: true }],
-      modelCount: 3,
+      ...baseInput,
+      doors: [{ name: 'local', url: 'http://x', reachable: false }],
+    })
+    expect(tooltip).toContain('$(error) unreachable')
+    expect(tooltip).toContain('`systemctl --user start engined`')
+  })
+
+  test('more than one door renders a Doors table, one row per door', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      doors: [
+        { name: 'local', url: 'http://127.0.0.1:29200', reachable: true },
+        { name: 'gpu-box', url: 'http://10.0.0.5:29200', reachable: false },
+      ],
+    })
+    expect(tooltip).toContain('<b>Doors</b>')
+    expect(tooltip).toMatch(/<table>(<tr>.*?<\/tr>){2}<\/table>/)
+    expect(tooltip).toContain('http://127.0.0.1:29200')
+    expect(tooltip).toContain('http://10.0.0.5:29200')
+  })
+
+  test('last chat renders a table with route, tokens, time -- no cost row when absent', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      lastChat: {
+        route: '@/llama/ornith',
+        egress: 'none',
+        promptTokens: 1200,
+        completionTokens: 340,
+        wallMs: 2300,
+      },
+    })
+    const section = tooltip.split('<hr>').find((s) => s.includes('Last chat'))
+    expect(section).toBeDefined()
+    expect(section).toContain('<table>')
+    expect(section).toContain('1.2k')
+    expect(section).toContain('340')
+    expect(section).not.toContain('Cost')
+  })
+
+  test('last chat renders a cost row only when the hop reported one', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      lastChat: { route: '@/opencode/ornith', egress: 'none', wallMs: 500, costUsd: 0.0123 },
+    })
+    expect(tooltip).toContain('$0.0123')
+  })
+
+  test('context meter appears only when both prompt tokens and a max are known', () => {
+    const withMax = buildTooltip({
+      ...baseInput,
+      lastChat: {
+        route: '@/claude/sonnet-5',
+        egress: 'remote',
+        promptTokens: 25300,
+        wallMs: 1000,
+        promptTokenMax: 262144,
+      },
+    })
+    expect(withMax).toContain('Context')
+    expect(withMax).toContain('data:image/svg+xml;base64,')
+    expect(withMax).toContain('25.3k / 262.1k')
+
+    const withoutMax = buildTooltip({
+      ...baseInput,
+      lastChat: {
+        route: '@/claude/sonnet-5',
+        egress: 'remote',
+        promptTokens: 25300,
+        wallMs: 1000,
+      },
+    })
+    expect(withoutMax).not.toContain('Context')
+    expect(withoutMax).not.toContain('data:image/svg+xml;base64,')
+  })
+
+  test('today usage table appears only when supplied', () => {
+    const withToday = buildTooltip({
+      ...baseInput,
+      todayUsage: { requests: 12, promptTokens: 4000, completionTokens: 900 },
+    })
+    expect(withToday).toContain('<b>Today</b>')
+    expect(withToday).toContain('12')
+
+    const withoutToday = buildTooltip(baseInput)
+    expect(withoutToday).not.toContain('<b>Today</b>')
+  })
+
+  test('defaults: configured, automatic, and unusable-configured render as table rows', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
       defaults: [
         { label: 'Image', resolvedName: '@/comfy/local', configured: true },
         { label: 'OCR', resolvedName: '@/llama/ocr', configured: false },
@@ -193,59 +307,65 @@ describe('buildTooltip', () => {
         },
       ],
     })
-    const defaults = tooltip.split('\n\n---\n\n')[1]
-    expect(defaults).toBe(
-      '**Defaults**\n\nImage: @/comfy/local  \nOCR: @/llama/ocr (automatic)  \nSpeech: @/whisper/x unavailable, using @/chatterbox-en/local',
-    )
+    const section = tooltip.split('<hr>').find((s) => s.includes('Defaults'))
+    expect(section).toContain('@/comfy/local')
+    expect(section).toContain('(automatic)')
+    expect(section).toContain('@/whisper/x unavailable')
+    expect(section).toContain('using @/chatterbox-en/local')
   })
 
-  test('shows the unreachable header with how to start it', () => {
-    const tooltip = buildTooltip({
-      doors: [{ name: 'local', url: 'http://x', reachable: false }],
-      modelCount: 0,
-      defaults: [],
-    })
-    expect(tooltip.split('\n\n---\n\n')[0]).toBe(
-      '**engined** · $(error) unreachable -- start it with `systemctl --user start engined` · 0 model(s)',
-    )
+  test('chat-routed chip swaps the "use everywhere" action for "Restore"', () => {
+    const routed = buildTooltip({ ...baseInput, chatSettingsRouted: true })
+    expect(routed).toContain('Chat features routed to engined')
+    expect(routed).toContain(`command:${TOOLTIP_COMMANDS.restore}`)
+    expect(routed).not.toContain('Use engined everywhere')
+
+    const notRouted = buildTooltip(baseInput)
+    expect(notRouted).toContain(`command:${TOOLTIP_COMMANDS.useForAll}`)
   })
 
-  test('says when chat features are routed to engined, and shows Restore instead of Use everywhere', () => {
-    const tooltip = buildTooltip({
-      doors: [{ name: 'local', url: 'http://x', reachable: true }],
-      modelCount: 0,
-      defaults: [],
-      chatSettingsRouted: true,
-    })
-    const sections = tooltip.split('\n\n---\n\n')
-    expect(sections[0]).toContain('Chat features routed to engined')
-    const actions = sections.at(-1)
-    expect(actions).toContain('[Restore](command:engined.restoreChatSettings)')
-    expect(actions).not.toContain('Use engined everywhere')
+  test('every action command id is one of TOOLTIP_COMMANDS -- what isTrusted.enabledCommands must allow', () => {
+    const tooltip = buildTooltip(baseInput)
+    const commandIds = [...tooltip.matchAll(/command:([a-zA-Z0-9._]+)/g)].map((m) => m[1] ?? '')
+    expect(commandIds.length).toBeGreaterThan(0)
+    for (const id of commandIds) {
+      expect(Object.values(TOOLTIP_COMMANDS)).toContain(
+        id as (typeof TOOLTIP_COMMANDS)[keyof typeof TOOLTIP_COMMANDS],
+      )
+    }
+  })
+})
+
+describe('meterDataUri', () => {
+  function decode(uri: string): string {
+    const b64 = uri.slice('data:image/svg+xml;base64,'.length)
+    return Buffer.from(b64, 'base64').toString('utf8')
+  }
+
+  test('decodes to a valid, explicitly sized SVG', () => {
+    const uri = meterDataUri(0.5, 'dark')
+    expect(uri.startsWith('data:image/svg+xml;base64,')).toBe(true)
+    const svg = decode(uri)
+    expect(svg).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="\d+" height="\d+">/)
+    expect(svg).toContain('</svg>')
+    expect(svg).toContain('<rect')
   })
 
-  test('more than one door: a summary count in the header and a Doors section, one line per door', () => {
-    const tooltip = buildTooltip({
-      doors: [
-        { name: 'local', url: 'http://127.0.0.1:29200', reachable: true },
-        { name: 'gpu-box', url: 'http://10.0.0.5:29200', reachable: false },
-      ],
-      modelCount: 4,
-      defaults: [],
-    })
-    const sections = tooltip.split('\n\n---\n\n')
-    expect(sections[0]).toBe('**engined** · $(warning) 1/2 doors reachable · 4 model(s)')
-    expect(sections[1]).toBe(
-      '**Doors**\n\n$(pass-filled) local -- http://127.0.0.1:29200  \n$(error) gpu-box -- http://10.0.0.5:29200 unreachable',
-    )
+  test('clamps fractions outside 0-1 and omits the fill rect at zero', () => {
+    const zero = decode(meterDataUri(0, 'dark'))
+    expect(zero.match(/<rect/g)?.length).toBe(1) // track only, no fill
+
+    const over = decode(meterDataUri(4, 'dark'))
+    const under = decode(meterDataUri(-1, 'dark'))
+    expect(over).toContain('<rect')
+    expect(under.match(/<rect/g)?.length).toBe(1)
   })
 
-  test('omits chat/completion/defaults sections when there is nothing to show', () => {
-    const tooltip = buildTooltip({
-      doors: [{ name: 'local', url: 'http://x', reachable: true }],
-      modelCount: 0,
-      defaults: [],
-    })
-    expect(tooltip.split('\n\n---\n\n')).toHaveLength(2)
+  test('light and dark themes pick different, both fixed (non-var) fill colors', () => {
+    const light = decode(meterDataUri(1, 'light'))
+    const dark = decode(meterDataUri(1, 'dark'))
+    expect(light).not.toContain('var(')
+    expect(dark).not.toContain('var(')
+    expect(light).not.toBe(dark)
   })
 })

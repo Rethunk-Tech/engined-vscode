@@ -70,7 +70,7 @@ import {
 } from './requestBuilder.ts'
 import { truncateSnippet } from './search.ts'
 import { SearchIndex } from './searchIndex.ts'
-import type { CallRecord } from './status.ts'
+import type { CallRecord, ThemeKind, TodayUsage } from './status.ts'
 import {
   buildTooltip,
   formatCallLine,
@@ -89,7 +89,7 @@ import {
   confirmationMessage,
   ToolRouteError,
 } from './toolRequests.ts'
-import { buildUsageReport } from './usageReport.ts'
+import { buildUsageReport, totalsFor } from './usageReport.ts'
 
 const LOADING_TICK_MS = 300
 const RECENT_DOCUMENTS_CAP = 10
@@ -117,6 +117,10 @@ let inFlightChat:
   | { modelId: string; startedAt: number; promptTokenEstimate: number; firstTokenAt?: number }
   | undefined
 let loadingTimer: ReturnType<typeof setInterval> | undefined
+const TODAY_USAGE_REFRESH_MS = 60_000
+let todayUsageCache: TodayUsage | undefined
+let todayUsageFetchedAt = 0
+let todayUsageFetchInFlight = false
 /** Most-recently-active documents this session, most recent first; excludes whichever is currently active. */
 const recentDocuments: vscode.TextDocument[] = []
 
@@ -326,6 +330,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       completionTokens: usage?.completionTokens,
       wallMs: Date.now() - startedAt,
       costUsd: usage?.costUsd ?? costUsdHeader(headers),
+      promptTokenMax: model.maxInputTokens,
     }
     if (hadTools) {
       lastChatCall = record
@@ -603,9 +608,42 @@ function maybeShowUnreachableNotice(): void {
     })
 }
 
+/** `vscode.ColorThemeKind` collapsed to the two palettes the SVG meters ship (a static `data:` image can't read `var(--vscode-...)`); high-contrast reads fine off its nearer light/dark base. */
+function themeKindFor(kind: vscode.ColorThemeKind): ThemeKind {
+  return kind === vscode.ColorThemeKind.Light || kind === vscode.ColorThemeKind.HighContrastLight
+    ? 'light'
+    : 'dark'
+}
+
+/** `GET /engined/v1/usage?days=1`, cached and refreshed at most every `TODAY_USAGE_REFRESH_MS` -- never awaited by a render, so a slow/unreachable door never blocks the tooltip. */
+function refreshTodayUsageIfStale(): void {
+  if (todayUsageFetchInFlight || Date.now() - todayUsageFetchedAt < TODAY_USAGE_REFRESH_MS) {
+    return
+  }
+  todayUsageFetchInFlight = true
+  fetchAllUsage(getDoors(), 1)
+    .then((usages) => {
+      const rows = usages.filter((u) => u.status === 'ok').flatMap((u) => u.rows)
+      const t = totalsFor(rows)
+      todayUsageCache = {
+        requests: t.requests,
+        promptTokens: t.promptTokens,
+        completionTokens: t.completionTokens,
+      }
+      todayUsageFetchedAt = Date.now()
+      renderStatusBar()
+    })
+    .catch((error: unknown) => log(`today usage: ${describeError(error)}`))
+    .finally(() => {
+      todayUsageFetchInFlight = false
+    })
+}
+
 function tooltipMarkdown(): vscode.MarkdownString {
   const md = new vscode.MarkdownString(
     buildTooltip({
+      themeKind: themeKindFor(vscode.window.activeColorTheme.kind),
+      todayUsage: todayUsageCache,
       // Before the first poll resolves, `doorStatus` is empty -- assume every configured door
       // reachable, matching the sync default `renderStatusBar` shows at activation.
       doors: (poller.doorStatus.length > 0
@@ -636,11 +674,13 @@ function tooltipMarkdown(): vscode.MarkdownString {
     }),
   )
   md.supportThemeIcons = true
+  md.supportHtml = true
   md.isTrusted = { enabledCommands: Object.values(TOOLTIP_COMMANDS) }
   return md
 }
 
 function renderStatusBar(): void {
+  refreshTodayUsageIfStale()
   if (!doorReachable) {
     statusBarItem.text = '$(warning) engined unreachable'
     statusBarItem.tooltip = tooltipMarkdown()
@@ -1368,6 +1408,7 @@ export function activate(context: vscode.ExtensionContext): void {
     output,
     statusBarItem,
     engineExplorer,
+    vscode.window.onDidChangeActiveColorTheme(() => renderStatusBar()),
     vscode.window.registerTreeDataProvider('engined.engines', engineExplorer),
     vscode.lm.registerLanguageModelChatProvider('engined', chatProvider),
     vscode.languages.registerInlineCompletionItemProvider(
