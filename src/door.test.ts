@@ -63,6 +63,16 @@ describe('mapModels', () => {
     expect(mapModels(undefined)).toEqual([])
     expect(mapModels({})).toEqual([])
   })
+
+  test('keeps vision rows out of the chat picker even though they serve chat completions', () => {
+    const chatIds = new Set(mapModels(models).map((m) => m.id))
+    expect(chatIds.has('@/llama/vision')).toBe(false)
+    expect(chatIds.has('@/llama/ocr')).toBe(false)
+    // Tools and defaults still see them -- only the chat picker excludes them.
+    const rows = mapAnswerableRows(models)
+    expect(rows.some((r) => r.id === '@/llama/vision')).toBe(true)
+    expect(rows.some((r) => r.id === '@/llama/ocr')).toBe(true)
+  })
 })
 
 describe('mapAnswerableRows', () => {

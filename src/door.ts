@@ -70,7 +70,9 @@ function tooltipFor(row: EnginedModelRow): string {
 /** One row -> the model info the provider reports, or `undefined` for a row this extension does not offer as a chat model. */
 export function mapModelRow(row: EnginedModelRow): EnginedModelInfo | undefined {
   // `running` and `warming` are the same model in use; only `unavailable` cannot answer.
-  if (!row.serves.includes(CHAT_PATH) || row.state === 'unavailable') {
+  // A vision row (ocr/describe) serves chat completions but only ever answers a tool's
+  // image-carrying request, never a chat turn -- keep it out of the picker.
+  if (!row.serves.includes(CHAT_PATH) || row.state === 'unavailable' || row.role === 'vision') {
     return undefined
   }
   return {
