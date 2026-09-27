@@ -7,7 +7,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | Path | Responsibility |
 | --- | --- |
 | `src/door.ts` | `/openai/v1/models` row -> `EnginedModelInfo` mapping, poll-change serialization, reasoning-level ordering/snapping, and door id qualification (`qualifyId`/`splitQualifiedId`/`doorByName`/`qualifiedEngineIds`). No `vscode` import. |
-| `src/chatStream.ts` | SSE reader for `/openai/v1/chat/completions`, ported from engined's own `src/cursorChat.ts`. No `vscode` import. |
+| `src/chatStream.ts` | SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader in [`Rethunk-Tech/engined`](https://github.com/Rethunk-Tech/engined). No `vscode` import. |
 | `src/requestBuilder.ts` | Plain VS Code-shaped messages -> the OpenAI chat request body; token estimation. No `vscode` import. |
 | `src/toolRequests.ts` | Request shapes for the four `engined_*` tools, built against an already-resolved row. No `vscode` import. |
 | `src/defaultModels.ts` | `resolveDefaultModel`: the one selection rule behind every `engined.defaultModels.*` setting (configured id if it still qualifies, else the automatic pick). No `vscode` import. |
@@ -30,7 +30,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 
 - No request to engined that would load a model just to answer a *listing* question — `GET /openai/v1/models` is always safe to poll; nothing else is called from the poller.
 - Token counts prefer `POST /engined/v1/tokenize` (vocab-only, no weights loaded) for a row that lists it in `serves`, and fall back to the chars/3 estimate on any failure or when the row doesn't serve it -- never the chat-template-expanding `GET /engined/v1/engines/:id/tokenize`.
-- Never send `tools`/`tool_choice` to a model row whose `tools` is `false` — the door refuses it anyway (engined `src/responses.ts:133-147`), but this extension must not rely on that refusal.
+- Never send `tools`/`tool_choice` to a model row whose `tools` is `false` — the door refuses it anyway (see [`Rethunk-Tech/engined`](https://github.com/Rethunk-Tech/engined)'s request-validation path), but this extension must not rely on that refusal.
 - Every tool input/output path resolves inside an open workspace folder (`pathGuard.ts`) before it touches the filesystem.
 - A tool, the completions picker, and `engined: Choose Default Models` all pick a route through `defaultModels.ts`'s `resolveDefaultModel` -- there is no second picking rule anywhere else.
 - A tool picks its route from `ModelPoller.rows` (every answerable row), never from `.models` (the chat-only subset) -- a comfy, TTS, or STT row never serves chat.
