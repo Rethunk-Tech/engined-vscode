@@ -2,9 +2,15 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { qualifyingRows, resolveDefaultModel } from './defaultModels.ts'
+import {
+  DEFAULT_MODEL_ROLES,
+  qualifyingRows,
+  ROLE_PATH,
+  resolveDefaultModel,
+} from './defaultModels.ts'
 import type { Door, EnginedModelRow } from './door.ts'
 
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const models: { data: EnginedModelRow[] } = JSON.parse(
   readFileSync(join(FIXTURES, 'models.json'), 'utf8'),
@@ -103,5 +109,31 @@ describe('resolveDefaultModel: completion', () => {
     const resolved = resolveDefaultModel(qualifiedRows, 'completion', '@/llama/second')
     expect(resolved.row?.id).toBe(`${DOOR.name}/@/llama/second`)
     expect(resolved.unusableReason).toBeUndefined()
+  })
+})
+
+describe('DEFAULT_MODEL_ROLES', () => {
+  test('covers every ModelRole exactly once', () => {
+    const roles: string[] = DEFAULT_MODEL_ROLES.map((r) => r.role)
+    expect(new Set(roles).size).toBe(roles.length)
+    expect(roles.sort()).toEqual(Object.keys(ROLE_PATH).sort())
+  })
+
+  test('matches the engined.defaultModels.* keys package.json declares, one role each', () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'))
+    const properties = pkg.contributes.configuration.properties as Record<string, unknown>
+    const settingRoles = Object.keys(properties)
+      .map((key) => /^engined\.defaultModels\.(\w+)$/.exec(key)?.[1])
+      .filter((role): role is string => role !== undefined)
+      .sort()
+    const roles: string[] = DEFAULT_MODEL_ROLES.map((r) => r.role)
+    expect(roles.sort()).toEqual(settingRoles)
+  })
+
+  test('every role has a non-empty chooser and popup label', () => {
+    for (const r of DEFAULT_MODEL_ROLES) {
+      expect(r.chooserLabel.length).toBeGreaterThan(0)
+      expect(r.popupLabel.length).toBeGreaterThan(0)
+    }
   })
 })

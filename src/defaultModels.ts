@@ -28,6 +28,30 @@ export const ROLE_PATH: Record<ModelRole, string> = {
   embedding: '/openai/v1/embeddings',
 }
 
+export interface DefaultModelRoleInfo {
+  role: ModelRole
+  /** `engined: Choose Default Models`' role-picker label. */
+  chooserLabel: string
+  /** The status popup's compact per-role label. */
+  popupLabel: string
+}
+
+/**
+ * Every `ModelRole` exactly once, in `engined.defaultModels.*`'s own order
+ * (`package.json`'s `contributes.configuration`) -- the one list behind
+ * both the chooser command and the popup, so the two can no longer drift
+ * apart the way `DEFAULT_MODEL_ROLES`/`DEFAULT_MODEL_TOOLTIP_ROLES` did.
+ */
+export const DEFAULT_MODEL_ROLES: readonly DefaultModelRoleInfo[] = [
+  { role: 'image', chooserLabel: 'Image generation/edit', popupLabel: 'Image' },
+  { role: 'ocr', chooserLabel: 'OCR (vision: read)', popupLabel: 'OCR' },
+  { role: 'vision', chooserLabel: 'Describe image (vision: describe)', popupLabel: 'Vision' },
+  { role: 'completion', chooserLabel: 'Inline completions', popupLabel: 'Completion' },
+  { role: 'speech', chooserLabel: 'Text-to-speech', popupLabel: 'Speech' },
+  { role: 'transcription', chooserLabel: 'Audio transcription', popupLabel: 'Transcription' },
+  { role: 'embedding', chooserLabel: 'Embedding', popupLabel: 'Embedding' },
+]
+
 /** A configured id matches a row by its qualified `id` or its bare `routeId` -- a setting written before a second door existed keeps working. */
 function matchesConfigured(row: EnginedModelRow, configuredId: string): boolean {
   return row.id === configuredId || row.routeId === configuredId

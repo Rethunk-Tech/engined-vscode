@@ -30,7 +30,12 @@ import {
   setReasoningEffort,
 } from './config.ts'
 import type { DefaultModelResolution, ModelRole } from './defaultModels.ts'
-import { qualifyingRows, ROLE_PATH, resolveDefaultModel } from './defaultModels.ts'
+import {
+  DEFAULT_MODEL_ROLES,
+  qualifyingRows,
+  ROLE_PATH,
+  resolveDefaultModel,
+} from './defaultModels.ts'
 import type { Door, EnginedModelInfo, EnginedModelRow, ReasoningLevel } from './door.ts'
 import {
   doorByName,
@@ -659,11 +664,11 @@ function tooltipMarkdown(): vscode.MarkdownString {
       lastBackground: lastBackgroundCall,
       lastCompletion: lastCompletionCall,
       modelCount: poller.models.length,
-      defaults: DEFAULT_MODEL_TOOLTIP_ROLES.map((r) => {
+      defaults: DEFAULT_MODEL_ROLES.map((r) => {
         const configuredId = getDefaultModel(r.role)
         const resolved = resolveDefaultModel(poller.rows, r.role, configuredId)
         return {
-          label: r.label,
+          label: r.popupLabel,
           resolvedName:
             resolved.row === undefined ? undefined : (resolved.row.display_name ?? resolved.row.id),
           configured: configuredId !== '',
@@ -1035,30 +1040,10 @@ async function pickAndSetEffort(modelId?: string): Promise<void> {
   }
 }
 
-const DEFAULT_MODEL_ROLES: { role: ModelRole; label: string; path?: string }[] = [
-  { role: 'image', label: 'Image generation/edit' },
-  { role: 'ocr', label: 'OCR (vision: read)' },
-  { role: 'vision', label: 'Describe image (vision: describe)' },
-  { role: 'completion', label: 'Inline completions' },
-  { role: 'speech', label: 'Text-to-speech' },
-  { role: 'transcription', label: 'Audio transcription' },
-]
-
-/** One compact tooltip line per role, in `engined.defaultModels.*`'s own order (`package.json` configuration). */
-const DEFAULT_MODEL_TOOLTIP_ROLES: { role: ModelRole; label: string }[] = [
-  { role: 'image', label: 'Image' },
-  { role: 'ocr', label: 'OCR' },
-  { role: 'vision', label: 'Vision' },
-  { role: 'completion', label: 'Completion' },
-  { role: 'speech', label: 'Speech' },
-  { role: 'transcription', label: 'Transcription' },
-  { role: 'embedding', label: 'Embedding' },
-]
-
 /** `engined.chooseDefaultModels`: pick a role, then a qualifying row (or Automatic), and write `engined.defaultModels.<role>` at user scope. */
 async function chooseDefaultModels(): Promise<void> {
   const rolePick = await vscode.window.showQuickPick(
-    DEFAULT_MODEL_ROLES.map((r) => ({ label: r.label, role: r.role })),
+    DEFAULT_MODEL_ROLES.map((r) => ({ label: r.chooserLabel, role: r.role })),
     { title: 'engined: Choose default models -- role' },
   )
   if (rolePick === undefined) {
