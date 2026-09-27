@@ -76,6 +76,19 @@ export async function stopEngine(baseUrl: string, id: string, signal?: AbortSign
   await postJson(baseUrl, `/engined/v1/engines/${id}/stop`, {}, signal)
 }
 
+/** `POST /engined/v1/tokenize`: a vocab-only token count for a route that lists it in `serves`, no engine started. */
+export async function postTokenize(
+  baseUrl: string,
+  model: string,
+  content: string,
+  signal?: AbortSignal,
+): Promise<number> {
+  const data = (await postJson(baseUrl, '/engined/v1/tokenize', { model, content }, signal)) as {
+    tokens: number
+  }
+  return data.tokens
+}
+
 export interface StartRow {
   address: string
   engine: string

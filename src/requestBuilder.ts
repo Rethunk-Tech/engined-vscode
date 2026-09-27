@@ -161,17 +161,22 @@ export function estimateTokenCount(text: string): number {
   return Math.ceil(text.length / 3)
 }
 
-/** A plain message's token estimate: its text and tool-call-argument JSON, summed. */
-export function estimateMessageTokenCount(message: PlainMessage): number {
-  let chars = 0
+/** A plain message's literal-text content: its text and tool-call-argument JSON, concatenated -- what a real tokenize call or the chars/3 estimate both count against. */
+export function plainMessageContent(message: PlainMessage): string {
+  let content = ''
   for (const part of message.parts) {
     if (part.type === 'text') {
-      chars += part.text.length
+      content += part.text
     } else if (part.type === 'toolCall') {
-      chars += JSON.stringify(part.arguments ?? {}).length
+      content += JSON.stringify(part.arguments ?? {})
     } else if (part.type === 'toolResult') {
-      chars += part.text.length
+      content += part.text
     }
   }
-  return Math.ceil(chars / 3)
+  return content
+}
+
+/** A plain message's token estimate: its text and tool-call-argument JSON, summed. */
+export function estimateMessageTokenCount(message: PlainMessage): number {
+  return estimateTokenCount(plainMessageContent(message))
 }

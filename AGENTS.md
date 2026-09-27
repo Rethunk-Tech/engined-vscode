@@ -20,6 +20,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/search.ts` | Chunking a file into overlapping windows, cosine top-k, index-update planning (which files a refresh must touch), and folding a rerank reply back over the cosine order. No `vscode` import. |
 | `src/engineEvents.ts` | SSE frame parsing for `GET /engined/v1/engines/events` and the reconnect-backoff sequence. No `vscode` import. |
 | `src/engineTree.ts` | `GET /engined/v1/engines` JSON -> the plain tree-item rows the Engines view renders. No `vscode` import. |
+| `src/tokenCount.ts` | `provideTokenCount`'s cache-then-door-then-estimate decision, and the small LRU keyed by (model, content hash) behind it. No `vscode` import. |
 | `src/config.ts` | Reads/writes `engined.*` settings. Imports `vscode`. |
 | `src/searchIndex.ts` | The workspace-scanning/storage half of `engined_search`: finds candidate files, keeps the chunk+vector index in `context.storageUri`, calls `search.ts` for the pure logic. Imports `vscode`. |
 | `src/engineExplorer.ts` | The Engines `TreeDataProvider`, its commands (warm/hold/release/stop/logs/copy-fix), and the live-events subscription that refreshes it. Imports `vscode`. |
@@ -28,6 +29,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 ## Invariants
 
 - No request to engined that would load a model just to answer a *listing* question — `GET /openai/v1/models` is always safe to poll; nothing else is called from the poller.
+- Token counts prefer `POST /engined/v1/tokenize` (vocab-only, no weights loaded) for a row that lists it in `serves`, and fall back to the chars/3 estimate on any failure or when the row doesn't serve it -- never the chat-template-expanding `GET /engined/v1/engines/:id/tokenize`.
 - Never send `tools`/`tool_choice` to a model row whose `tools` is `false` — the door refuses it anyway (engined `src/responses.ts:133-147`), but this extension must not rely on that refusal.
 - Every tool input/output path resolves inside an open workspace folder (`pathGuard.ts`) before it touches the filesystem.
 - A tool, the completions picker, and `engined: Choose Default Models` all pick a route through `defaultModels.ts`'s `resolveDefaultModel` -- there is no second picking rule anywhere else.

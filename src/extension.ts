@@ -30,7 +30,7 @@ import {
 import type { DefaultModelResolution, ModelRole } from './defaultModels.ts'
 import { qualifyingRows, ROLE_PATH, resolveDefaultModel } from './defaultModels.ts'
 import type { EnginedModelInfo, EnginedModelRow, ReasoningLevel } from './door.ts'
-import { REASONING_LEVELS } from './door.ts'
+import { REASONING_LEVELS, servesTokenize } from './door.ts'
 import {
   DoorHttpError,
   fetchModels,
@@ -40,6 +40,7 @@ import {
   postForm,
   postJson,
   postJsonWithHeaders,
+  postTokenize,
   startModel,
   unholdEngine,
 } from './doorClient.ts'
@@ -54,7 +55,7 @@ import type { PlainMessage, PlainMessagePart } from './requestBuilder.ts'
 import {
   buildChatRequestBody,
   estimateMessageTokenCount,
-  estimateTokenCount,
+  plainMessageContent,
 } from './requestBuilder.ts'
 import { truncateSnippet } from './search.ts'
 import { SearchIndex } from './searchIndex.ts'
@@ -68,6 +69,7 @@ import {
   resolveRoute,
   TOOLTIP_COMMANDS,
 } from './status.ts'
+import { resolveTokenCount, TokenCountCache } from './tokenCount.ts'
 import {
   buildImageRequest,
   buildReadImageRequest,
@@ -92,6 +94,7 @@ let pollTimer: ReturnType<typeof setInterval> | undefined
 let doorReachable = true
 /** Shown once per session, on the first failed poll -- never repeated even if the door stays down. */
 let unreachableNoticeShown = false
+const tokenCountCache = new TokenCountCache()
 let lastChatCall: CallRecord | undefined
 /** The last tool-less chat request -- Copilot's own title/summary calls, never the status-bar source. */
 let lastBackgroundCall: CallRecord | undefined
@@ -202,9 +205,25 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       (sum, m) => sum + estimateMessageTokenCount(m),
       0,
     )
-    inFlightChat = { modelId: model.id, startedAt, promptTokenEstimate }
+    const flight = { modelId: model.id, startedAt, promptTokenEstimate }
+    inFlightChat = flight
     startLoadingTimer()
     renderStatusBar()
+    if (servesTokenize(model.row)) {
+      const content = plainMessages.map(plainMessageContent).join('')
+      void resolveTokenCount(
+        tokenCountCache,
+        (m, c) => postTokenize(getUrl(), m, c, controller.signal),
+        model.id,
+        content,
+        true,
+      ).then((tokens) => {
+        if (inFlightChat === flight) {
+          flight.promptTokenEstimate = tokens
+          renderStatusBar()
+        }
+      })
+    }
     let stream: ReadableStream<Uint8Array>
     let headers: Headers
     try {
@@ -262,13 +281,20 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
   }
 
   async provideTokenCount(
-    _model: EnginedModelInfo,
+    model: EnginedModelInfo,
     text: string | vscode.LanguageModelChatRequestMessage,
-    _token: vscode.CancellationToken,
+    token: vscode.CancellationToken,
   ): Promise<number> {
-    return typeof text === 'string'
-      ? estimateTokenCount(text)
-      : estimateMessageTokenCount(toPlainMessage(text))
+    const content = typeof text === 'string' ? text : plainMessageContent(toPlainMessage(text))
+    const controller = new AbortController()
+    token.onCancellationRequested(() => controller.abort())
+    return resolveTokenCount(
+      tokenCountCache,
+      (m, c) => postTokenize(getUrl(), m, c, controller.signal),
+      model.id,
+      content,
+      servesTokenize(model.row),
+    )
   }
 }
 
