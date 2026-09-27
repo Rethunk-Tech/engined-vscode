@@ -132,3 +132,54 @@ describe('buildChatRequestBody', () => {
     ])
   })
 })
+
+describe('tool order and schema-key order are stable', () => {
+  test('two permutations of the same tool set, with differently-ordered schema keys, serialize byte-identical', () => {
+    const model = modelInfo()
+    const messages = [{ role: 'user' as const, parts: [{ type: 'text' as const, text: 'hi' }] }]
+    const options = {
+      toolChoiceRequired: false,
+      reasoningEffort: 'medium' as const,
+      reasoningEffortByModel: {},
+    }
+    const a = buildChatRequestBody(model, messages, {
+      ...options,
+      tools: [
+        {
+          name: 'get_weather',
+          description: 'weather',
+          inputSchema: {
+            type: 'object',
+            properties: { city: { type: 'string' } },
+            required: ['city'],
+          },
+        },
+        {
+          name: 'search_web',
+          description: 'search',
+          inputSchema: { query: { type: 'string' }, limit: { type: 'number' } },
+        },
+      ],
+    })
+    const b = buildChatRequestBody(model, messages, {
+      ...options,
+      tools: [
+        {
+          name: 'search_web',
+          description: 'search',
+          inputSchema: { limit: { type: 'number' }, query: { type: 'string' } },
+        },
+        {
+          name: 'get_weather',
+          description: 'weather',
+          inputSchema: {
+            required: ['city'],
+            properties: { city: { type: 'string' } },
+            type: 'object',
+          },
+        },
+      ],
+    })
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b))
+  })
+})

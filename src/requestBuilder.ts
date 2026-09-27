@@ -124,6 +124,21 @@ function resolveReasoningEffort(
   return snapReasoningEffort(requested, levels)
 }
 
+/** A plain object's keys, sorted `a < b` (locale-independent, unlike `localeCompare`) and recursed into -- so two logically-identical schemas serialize byte-identical whatever order Copilot built them in. Arrays keep their order: position is meaning there, not an unordered key set. */
+function sortKeysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortKeysDeep)
+  }
+  if (value !== null && typeof value === 'object') {
+    const sorted: Record<string, unknown> = {}
+    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+      sorted[key] = sortKeysDeep((value as Record<string, unknown>)[key])
+    }
+    return sorted
+  }
+  return value
+}
+
 /**
  * Build the request body, or throw when the caller asked for tools/tool_choice
  * against a row that cannot forward them -- the door refuses that request
@@ -141,10 +156,20 @@ export function buildChatRequestBody(
     stream_options: { include_usage: true },
   }
   if (model.row.tools && options.tools !== undefined && options.tools.length > 0) {
-    body.tools = options.tools.map((t) => ({
-      type: 'function',
-      function: { name: t.name, description: t.description, parameters: t.inputSchema },
-    }))
+    // Sorted by name, with each schema's keys sorted too: the same tool set renders the same
+    // prompt text every time, whatever order Copilot happened to pass it in -- Qwen's chat
+    // template puts the tool list near the top of the system prompt, so an order that drifts
+    // between otherwise-identical chats breaks the engine's prompt-prefix cache mid-way through.
+    body.tools = [...options.tools]
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+      .map((t) => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: sortKeysDeep(t.inputSchema),
+        },
+      }))
     if (options.toolChoiceRequired === true) {
       body.tool_choice = 'required'
     }

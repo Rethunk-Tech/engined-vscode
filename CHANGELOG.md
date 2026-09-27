@@ -30,6 +30,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Status popup's Defaults section now shows the resolved model name for every role (previously showed "automatic" whenever the row had no `display_name`), and marks whether it's the configured id, the automatic pick, or a configured id that fell through to automatic. It also updates immediately after `engined.defaultModels.*` changes.
 - Engines view: a non-running engine no longer expands to a raw door error (`{"error": ...}`) as a child. An agentic-cli engine, an unavailable one, and one backing only remote-egress rows now show a one-line explanation instead ("agent CLI, no container", its fix, "remote API"); an installed-but-idle local container says "idle, starts on demand"; only a running local container engine expands, showing its resources as one formatted line (`RAM 334 MiB · GPU 28.0 GiB`, 1024-based) instead of raw byte counts.
 
+### Performance
+
+- The chat request's `tools` array is sorted by name, and each tool's JSON schema by key, before it's sent -- Copilot passing the same tools in a different order per chat was breaking the prompt-prefix cache partway through, since the tool list renders near the top of the system prompt.
+
 ### Changed
 
 - README restructured: a short pitch/quick-start at the top, logical sections with short intros, and detailed reference material (tool parameters, reasoning-effort mapping, polling internals) moved to `docs/*.md`.
