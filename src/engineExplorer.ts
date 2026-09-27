@@ -7,16 +7,17 @@
  */
 
 import * as vscode from 'vscode'
-import { getUrl } from './config.ts'
+import type { Door, EnginedModelRow } from './door.ts'
 import { fetchEngineLogs, fetchEngineResources, fetchEngines, stopEngine } from './doorClient.ts'
 import type { EngineNode, EnginesListResponse } from './engineTree.ts'
-import { formatResourceLines, toEngineNodes, truncateLogLines } from './engineTree.ts'
+import { formatResourceLine, toEngineNodes, truncateLogLines } from './engineTree.ts'
 
 const LOG_TAIL = 500
 
 export type EngineTreeItem =
   | { kind: 'engine'; node: EngineNode }
   | { kind: 'resource'; text: string }
+  | { kind: 'doorGroup'; door: Door }
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -29,10 +30,19 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   #heldIds: ReadonlySet<string>
   #log: (line: string) => void
   #logChannels = new Map<string, vscode.OutputChannel>()
+  #getDoors: () => Door[]
+  #getRows: () => readonly EnginedModelRow[]
 
-  constructor(heldIds: ReadonlySet<string>, log: (line: string) => void) {
+  constructor(
+    heldIds: ReadonlySet<string>,
+    log: (line: string) => void,
+    getDoors: () => Door[],
+    getRows: () => readonly EnginedModelRow[],
+  ) {
     this.#heldIds = heldIds
     this.#log = log
+    this.#getDoors = getDoors
+    this.#getRows = getRows
   }
 
   dispose(): void {
@@ -42,13 +52,26 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   }
 
   async refresh(): Promise<void> {
-    try {
-      const response = (await fetchEngines(getUrl())) as EnginesListResponse
-      this.#nodes = toEngineNodes(response, this.#heldIds)
-    } catch (error) {
-      this.#log(`engines view: refresh failed: ${describe(error)}`)
-      this.#nodes = []
-    }
+    const doors = this.#getDoors()
+    const rows = this.#getRows()
+    const remoteEngineIds = new Set(
+      rows
+        .filter((r) => r.engine !== undefined && r.egress !== undefined && r.egress !== 'none')
+        .map((r) => r.engine as string),
+    )
+    const isRemote = (rawId: string) => remoteEngineIds.has(rawId)
+    const results = await Promise.all(
+      doors.map(async (door) => {
+        try {
+          const response = (await fetchEngines(door.url)) as EnginesListResponse
+          return toEngineNodes(response, this.#heldIds, door, doors.length, isRemote)
+        } catch (error) {
+          this.#log(`engines view: refresh failed for door "${door.name}": ${describe(error)}`)
+          return []
+        }
+      }),
+    )
+    this.#nodes = results.flat()
     this.#emitter.fire()
   }
 
@@ -56,8 +79,19 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     if (element.kind === 'resource') {
       return new vscode.TreeItem(element.text)
     }
+    if (element.kind === 'doorGroup') {
+      const item = new vscode.TreeItem(element.door.name, vscode.TreeItemCollapsibleState.Expanded)
+      item.iconPath = new vscode.ThemeIcon('server')
+      item.contextValue = 'doorGroup'
+      return item
+    }
     const node = element.node
-    const item = new vscode.TreeItem(node.label, vscode.TreeItemCollapsibleState.Collapsed)
+    const item = new vscode.TreeItem(
+      node.label,
+      node.hasResources
+        ? vscode.TreeItemCollapsibleState.Expanded
+        : vscode.TreeItemCollapsibleState.None,
+    )
     item.description = node.description
     item.tooltip = node.tooltip
     item.contextValue = node.contextValue
@@ -67,14 +101,23 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
 
   async getChildren(element?: EngineTreeItem): Promise<EngineTreeItem[]> {
     if (element === undefined) {
+      const doors = this.#getDoors()
+      if (doors.length > 1) {
+        return doors.map((door) => ({ kind: 'doorGroup' as const, door }))
+      }
       return this.#nodes.map((node) => ({ kind: 'engine' as const, node }))
     }
-    if (element.kind !== 'engine') {
+    if (element.kind === 'doorGroup') {
+      return this.#nodes
+        .filter((n) => n.door.name === element.door.name)
+        .map((node) => ({ kind: 'engine' as const, node }))
+    }
+    if (element.kind !== 'engine' || !element.node.hasResources) {
       return []
     }
     try {
-      const resources = await fetchEngineResources(getUrl(), element.node.id)
-      return formatResourceLines(resources).map((text) => ({ kind: 'resource' as const, text }))
+      const resources = await fetchEngineResources(element.node.door.url, element.node.rawId)
+      return [{ kind: 'resource' as const, text: formatResourceLine(resources) }]
     } catch (error) {
       return [{ kind: 'resource' as const, text: describe(error) }]
     }
@@ -93,23 +136,25 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     return channel
   }
 
-  async showLogs(id: string): Promise<void> {
-    const channel = this.#channelFor(id)
+  async showLogs(node: EngineNode): Promise<void> {
+    const channel = this.#channelFor(node.id)
     try {
-      const lines = truncateLogLines(await fetchEngineLogs(getUrl(), id, LOG_TAIL))
+      const lines = truncateLogLines(await fetchEngineLogs(node.door.url, node.rawId, LOG_TAIL))
       channel.clear()
       for (const line of lines) {
         channel.appendLine(line)
       }
       channel.show()
     } catch (error) {
-      void vscode.window.showErrorMessage(`engined: logs for "${id}" failed: ${describe(error)}`)
+      void vscode.window.showErrorMessage(
+        `engined: logs for "${node.id}" failed: ${describe(error)}`,
+      )
     }
   }
 
-  async stop(id: string): Promise<void> {
+  async stop(node: EngineNode): Promise<void> {
     const confirmed = await vscode.window.showWarningMessage(
-      `Stop engine "${id}"?`,
+      `Stop engine "${node.id}"?`,
       { modal: true },
       'Stop',
     )
@@ -117,9 +162,9 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
       return
     }
     try {
-      await stopEngine(getUrl(), id)
+      await stopEngine(node.door.url, node.rawId)
     } catch (error) {
-      void vscode.window.showErrorMessage(`engined: stop "${id}" failed: ${describe(error)}`)
+      void vscode.window.showErrorMessage(`engined: stop "${node.id}" failed: ${describe(error)}`)
     }
     await this.refresh()
   }
