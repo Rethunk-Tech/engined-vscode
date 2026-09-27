@@ -1,6 +1,6 @@
 /**
- * The SSE reader for `/openai/v1/chat/completions`, ported from engined's own
- * `src/cursorChat.ts`: tool-call deltas arrive indexed and have to be
+ * The SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader
+ * in Rethunk-Tech/engined: tool-call deltas arrive indexed and have to be
  * stitched back together before they mean anything. Pure and vscode-free so
  * `bun test` can replay a recorded stream without an extension host.
  */
@@ -19,7 +19,7 @@ interface ChatChunk {
     }
   }[]
   usage?: { prompt_tokens?: number; completion_tokens?: number }
-  /** An agentic hop's own cost, known only once its process exits -- carried on the final chunk since it comes too late for the `x-engined-cost-usd` header (`docs/http-api.md` "Answering-route headers"). */
+  /** An agentic hop's own cost, known only once its process exits -- carried on the final chunk since it comes too late for the `x-engined-cost-usd` header (see engined's HTTP API reference, "Answering-route headers"). */
   engined?: { cost_usd?: number }
 }
 

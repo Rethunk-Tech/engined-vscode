@@ -176,13 +176,7 @@ function commandLink(label: string, command: string): string {
   return `[${label}](command:${command})`
 }
 
-/**
- * The rich status popup, as Markdown -- codicons and command links only
- * work once `extension.ts` wraps this in a `MarkdownString` with
- * `supportThemeIcons: true` and `isTrusted.enabledCommands` set to
- * `Object.values(TOOLTIP_COMMANDS)`.
- */
-/** A single door -- the old plain reachable/unreachable header, unchanged for one-door compatibility. */
+/** The single-door header: plain reachable/unreachable text. */
 function singleDoorHeaderLine(reachable: boolean): string {
   return reachable
     ? '$(pass-filled) reachable'
@@ -207,6 +201,12 @@ function doorLine(d: DoorLine): string {
   return `${glyph} ${d.name} -- ${d.url}${suffix}`
 }
 
+/**
+ * The rich status popup, as Markdown -- codicons and command links only
+ * work once `extension.ts` wraps this in a `MarkdownString` with
+ * `supportThemeIcons: true` and `isTrusted.enabledCommands` set to
+ * `Object.values(TOOLTIP_COMMANDS)`.
+ */
 export function buildTooltip(input: TooltipInput): string {
   const header = [
     '**engined**',
