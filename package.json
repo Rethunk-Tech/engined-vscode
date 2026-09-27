@@ -9,7 +9,7 @@
   "type": "module",
   "packageManager": "bun@1.4.2",
   "engines": {
-    "vscode": "^1.106.0"
+    "vscode": "^1.138.0"
   },
   "categories": [
     "AI",
@@ -484,7 +484,7 @@
     "package": "bunx @vscode/vsce package --no-dependencies",
     "smoke": "node scripts/smoke.cjs",
     "setup-hooks": "lefthook install",
-    "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
+    "ci": "bun run lint && bun run typecheck && bun run test && bun run build && bunx @vscode/vsce ls --no-dependencies >/dev/null"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",

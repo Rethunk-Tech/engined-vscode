@@ -5,7 +5,7 @@ Build, package, and run this extension from source. Contributors: [CONTRIBUTING.
 ## Prerequisites
 
 - [Bun](https://bun.sh) 1.4.x
-- VS Code ≥ 1.106.0 (see `engines.vscode` in `package.json`)
+- VS Code ≥ 1.138.0 (see `engines.vscode` in `package.json`)
 - engined running locally, or reachable via Remote-SSH
 
 ## Build
