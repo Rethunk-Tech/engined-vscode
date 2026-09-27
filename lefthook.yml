@@ -1,5 +1,7 @@
 pre-commit:
   jobs:
+    - name: gitleaks
+      run: gitleaks git --pre-commit --staged --redact --no-banner --log-level warn
     - name: lint
       run: bun run lint
 
