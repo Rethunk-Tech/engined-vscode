@@ -29,6 +29,8 @@ Then open Copilot Chat's model picker and choose an `engined` model. Full runboo
 - Status bar shows what answered, whether it ran locally, tokens used, and a loading state
 - An Engines view for warming, holding, and stopping engines, with live resource usage
 - A usage report (per-day/per-route requests, tokens, cost, and local/remote split) across every configured door
+- Image attachments work on a text-only engined model that engined bridges to a vision route
+- Copilot's Context Window meter reads engined's own token counts
 
 ## Documentation
 
