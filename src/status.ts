@@ -119,8 +119,25 @@ export function hasExceededLoadingThreshold(
 export interface DefaultModelLine {
   /** e.g. "Image" */
   label: string
-  /** `undefined` when nothing installed qualifies for the role. */
-  modelName: string | undefined
+  /** The resolved row's `display_name ?? id`; `undefined` when nothing installed qualifies for the role. */
+  resolvedName: string | undefined
+  /** Whether `engined.defaultModels.<role>` is non-empty. */
+  configured: boolean
+  /** The configured id/name, set only when it fell through to automatic because it is no longer usable. */
+  unusableConfigured?: string
+}
+
+/** `Image: @/comfy/local` / `Image: @/comfy/local (automatic)` / `Image: @/whisper/x unavailable, using @/comfy/local`. */
+function formatDefaultModelLine(line: DefaultModelLine): string {
+  if (line.resolvedName === undefined) {
+    return `${line.label}: none available`
+  }
+  if (line.unusableConfigured !== undefined) {
+    return `${line.label}: ${line.unusableConfigured} unavailable, using ${line.resolvedName}`
+  }
+  return line.configured
+    ? `${line.label}: ${line.resolvedName}`
+    : `${line.label}: ${line.resolvedName} (automatic)`
 }
 
 export interface TooltipInput {
@@ -128,6 +145,8 @@ export interface TooltipInput {
   doorUrl: string
   modelCount: number
   lastChat?: CallRecord
+  /** The last tool-less chat request (e.g. Copilot's own title/summary calls) -- never the source of the status-bar text. */
+  lastBackground?: CallRecord
   lastCompletion?: CallRecord
   defaults: readonly DefaultModelLine[]
   /** Engines this session has itself put on hold -- see `AGENTS.md`'s Engines-view invariant for why nothing else can be known here. */
@@ -176,11 +195,14 @@ export function buildTooltip(input: TooltipInput): string {
   if (input.lastChat !== undefined) {
     sections.push(`**Last chat**\n\n${formatCallLine(input.lastChat)}`)
   }
+  if (input.lastBackground !== undefined) {
+    sections.push(`**Last background**\n\n${formatCallLine(input.lastBackground)}`)
+  }
   if (input.lastCompletion !== undefined) {
     sections.push(`**Last completion**\n\n${formatCallLine(input.lastCompletion)}`)
   }
   if (input.defaults.length > 0) {
-    const lines = input.defaults.map((d) => `${d.label}: ${d.modelName ?? 'automatic'}`)
+    const lines = input.defaults.map(formatDefaultModelLine)
     sections.push(`**Defaults**\n\n${lines.join('  \n')}`)
   }
 

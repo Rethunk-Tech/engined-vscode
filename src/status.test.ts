@@ -144,7 +144,7 @@ describe('buildTooltip', () => {
       modelCount: 5,
       lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 1000 },
       lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
-      defaults: [{ label: 'Completion', modelName: 'ornith' }],
+      defaults: [{ label: 'Completion', resolvedName: 'ornith', configured: true }],
     })
     const sections = tooltip.split('\n\n---\n\n')
     expect(sections[0]).toBe('**engined** · $(pass-filled) reachable · 5 model(s)')
@@ -153,6 +153,53 @@ describe('buildTooltip', () => {
     expect(sections[3]).toBe('**Defaults**\n\nCompletion: ornith')
     expect(sections[4]).toContain('[Refresh](command:engined.refreshModels)')
     expect(sections[4]).toContain('[Use engined everywhere](command:engined.useForAllChatFeatures)')
+  })
+
+  test('shows a tool-less background call separately from the last agent chat call', () => {
+    const tooltip = buildTooltip({
+      doorReachable: true,
+      doorUrl: 'http://x',
+      modelCount: 1,
+      lastChat: {
+        route: '@/claude/sonnet-5',
+        egress: 'remote',
+        promptTokens: 31000,
+        wallMs: 54000,
+      },
+      lastBackground: {
+        route: '@/claude/sonnet-5',
+        egress: 'remote',
+        promptTokens: 268,
+        completionTokens: 149,
+        wallMs: 54000,
+      },
+      defaults: [],
+    })
+    const sections = tooltip.split('\n\n---\n\n')
+    expect(sections[1]).toBe('**Last chat**\n\n$(cloud) sonnet-5 · remote · 31.0k→? · 54s')
+    expect(sections[2]).toBe('**Last background**\n\n$(cloud) sonnet-5 · remote · 268→149 · 54s')
+  })
+
+  test('default-model lines: configured and usable, empty setting, and unusable-configured', () => {
+    const tooltip = buildTooltip({
+      doorReachable: true,
+      doorUrl: 'http://x',
+      modelCount: 3,
+      defaults: [
+        { label: 'Image', resolvedName: '@/comfy/local', configured: true },
+        { label: 'OCR', resolvedName: '@/llama/ocr', configured: false },
+        {
+          label: 'Speech',
+          resolvedName: '@/chatterbox-en/local',
+          configured: true,
+          unusableConfigured: '@/whisper/x',
+        },
+      ],
+    })
+    const defaults = tooltip.split('\n\n---\n\n')[1]
+    expect(defaults).toBe(
+      '**Defaults**\n\nImage: @/comfy/local  \nOCR: @/llama/ocr (automatic)  \nSpeech: @/whisper/x unavailable, using @/chatterbox-en/local',
+    )
   })
 
   test('shows the unreachable header with how to start it', () => {

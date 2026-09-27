@@ -93,6 +93,8 @@ let doorReachable = true
 /** Shown once per session, on the first failed poll -- never repeated even if the door stays down. */
 let unreachableNoticeShown = false
 let lastChatCall: CallRecord | undefined
+/** The last tool-less chat request -- Copilot's own title/summary calls, never the status-bar source. */
+let lastBackgroundCall: CallRecord | undefined
 let lastCompletionCall: CallRecord | undefined
 let inFlightChat:
   | { modelId: string; startedAt: number; promptTokenEstimate: number; firstTokenAt?: number }
@@ -182,6 +184,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     token: vscode.CancellationToken,
   ): Promise<void> {
     const plainMessages = messages.map(toPlainMessage)
+    const hadTools = (options.tools?.length ?? 0) > 0
     const body = buildChatRequestBody(model, plainMessages, {
       tools: options.tools?.map((t) => ({
         name: t.name,
@@ -237,13 +240,18 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       },
       { id: model.id, egress: model.row.egress },
     )
-    lastChatCall = {
+    const record: CallRecord = {
       route: resolved.route,
       egress: resolved.egress,
       promptTokens: usage?.promptTokens,
       completionTokens: usage?.completionTokens,
       wallMs: Date.now() - startedAt,
       costUsd: usage?.costUsd ?? costUsdHeader(headers),
+    }
+    if (hadTools) {
+      lastChatCall = record
+    } else {
+      lastBackgroundCall = record
     }
     renderStatusBar()
     for (const call of toolCalls) {
@@ -506,14 +514,21 @@ function tooltipMarkdown(): vscode.MarkdownString {
     buildTooltip({
       doorReachable,
       lastChat: lastChatCall,
+      lastBackground: lastBackgroundCall,
       lastCompletion: lastCompletionCall,
       doorUrl: getUrl(),
       modelCount: poller.models.length,
-      defaults: DEFAULT_MODEL_TOOLTIP_ROLES.map((r) => ({
-        label: r.label,
-        modelName: resolveDefaultModel(poller.rows, r.role, getDefaultModel(r.role)).row
-          ?.display_name,
-      })),
+      defaults: DEFAULT_MODEL_TOOLTIP_ROLES.map((r) => {
+        const configuredId = getDefaultModel(r.role)
+        const resolved = resolveDefaultModel(poller.rows, r.role, configuredId)
+        return {
+          label: r.label,
+          resolvedName:
+            resolved.row === undefined ? undefined : (resolved.row.display_name ?? resolved.row.id),
+          configured: configuredId !== '',
+          unusableConfigured: resolved.unusableReason === undefined ? undefined : configuredId,
+        }
+      }),
       heldEngines: [...heldEngineIds],
       chatSettingsRouted: savedChatSettings() !== undefined,
     }),
@@ -1322,6 +1337,9 @@ export function activate(context: vscode.ExtensionContext): void {
         stopEngineEvents()
         restartPollTimer()
         void connectEngineEvents()
+      }
+      if (e.affectsConfiguration('engined.defaultModels')) {
+        renderStatusBar()
       }
     }),
     new vscode.Disposable(() => {
