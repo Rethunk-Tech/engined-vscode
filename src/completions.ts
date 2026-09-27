@@ -10,6 +10,23 @@ import type { ExtraFile } from './neighbourContext.ts'
 export const COMPLETIONS_PATH = '/openai/v1/completions'
 
 /**
+ * A `DocumentFilter[]` for `registerInlineCompletionItemProvider`. A
+ * `pattern`-only filter with no `scheme` is not guaranteed to score a
+ * `vscode-notebook-cell` or `untitled` document -- VS Code's own selector
+ * scoring (`vs/editor/common/languageSelector.ts`) treats an unscoped
+ * `pattern` filter as `file`/`untitled` only, so a notebook cell (which
+ * never carries a `file` URI) is invisible to it. Listed explicitly instead
+ * of relying on that default. `vscode-remote` is not needed: this
+ * extension's `extensionKind` is `workspace`, so it always sees `file` URIs
+ * even under Remote-SSH.
+ */
+export const COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES = [
+  'file',
+  'untitled',
+  'vscode-notebook-cell',
+] as const
+
+/**
  * ponytail: fixed single-line budget rather than something configurable --
  * ornith measurements back the numbers in the spec, and a knob nobody has
  * asked to turn is a setting nobody needed.

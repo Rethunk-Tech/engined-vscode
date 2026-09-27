@@ -1,10 +1,21 @@
 import { describe, expect, test } from 'bun:test'
 import {
   buildCompletionsRequestBody,
+  COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES,
   extractCompletionText,
   extractCompletionUsage,
   sliceContext,
 } from './completions.ts'
+
+describe('COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES', () => {
+  test('covers on-disk, untitled and notebook-cell documents', () => {
+    expect(COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES).toEqual([
+      'file',
+      'untitled',
+      'vscode-notebook-cell',
+    ])
+  })
+})
 
 describe('buildCompletionsRequestBody', () => {
   test('carries prefix as prompt, single-line stop, zero temperature, 64 max tokens', () => {

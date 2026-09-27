@@ -11,7 +11,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/requestBuilder.ts` | Plain VS Code-shaped messages -> the OpenAI chat request body; token estimation. No `vscode` import. |
 | `src/toolRequests.ts` | Request shapes for the four `engined_*` tools, built against an already-resolved row. No `vscode` import. |
 | `src/defaultModels.ts` | `resolveDefaultModel`: the one selection rule behind every `engined.defaultModels.*` setting (configured id if it still qualifies, else the automatic pick). No `vscode` import. |
-| `src/completions.ts` | Prefix/suffix slicing and the `/openai/v1/completions` request/reply shapes. No `vscode` import. |
+| `src/completions.ts` | Prefix/suffix slicing, the `/openai/v1/completions` request/reply shapes, and the inline-completion provider's document-selector schemes. No `vscode` import. |
 | `src/neighbourContext.ts` | Snippet selection for completions' `extra` field (cap, ordering, exclusion). No `vscode` import. |
 | `src/status.ts` | Status bar text/tooltip formatting and the route-header-vs-fallback resolution. No `vscode` import. |
 | `src/pathGuard.ts` | The workspace-folder trust boundary every tool path crosses. No `vscode` import. |

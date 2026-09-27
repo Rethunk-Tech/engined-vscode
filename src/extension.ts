@@ -11,6 +11,7 @@ import { buildChatSettingsPlan, buildRestorePlan, describePlan } from './chatSet
 import { readChatStream } from './chatStream.ts'
 import {
   buildCompletionsRequestBody,
+  COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES,
   COMPLETIONS_PATH,
   extractCompletionText,
   extractCompletionUsage,
@@ -1260,7 +1261,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerTreeDataProvider('engined.engines', engineExplorer),
     vscode.lm.registerLanguageModelChatProvider('engined', chatProvider),
     vscode.languages.registerInlineCompletionItemProvider(
-      { pattern: '**' },
+      COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES.map((scheme) => ({ scheme, pattern: '**' })),
       new EnginedInlineCompletionProvider(),
     ),
     vscode.window.onDidChangeActiveTextEditor(trackActiveEditor),

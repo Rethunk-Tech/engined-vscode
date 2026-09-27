@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - `engined_generateImage`, `engined_readImage`, `engined_transcribe`, `engined_speak`, and the inline-completions model picker now choose a route from every answerable row engined reports, not only the chat-completions subset -- a comfy, TTS or STT row never serves chat and was previously invisible to every tool.
+- Inline completions now register for `file`, `untitled` and `vscode-notebook-cell` documents explicitly -- a `pattern`-only selector with no `scheme` is not guaranteed to score a notebook cell document, which never carries a `file` URI.
 - Status popup's "Last chat" now shows the last request that actually carried tools, not Copilot's own tool-less title/summary requests, which now show separately as "Last background".
 - Status popup's Defaults section now shows the resolved model name for every role (previously showed "automatic" whenever the row had no `display_name`), and marks whether it's the configured id, the automatic pick, or a configured id that fell through to automatic. It also updates immediately after `engined.defaultModels.*` changes.
 
