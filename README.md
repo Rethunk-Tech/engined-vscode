@@ -13,6 +13,8 @@ Brings [engined](https://github.com/Rethunk-Tech/engined) into VS Code's own Cop
 
 The extension only ever talks to `engined.doors`; no request goes anywhere else, and the status bar always shows which route answered and whether it stayed local.
 
+<p align="center"><img src="media/readme/image-and-speech.png" alt="Copilot Chat on a local engined model: #enginedImage generates a fantasy kingdom with Chroma, #enginedSpeak narrates it, and the image opens beside the chat" width="900"></p>
+
 ## Quick start
 
 ```bash
@@ -31,6 +33,15 @@ Then open Copilot Chat's model picker and choose an `engined` model. Full runboo
 - A usage report (per-day/per-route requests, tokens, cost, and local/remote split) across every configured door
 - Image attachments work on a text-only engined model that engined bridges to a vision route
 - Copilot's Context Window meter shows the token usage engined reports for each reply
+
+## Screenshots
+
+<table>
+<tr><td align="center" colspan="2"><img src="media/readme/completion-haversine.png" alt="Inline completion: Ornith fills in the haversine formula from the helpers above and the return below" height="210"><br><sub>Fill-in-the-middle completions from a local model</sub></td></tr>
+<tr><td align="center"><img src="media/readme/status-popup.png" alt="Status bar popup: the last chat, background and completion calls side by side, today's usage and the default models" height="380"><br><sub>Status popup: what answered, where, and at what cost</sub></td><td align="center"><img src="media/readme/engines-view.png" alt="Engines view: running engines with RAM and GPU use" height="380"><br><sub>Engines view with live resource use</sub></td></tr>
+<tr><td align="center"><img src="media/readme/agent-tools.png" alt="Copilot's Configure Tools listing the four engined tools" height="220"><br><sub>engined's tools in Copilot's tool picker</sub></td><td align="center"><img src="media/readme/transcribe.png" alt="#enginedTranscribe returning the Peter Piper tongue twister from an audio file" height="220"><br><sub>Speech-to-text through #enginedTranscribe</sub></td></tr>
+<tr><td align="center"><img src="media/readme/usage-report.png" alt="Usage report: per-day and per-route requests and tokens" height="300"><br><sub>Usage report across routes</sub></td><td align="center"><img src="media/readme/context-window.png" alt="Copilot's Context Window meter reading engined's reported token usage" height="300"><br><sub>Copilot's Context Window meter with engined's counts</sub></td></tr>
+</table>
 
 ## Documentation
 
