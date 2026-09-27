@@ -281,37 +281,83 @@ function doorRow(d: DoorLine): string {
   return row(d.name, `${glyph} ${d.url}${suffix}`)
 }
 
-// --- call/usage/defaults tables -------------------------------------------
+// --- calls table (one table, calls as columns) ----------------------------
 
-function callTable(call: CallRecord, theme: ThemeKind): string {
+/** A named call column -- only entries whose `call` is defined become a column. */
+interface CallColumn {
+  label: string
+  call: CallRecord
+}
+
+function routeCell(call: CallRecord): string {
   const local = isLocalEgress(call.egress)
   const glyph = local ? '$(server)' : '$(cloud)'
+  return `${glyph} ${shortModelName(call.route)} ${muted(local ? '(local)' : '(remote)')}`
+}
+
+function tokensCell(call: CallRecord): string {
   const inTokens = call.promptTokens === undefined ? '?' : abbreviateTokenCount(call.promptTokens)
   const outTokens =
     call.completionTokens === undefined ? '?' : abbreviateTokenCount(call.completionTokens)
-  const rows = [
-    row('Route', `${glyph} ${shortModelName(call.route)} ${muted(local ? '(local)' : '(remote)')}`),
-    row('Tokens', `${inTokens} → ${outTokens}`),
-    row('Time', formatSeconds(call.wallMs)),
-  ]
-  if (call.costUsd !== undefined) {
-    rows.push(row('Cost', formatCostUsd(call.costUsd)))
-  }
-  if (
-    call.promptTokens !== undefined &&
-    call.promptTokenMax !== undefined &&
-    call.promptTokenMax > 0
-  ) {
-    const fraction = call.promptTokens / call.promptTokenMax
-    rows.push(
-      row(
-        'Context',
-        `${meterImg(fraction, theme, 'prompt tokens used')} ${abbreviateTokenCount(call.promptTokens)} / ${abbreviateTokenCount(call.promptTokenMax)}`,
-      ),
-    )
-  }
-  return table(rows)
+  return `${inTokens} → ${outTokens}`
 }
+
+function costCell(call: CallRecord): string {
+  return call.costUsd === undefined ? muted('—') : formatCostUsd(call.costUsd)
+}
+
+function hasContextMeter(call: CallRecord): boolean {
+  return (
+    call.promptTokens !== undefined && call.promptTokenMax !== undefined && call.promptTokenMax > 0
+  )
+}
+
+function contextCell(call: CallRecord, theme: ThemeKind): string {
+  if (
+    call.promptTokens === undefined ||
+    call.promptTokenMax === undefined ||
+    call.promptTokenMax <= 0
+  ) {
+    return muted('—')
+  }
+  const fraction = call.promptTokens / call.promptTokenMax
+  return `${meterImg(fraction, theme, 'prompt tokens used')} ${abbreviateTokenCount(call.promptTokens)} / ${abbreviateTokenCount(call.promptTokenMax)}`
+}
+
+/** `<tr><td>Route</td><td>chip</td><td>chip</td>...</tr>`, one column per call, label column left as-is (muted) and value columns left-aligned so they read as columns. */
+function callsRow(
+  label: string,
+  columns: readonly CallColumn[],
+  cell: (call: CallRecord) => string,
+): string {
+  const cells = columns.map((c) => `<td>${cell(c.call)}</td>`).join('')
+  return `<tr><td>${muted(label)}</td>${cells}</tr>`
+}
+
+/**
+ * ONE table for every in-flight call kind, calls as columns instead of one
+ * narrow table per section -- a header row naming only the calls that
+ * exist, then a row per fact, each row present only when some column has
+ * that fact (Cost/Context are usually completion-only or absent entirely).
+ */
+function callsTable(columns: readonly CallColumn[], theme: ThemeKind): string {
+  const header = `<tr><td></td>${columns.map((c) => `<td>${muted(c.label)}</td>`).join('')}</tr>`
+  const rows = [
+    header,
+    callsRow('Route', columns, routeCell),
+    callsRow('Tokens', columns, tokensCell),
+    callsRow('Time', columns, (call) => formatSeconds(call.wallMs)),
+  ]
+  if (columns.some((c) => c.call.costUsd !== undefined)) {
+    rows.push(callsRow('Cost', columns, costCell))
+  }
+  if (columns.some((c) => hasContextMeter(c.call))) {
+    rows.push(callsRow('Context', columns, (call) => contextCell(call, theme)))
+  }
+  return `<table width="100%">${rows.join('')}</table>`
+}
+
+// --- today/defaults (one row, two cells) ----------------------------------
 
 function todayTable(usage: TodayUsage): string {
   const rows = [row('Requests', String(usage.requests))]
@@ -340,6 +386,20 @@ function defaultRow(line: DefaultModelLine): string {
     line.label,
     line.configured ? line.resolvedName : `${line.resolvedName} ${muted('(automatic)')}`,
   )
+}
+
+/**
+ * Today's totals and the configured defaults side by side, as one 2-cell
+ * row instead of two stacked full-width tables -- both are short, so
+ * stacking them wasted the popup's height for no reason.
+ */
+function todayDefaultsRow(
+  usage: TodayUsage | undefined,
+  defaults: readonly DefaultModelLine[],
+): string {
+  const left = usage === undefined ? '' : todayTable(usage)
+  const right = defaults.length === 0 ? '' : table(defaults.map(defaultRow))
+  return `<table width="100%"><tr><td><b>Today</b><br>${left}</td><td><b>Defaults</b><br>${right}</td></tr></table>`
 }
 
 // --- actions ---------------------------------------------------------------
@@ -386,24 +446,36 @@ export function buildTooltip(input: TooltipInput): string {
     headerParts.push(chip('Chat features routed to engined', COLOR_ROUTED))
   }
 
+  const callColumns: CallColumn[] = []
+  if (input.lastChat !== undefined) {
+    callColumns.push({ label: 'Chat', call: input.lastChat })
+  }
+  if (input.lastBackground !== undefined) {
+    callColumns.push({ label: 'Background', call: input.lastBackground })
+  }
+  if (input.lastCompletion !== undefined) {
+    callColumns.push({ label: 'Completion', call: input.lastCompletion })
+  }
+  const callsBlock = callColumns.length > 0 ? callsTable(callColumns, theme) : undefined
+
+  const todayDefaultsBlock =
+    input.todayUsage !== undefined || input.defaults.length > 0
+      ? todayDefaultsRow(input.todayUsage, input.defaults)
+      : undefined
+
+  // At most one rule between these two blocks -- more would stack rules for
+  // no reason, since each block is already a single self-contained table.
+  const middle =
+    callsBlock !== undefined && todayDefaultsBlock !== undefined
+      ? `${callsBlock}\n\n<hr>\n\n${todayDefaultsBlock}`
+      : (callsBlock ?? todayDefaultsBlock)
+
   const sections = [headerParts.join(' &nbsp;·&nbsp; ')]
   if (input.doors.length > 1) {
     sections.push(section('Doors', table(input.doors.map(doorRow))))
   }
-  if (input.lastChat !== undefined) {
-    sections.push(section('Last chat', callTable(input.lastChat, theme)))
-  }
-  if (input.lastBackground !== undefined) {
-    sections.push(section('Last background', callTable(input.lastBackground, theme)))
-  }
-  if (input.lastCompletion !== undefined) {
-    sections.push(section('Last completion', callTable(input.lastCompletion, theme)))
-  }
-  if (input.todayUsage !== undefined) {
-    sections.push(section('Today', todayTable(input.todayUsage)))
-  }
-  if (input.defaults.length > 0) {
-    sections.push(section('Defaults', table(input.defaults.map(defaultRow))))
+  if (middle !== undefined) {
+    sections.push(middle)
   }
   sections.push(actionsHtml(input.chatSettingsRouted === true))
 

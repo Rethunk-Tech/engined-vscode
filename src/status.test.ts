@@ -226,8 +226,8 @@ describe('buildTooltip', () => {
     expect(tooltip).toContain('http://10.0.0.5:29200')
   })
 
-  test('last chat renders a table with route, tokens, time -- no cost row when absent', () => {
-    const tooltip = buildTooltip({
+  test('calls render as columns in one table, header names only the calls that exist', () => {
+    const chatOnly = buildTooltip({
       ...baseInput,
       lastChat: {
         route: '@/llama/ornith',
@@ -237,23 +237,62 @@ describe('buildTooltip', () => {
         wallMs: 2300,
       },
     })
-    const section = tooltip.split('<hr>').find((s) => s.includes('Last chat'))
-    expect(section).toBeDefined()
-    expect(section).toContain('<table>')
-    expect(section).toContain('1.2k')
-    expect(section).toContain('340')
-    expect(section).not.toContain('Cost')
+    expect(chatOnly).toContain('<table width="100%">')
+    expect(chatOnly).toContain('Chat')
+    expect(chatOnly).not.toContain('Background')
+    expect(chatOnly).not.toContain('Completion')
+    expect(chatOnly).toContain('1.2k')
+    expect(chatOnly).toContain('340')
+    expect(chatOnly).not.toContain('Cost')
+
+    const allThree = buildTooltip({
+      ...baseInput,
+      lastChat: {
+        route: '@/llama/ornith',
+        egress: 'none',
+        promptTokens: 1200,
+        completionTokens: 340,
+        wallMs: 2300,
+      },
+      lastBackground: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
+      lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
+    })
+    // one calls table, not three -- a single header row naming all three columns.
+    expect(allThree.match(/<table width="100%">/g)?.length).toBeGreaterThanOrEqual(1)
+    const headerRow = allThree.match(/<tr><td><\/td>.*?<\/tr>/)?.[0]
+    expect(headerRow).toBeDefined()
+    expect(headerRow).toContain('Chat')
+    expect(headerRow).toContain('Background')
+    expect(headerRow).toContain('Completion')
   })
 
-  test('last chat renders a cost row only when the hop reported one', () => {
+  test('a lone call still renders as a single column', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
+    })
+    const callsTableHtml = tooltip.match(/<table width="100%">.*?<\/table>/)?.[0] ?? ''
+    expect(callsTableHtml).toContain('Completion')
+    expect(callsTableHtml).not.toContain('>Chat<')
+    expect(callsTableHtml).not.toContain('Background')
+  })
+
+  test('cost row appears only when some column reported a cost', () => {
     const tooltip = buildTooltip({
       ...baseInput,
       lastChat: { route: '@/opencode/ornith', egress: 'none', wallMs: 500, costUsd: 0.0123 },
+      lastBackground: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
     })
     expect(tooltip).toContain('$0.0123')
+
+    const noCost = buildTooltip({
+      ...baseInput,
+      lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 500 },
+    })
+    expect(noCost).not.toContain('Cost')
   })
 
-  test('context meter appears only when both prompt tokens and a max are known', () => {
+  test('context row appears only when some column has both prompt tokens and a max', () => {
     const withMax = buildTooltip({
       ...baseInput,
       lastChat: {
@@ -263,6 +302,7 @@ describe('buildTooltip', () => {
         wallMs: 1000,
         promptTokenMax: 262144,
       },
+      lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
     })
     expect(withMax).toContain('Context')
     expect(withMax).toContain('data:image/svg+xml;base64,')
@@ -281,21 +321,10 @@ describe('buildTooltip', () => {
     expect(withoutMax).not.toContain('data:image/svg+xml;base64,')
   })
 
-  test('today usage table appears only when supplied', () => {
-    const withToday = buildTooltip({
+  test('Today and Defaults render side by side as one 2-cell row', () => {
+    const both = buildTooltip({
       ...baseInput,
       todayUsage: { requests: 12, promptTokens: 4000, completionTokens: 900 },
-    })
-    expect(withToday).toContain('<b>Today</b>')
-    expect(withToday).toContain('12')
-
-    const withoutToday = buildTooltip(baseInput)
-    expect(withoutToday).not.toContain('<b>Today</b>')
-  })
-
-  test('defaults: configured, automatic, and unusable-configured render as table rows', () => {
-    const tooltip = buildTooltip({
-      ...baseInput,
       defaults: [
         { label: 'Image', resolvedName: '@/comfy/local', configured: true },
         { label: 'OCR', resolvedName: '@/llama/ocr', configured: false },
@@ -307,11 +336,33 @@ describe('buildTooltip', () => {
         },
       ],
     })
-    const section = tooltip.split('<hr>').find((s) => s.includes('Defaults'))
-    expect(section).toContain('@/comfy/local')
-    expect(section).toContain('(automatic)')
-    expect(section).toContain('@/whisper/x unavailable')
-    expect(section).toContain('using @/chatterbox-en/local')
+    expect(both).toContain('<b>Today</b>')
+    expect(both).toContain('<b>Defaults</b>')
+    // one row, two cells -- no fresh outer table opens between them, so they
+    // sit in the same row rather than as two stacked full-width tables.
+    const todayIdx = both.indexOf('<b>Today</b>')
+    const defaultsIdx = both.indexOf('<b>Defaults</b>', todayIdx)
+    expect(defaultsIdx).toBeGreaterThan(todayIdx)
+    expect(both.slice(todayIdx, defaultsIdx)).not.toContain('<table width="100%">')
+    expect(both).toContain('12')
+    expect(both).toContain('@/comfy/local')
+    expect(both).toContain('(automatic)')
+    expect(both).toContain('@/whisper/x unavailable')
+    expect(both).toContain('using @/chatterbox-en/local')
+
+    const neither = buildTooltip(baseInput)
+    expect(neither).not.toContain('<b>Today</b>')
+    expect(neither).not.toContain('<b>Defaults</b>')
+  })
+
+  test('at most one <hr> sits between the calls table and the Today/Defaults row', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
+      todayUsage: { requests: 12 },
+    })
+    const between = tooltip.split('Today')[0]?.split('<table width="100%">').pop() ?? ''
+    expect(between.match(/<hr>/g)?.length ?? 0).toBeLessThanOrEqual(1)
   })
 
   test('chat-routed chip swaps the "use everywhere" action for "Restore"', () => {
