@@ -337,6 +337,10 @@
         "title": "engined: Choose Default Models"
       },
       {
+        "command": "engined.showUsageReport",
+        "title": "engined: Usage Report"
+      },
+      {
         "command": "engined.warmModel",
         "title": "engined: Warm Model"
       },

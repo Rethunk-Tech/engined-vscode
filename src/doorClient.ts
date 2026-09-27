@@ -283,6 +283,54 @@ export async function postRerank(
   return data.results ?? []
 }
 
+export interface UsageRow {
+  date: string
+  route: string
+  requests: number
+  ok: number
+  failed: number
+  prompt_tokens?: number
+  completion_tokens?: number
+  cost_usd?: number
+  duration_ms: number
+  egress?: string
+}
+
+export type DoorUsage =
+  | { door: Door; status: 'ok'; rows: UsageRow[] }
+  | { door: Door; status: 'unsupported' }
+  | { door: Door; status: 'unreachable' }
+
+/** `GET /engined/v1/usage?days=N` against one door. A 404 (this door predates the route) and any other failure are reported on the result, never thrown -- one door's gap must not blank out the usage report. */
+export async function fetchUsage(
+  door: Door,
+  days: number,
+  signal?: AbortSignal,
+): Promise<DoorUsage> {
+  try {
+    const res = await fetch(`${door.url}/engined/v1/usage?days=${days}`, { signal })
+    if (res.status === 404) {
+      return { door, status: 'unsupported' }
+    }
+    if (!res.ok) {
+      return { door, status: 'unreachable' }
+    }
+    const body = (await res.json()) as { data: UsageRow[] }
+    return { door, status: 'ok', rows: body.data }
+  } catch {
+    return { door, status: 'unreachable' }
+  }
+}
+
+/** Every configured door's usage, in `doors`' own order. */
+export async function fetchAllUsage(
+  doors: readonly Door[],
+  days: number,
+  signal?: AbortSignal,
+): Promise<DoorUsage[]> {
+  return Promise.all(doors.map((door) => fetchUsage(door, days, signal)))
+}
+
 /** A multipart POST -- image edit, transcription. */
 export async function postForm(baseUrl: string, path: string, form: FormData): Promise<unknown> {
   const res = await fetch(`${baseUrl}${path}`, { method: 'POST', body: form })

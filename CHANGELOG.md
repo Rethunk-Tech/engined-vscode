@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `engined: Usage Report`: a quick pick for 1/7/30 days, then a Markdown preview of totals (requests, tokens, cost where known, local/remote split), a per-day table, and a per-route table sorted by requests, merged across every configured door (with a Door column once there's more than one) and calling out a door whose engined predates `GET /engined/v1/usage` by name rather than failing.
 - Long user messages (Copilot's instructions) are split into consecutive user turns at structural boundaries so a hybrid model can reuse more of a cached prompt; `engined.chat.splitChunkChars` / `engined.chat.splitAboveChars` tune or disable it.
 - `engined: Use engined for All Chat Features` routes VS Code chat defaults (default, utility, plan and explore models) to an engined model and turns off Copilot inline suggestions, after listing every setting; `engined: Restore Previous Chat Settings` puts the saved values back.
 - Initial release: an `engined` VS Code language model chat provider backed by engined's `/openai/v1/models` and `/openai/v1/chat/completions`, model-list polling, reasoning-effort settings, and four tools (`engined_generateImage`, `engined_readImage`, `engined_transcribe`, `engined_speak`).

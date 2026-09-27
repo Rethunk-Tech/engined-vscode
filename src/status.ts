@@ -170,6 +170,7 @@ export const TOOLTIP_COMMANDS = {
   useForAll: 'engined.useForAllChatFeatures',
   restore: 'engined.restoreChatSettings',
   log: 'engined.showLog',
+  usage: 'engined.showUsageReport',
 } as const
 
 function commandLink(label: string, command: string): string {
@@ -245,6 +246,7 @@ export function buildTooltip(input: TooltipInput): string {
     commandLink('Default models', TOOLTIP_COMMANDS.defaultModels),
     commandLink('Warm up', TOOLTIP_COMMANDS.warm),
     commandLink('Engines', TOOLTIP_COMMANDS.engines),
+    commandLink('Usage', TOOLTIP_COMMANDS.usage),
     input.chatSettingsRouted === true
       ? commandLink('Restore', TOOLTIP_COMMANDS.restore)
       : commandLink('Use engined everywhere', TOOLTIP_COMMANDS.useForAll),

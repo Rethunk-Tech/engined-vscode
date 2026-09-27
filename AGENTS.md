@@ -14,6 +14,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/completions.ts` | Prefix/suffix slicing, the `/openai/v1/completions` request/reply shapes, and the inline-completion provider's document-selector schemes. No `vscode` import. |
 | `src/neighbourContext.ts` | Snippet selection for completions' `extra` field (cap, ordering, exclusion). No `vscode` import. |
 | `src/status.ts` | Status bar text/tooltip formatting and the route-header-vs-fallback resolution. No `vscode` import. |
+| `src/usageReport.ts` | Aggregates `GET /engined/v1/usage` rows across doors into totals and the per-day/per-route Markdown tables `engined: Usage Report` shows. No `vscode` import. |
 | `src/pathGuard.ts` | The workspace-folder trust boundary every tool path crosses. No `vscode` import. |
 | `src/polling.ts` | `ModelPoller`: tracks both the chat-only model list and every answerable row; fires only on an actual change, empties after 3 consecutive failures. No `vscode` import. |
 | `src/doorClient.ts` | The only file that calls `fetch` against the door; `fetchAllDoors` fans a poll out across every configured door and merges the reachable ones. No `vscode` import. |

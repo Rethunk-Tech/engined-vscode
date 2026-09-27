@@ -42,6 +42,7 @@ import {
 import {
   DoorHttpError,
   fetchAllDoors,
+  fetchAllUsage,
   holdEngine,
   openEngineEventsStream,
   postChatCompletion,
@@ -88,6 +89,7 @@ import {
   confirmationMessage,
   ToolRouteError,
 } from './toolRequests.ts'
+import { buildUsageReport } from './usageReport.ts'
 
 const LOADING_TICK_MS = 300
 const RECENT_DOCUMENTS_CAP = 10
@@ -930,6 +932,7 @@ async function showQuickPick(chatProvider: EnginedChatProvider): Promise<void> {
       { label: 'Set reasoning effort (global)', action: 'effort-global' as const },
       { label: 'Set reasoning effort for a model', action: 'effort-model' as const },
       { label: 'Choose default models', action: 'default-models' as const },
+      { label: 'Usage report', action: 'usage' as const },
       { label: 'Show engined log', action: 'log' as const },
     ],
     { title: 'engined' },
@@ -952,6 +955,8 @@ async function showQuickPick(chatProvider: EnginedChatProvider): Promise<void> {
     await pickAndSetEffort()
   } else if (pick.action === 'default-models') {
     await chooseDefaultModels()
+  } else if (pick.action === 'usage') {
+    await showUsageReport()
   } else {
     const model = await vscode.window.showQuickPick(
       poller.models.map((m) => m.name),
@@ -1019,6 +1024,26 @@ async function chooseDefaultModels(): Promise<void> {
   }
   await setDefaultModel(rolePick.role, modelPick.id)
   loggedUnusableReasons.delete(rolePick.role)
+}
+
+const USAGE_REPORT_DAY_CHOICES = [1, 7, 30] as const
+
+/** `engined: Usage Report`: pick a day range, fetch `/engined/v1/usage` from every configured door, and show the result as a read-only Markdown preview. */
+async function showUsageReport(): Promise<void> {
+  const pick = await vscode.window.showQuickPick(
+    USAGE_REPORT_DAY_CHOICES.map((days) => ({
+      label: `${days} day${days === 1 ? '' : 's'}`,
+      days,
+    })),
+    { title: 'engined: Usage report' },
+  )
+  if (pick === undefined) {
+    return
+  }
+  const usages = await fetchAllUsage(getDoors(), pick.days)
+  const report = buildUsageReport(usages, pick.days)
+  const doc = await vscode.workspace.openTextDocument({ content: report, language: 'markdown' })
+  await vscode.commands.executeCommand('markdown.showPreview', doc.uri)
 }
 
 // --- tools ------------------------------------------------------------------
@@ -1349,6 +1374,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('engined.showQuickPick', () => showQuickPick(chatProvider)),
     vscode.commands.registerCommand('engined.chooseDefaultModels', () => chooseDefaultModels()),
+    vscode.commands.registerCommand('engined.showUsageReport', () => showUsageReport()),
     vscode.commands.registerCommand('engined.warmModel', () => warmModel()),
     vscode.commands.registerCommand('engined.useForAllChatFeatures', () => useForAllChatFeatures()),
     vscode.commands.registerCommand('engined.restoreChatSettings', () => restoreChatSettings()),
