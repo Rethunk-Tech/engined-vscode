@@ -183,3 +183,41 @@ describe('tool order and schema-key order are stable', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
   })
 })
+
+describe('long user messages', () => {
+  test('a long text-only user message becomes consecutive user turns; short ones are untouched', () => {
+    const long = Array.from({ length: 400 }, (_, i) => `line ${i} of the instructions`).join('\n')
+    const body = buildChatRequestBody(
+      modelInfo(),
+      [
+        { role: 'user', parts: [{ type: 'text', text: long }] },
+        { role: 'user', parts: [{ type: 'text', text: 'short' }] },
+      ],
+      { toolChoiceRequired: false, reasoningEffort: 'medium', reasoningEffortByModel: {} },
+    )
+    const users = body.messages.filter((m) => m.role === 'user')
+    expect(users.length).toBeGreaterThan(2)
+    expect(
+      users
+        .slice(0, -1)
+        .map((m) => m.content)
+        .join(''),
+    ).toBe(long)
+    expect(users.at(-1)?.content).toBe('short')
+  })
+
+  test('splitAboveChars 0 sends the message whole', () => {
+    const long = 'x\n'.repeat(10000)
+    const body = buildChatRequestBody(
+      modelInfo(),
+      [{ role: 'user', parts: [{ type: 'text', text: long }] }],
+      {
+        toolChoiceRequired: false,
+        reasoningEffort: 'medium',
+        reasoningEffortByModel: {},
+        split: { chunkChars: 2000, splitAboveChars: 0 },
+      },
+    )
+    expect(body.messages.length).toBe(1)
+  })
+})

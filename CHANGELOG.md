@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Long user messages (Copilot's instructions) are split into consecutive user turns at structural boundaries so a hybrid model can reuse more of a cached prompt; `engined.chat.splitChunkChars` / `engined.chat.splitAboveChars` tune or disable it.
 - `engined: Use engined for All Chat Features` routes VS Code chat defaults (default, utility, plan and explore models) to an engined model and turns off Copilot inline suggestions, after listing every setting; `engined: Restore Previous Chat Settings` puts the saved values back.
 - Initial release: an `engined` VS Code language model chat provider backed by engined's `/openai/v1/models` and `/openai/v1/chat/completions`, model-list polling, reasoning-effort settings, and four tools (`engined_generateImage`, `engined_readImage`, `engined_transcribe`, `engined_speak`).
 - Inline completions (ghost text) via engined's `POST /openai/v1/completions`, debounced and abortable, with an `engined.completions.enabled` setting.

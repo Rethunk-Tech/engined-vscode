@@ -25,6 +25,7 @@ import {
   getPollSeconds,
   getReasoningEffort,
   getReasoningEffortByModel,
+  getSplitOptions,
   setDefaultModel,
   setReasoningEffort,
 } from './config.ts'
@@ -223,6 +224,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       toolChoiceRequired: options.toolMode === vscode.LanguageModelChatToolMode.Required,
       reasoningEffort: getReasoningEffort(),
       reasoningEffortByModel: getReasoningEffortByModel(),
+      split: getSplitOptions(),
     })
     if (hadTools) {
       const print: FingerprintInput = {

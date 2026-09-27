@@ -7,6 +7,8 @@
 
 import type { EnginedModelInfo, ReasoningLevel } from './door.ts'
 import { reasoningLevelsFor, snapReasoningEffort } from './door.ts'
+import type { SplitOptions } from './promptSplit.ts'
+import { DEFAULT_SPLIT, splitAtBoundaries } from './promptSplit.ts'
 
 export type PlainMessagePart =
   | { type: 'text'; text: string }
@@ -31,6 +33,8 @@ export interface ChatRequestOptions {
   toolChoiceRequired?: boolean
   reasoningEffort: ReasoningLevel
   reasoningEffortByModel: Record<string, ReasoningLevel>
+  /** How long user messages are split; DEFAULT_SPLIT when absent. */
+  split?: SplitOptions
 }
 
 interface OpenAiContentPart {
@@ -111,6 +115,18 @@ function toOpenAiMessages(message: PlainMessage): OpenAiMessage[] {
   return out
 }
 
+/**
+ * Copilot's instructions arrive as one ~15k-token user message that changes per chat, and a
+ * hybrid model recomputes a changed message from its start, so long text-only user messages go
+ * out as consecutive user turns carrying the same text (see promptSplit.ts).
+ */
+function splitLongUserMessage(message: OpenAiMessage, split: SplitOptions): OpenAiMessage[] {
+  if (message.role !== 'user' || typeof message.content !== 'string') {
+    return [message]
+  }
+  return splitAtBoundaries(message.content, split).map((content) => ({ role: 'user', content }))
+}
+
 /** The per-model override, else the global setting, snapped to a level the row actually lists; `undefined` when the row lists none. */
 function resolveReasoningEffort(
   model: EnginedModelInfo,
@@ -151,7 +167,9 @@ export function buildChatRequestBody(
 ): OpenAiChatRequestBody {
   const body: OpenAiChatRequestBody = {
     model: model.row.routeId,
-    messages: messages.flatMap(toOpenAiMessages),
+    messages: messages
+      .flatMap(toOpenAiMessages)
+      .flatMap((m) => splitLongUserMessage(m, options.split ?? DEFAULT_SPLIT)),
     stream: true,
     stream_options: { include_usage: true },
   }

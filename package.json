@@ -312,6 +312,18 @@
           "type": "number",
           "default": 20000,
           "description": "Maximum number of chunks the search index will hold. Indexing stops (with a log message) once reached."
+        },
+        "engined.chat.splitChunkChars": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 0,
+          "markdownDescription": "Long user messages sent to engined are split into consecutive user turns of about this many characters, cut at blank lines, closing XML tags or line ends and never inside a code fence or JSON value. A hybrid model such as Ornith can only reuse a cached prompt up to a message boundary, so smaller pieces make new chats faster. `0` disables splitting."
+        },
+        "engined.chat.splitAboveChars": {
+          "type": "number",
+          "default": 8000,
+          "minimum": 0,
+          "markdownDescription": "Only user messages longer than this many characters are split (see `engined.chat.splitChunkChars`). `0` disables splitting."
         }
       }
     },

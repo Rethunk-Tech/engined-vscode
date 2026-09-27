@@ -7,6 +7,8 @@ import * as vscode from 'vscode'
 import type { ModelRole } from './defaultModels.ts'
 import type { Door, ReasoningLevel } from './door.ts'
 import { REASONING_LEVELS } from './door.ts'
+import type { SplitOptions } from './promptSplit.ts'
+import { DEFAULT_SPLIT } from './promptSplit.ts'
 
 export const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
 export const DEFAULT_POLL_SECONDS = 30
@@ -80,4 +82,14 @@ export async function setReasoningEffort(level: ReasoningLevel, modelId?: string
   const byModel = getReasoningEffortByModel()
   byModel[modelId] = level
   await config().update('reasoningEffortByModel', byModel, vscode.ConfigurationTarget.Global)
+}
+
+export function getSplitOptions(): SplitOptions {
+  return {
+    chunkChars: Math.max(0, config().get<number>('chat.splitChunkChars', DEFAULT_SPLIT.chunkChars)),
+    splitAboveChars: Math.max(
+      0,
+      config().get<number>('chat.splitAboveChars', DEFAULT_SPLIT.splitAboveChars),
+    ),
+  }
 }

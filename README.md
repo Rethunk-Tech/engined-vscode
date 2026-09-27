@@ -59,6 +59,8 @@ This steers defaults only. Copilot's models stay in the picker and you can still
 | `engined.pollSeconds` | `30` | How often to re-poll the model list. `0` disables polling (use `engined: Refresh Models` instead). |
 | `engined.reasoningEffort` | `medium` | Default reasoning effort for models that support it. |
 | `engined.reasoningEffortByModel` | `{}` | Per-model override, keyed by model id. |
+| `engined.chat.splitChunkChars` | `2000` | Split long user messages into turns of about this many characters, at blank lines, closing tags or line ends, never inside a code fence or JSON value. A hybrid model like Ornith reuses a cached prompt only up to a message boundary, so this makes new chats faster. `0` disables. |
+| `engined.chat.splitAboveChars` | `8000` | Only messages longer than this are split. `0` disables. |
 | `engined.completions.enabled` | `true` | Offer inline completions (ghost text). |
 | `engined.completions.neighbourContext` | `true` | Send snippets from other open/recent editors as completions context. Only sent to a local (`egress: none`) completions route. |
 | `engined.defaultModels.image` | `""` | Model id for `engined_generateImage`. Empty is automatic. |
