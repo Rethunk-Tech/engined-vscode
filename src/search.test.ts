@@ -1,5 +1,25 @@
 import { describe, expect, test } from 'bun:test'
-import { chunkFile, cosineSimilarity, mergeRerank, planIndexUpdate, topK } from './search.ts'
+import {
+  chunkFile,
+  cosineSimilarity,
+  mergeRerank,
+  planIndexUpdate,
+  topK,
+  truncateSnippet,
+} from './search.ts'
+
+describe('truncateSnippet', () => {
+  test('leaves a short snippet untouched', () => {
+    expect(truncateSnippet('short', 600)).toBe('short')
+  })
+
+  test('caps a long snippet, ellipsised, while a caller keeps the full chunk range separately', () => {
+    const long = 'x'.repeat(700)
+    const truncated = truncateSnippet(long, 600)
+    expect(truncated).toBe(`${'x'.repeat(600)}…`)
+    expect(truncated.length).toBe(601)
+  })
+})
 
 describe('chunkFile', () => {
   test('one chunk when the whole file fits under maxChars', () => {

@@ -56,6 +56,7 @@ import {
   estimateMessageTokenCount,
   estimateTokenCount,
 } from './requestBuilder.ts'
+import { truncateSnippet } from './search.ts'
 import { SearchIndex } from './searchIndex.ts'
 import type { CallRecord } from './status.ts'
 import {
@@ -1143,7 +1144,7 @@ interface SearchInput {
   maxResults?: number
 }
 
-const DEFAULT_SEARCH_MAX_RESULTS = 8
+const DEFAULT_SEARCH_MAX_RESULTS = 6
 
 const searchTool: vscode.LanguageModelTool<SearchInput> = {
   async invoke(options) {
@@ -1158,7 +1159,7 @@ const searchTool: vscode.LanguageModelTool<SearchInput> = {
         ])
       }
       const text = hits
-        .map((h) => `${h.path}:${h.startLine}-${h.endLine}\n${h.text}`)
+        .map((h) => `${h.path}:${h.startLine}-${h.endLine}\n${truncateSnippet(h.text)}`)
         .join('\n\n---\n\n')
       return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
     } catch (error) {

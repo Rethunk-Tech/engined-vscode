@@ -55,6 +55,13 @@ export function chunkFile(
   return chunks
 }
 
+const DEFAULT_SNIPPET_CHAR_CAP = 600
+
+/** The displayed snippet, capped -- the chunk's own line range stays full-size regardless, so the model can open the file for the rest instead of VS Code spilling a large result to a `content.txt` it has to read back. */
+export function truncateSnippet(text: string, maxChars = DEFAULT_SNIPPET_CHAR_CAP): string {
+  return text.length <= maxChars ? text : `${text.slice(0, maxChars)}…`
+}
+
 export function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
   const length = Math.min(a.length, b.length)
   let dot = 0

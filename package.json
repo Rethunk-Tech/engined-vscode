@@ -156,7 +156,7 @@
         "toolReferenceName": "enginedSearch",
         "userDescription": "Semantic search over this workspace via engined's local embeddings.",
         "icon": "$(search)",
-        "modelDescription": "Semantic search over the open workspace's files via a local embeddings model, optionally reranked. Returns ranked snippets with their workspace-relative path and line range.",
+        "modelDescription": "Use this FIRST for conceptual or 'where is X / how does Y work' questions about this workspace: it finds code by meaning, not exact text; prefer it over text search when the user's words may not match identifiers. Semantic search over the open workspace's files via a local embeddings model, optionally reranked. Returns ranked snippets with their workspace-relative path and line range.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -166,7 +166,7 @@
             },
             "maxResults": {
               "type": "number",
-              "description": "Maximum number of snippets to return. Defaults to 8."
+              "description": "Maximum number of snippets to return. Defaults to 6."
             }
           },
           "required": [
