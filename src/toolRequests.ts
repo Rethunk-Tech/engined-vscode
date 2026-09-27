@@ -27,12 +27,12 @@ export function buildImageRequest(
   if (input.source !== undefined) {
     return {
       path: '/openai/v1/images/edits',
-      form: { model: row.id, prompt: input.prompt, image: input.source },
+      form: { model: row.routeId, prompt: input.prompt, image: input.source },
     }
   }
   return {
     path: '/openai/v1/images/generations',
-    body: { model: row.id, prompt: input.prompt, size: input.size },
+    body: { model: row.routeId, prompt: input.prompt, size: input.size },
   }
 }
 
@@ -55,7 +55,7 @@ export function buildReadImageRequest(
     input.question ??
     (input.mode === 'ocr' ? 'Transcribe every visible character exactly.' : 'Describe this image.')
   return {
-    model: row.id,
+    model: row.routeId,
     messages: [
       {
         role: 'user',
@@ -85,7 +85,7 @@ export function buildTranscribeRequest(
       input.translate === true
         ? '/openai/v1/audio/translations'
         : '/openai/v1/audio/transcriptions',
-    form: { model: row.id, file: input.audio },
+    form: { model: row.routeId, file: input.audio },
   }
 }
 
@@ -100,7 +100,7 @@ export function buildSpeakRequest(
 ): SpeakRequest {
   return {
     path: '/openai/v1/audio/speech',
-    body: { model: row.id, input: input.text, voice: input.voice },
+    body: { model: row.routeId, input: input.text, voice: input.voice },
   }
 }
 

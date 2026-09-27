@@ -55,7 +55,7 @@ This steers defaults only. Copilot's models stay in the picker and you can still
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `engined.url` | `http://127.0.0.1:29200` | Base URL of the engined door. |
+| `engined.doors` | `[{ "name": "local", "url": "http://127.0.0.1:29200" }]` | Every engined door to poll and route to. With one door, model/engine ids stay plain; with more than one, an id becomes `<door name>/<id>` and every request routes to the door that owns it. |
 | `engined.pollSeconds` | `30` | How often to re-poll the model list. `0` disables polling (use `engined: Refresh Models` instead). |
 | `engined.reasoningEffort` | `medium` | Default reasoning effort for models that support it. |
 | `engined.reasoningEffortByModel` | `{}` | Per-model override, keyed by model id. |
@@ -85,7 +85,7 @@ engined logs no request or response content, and this extension follows the same
 
 ## Requirements
 
-- No engined-side auth exists; do not point `engined.url` at anything but a loopback address you trust.
+- No engined-side auth exists; do not point any `engined.doors` entry at anything but a loopback address you trust.
 
 ## Development
 

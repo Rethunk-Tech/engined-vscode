@@ -4,7 +4,7 @@
  * empty it after 3 consecutive failures) runs under `bun test`.
  */
 
-import type { EnginedModelInfo, EnginedModelRow } from './door.ts'
+import type { DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { serializeModels, serializeRows } from './door.ts'
 
 const CONSECUTIVE_FAILURES_TO_EMPTY = 3
@@ -12,6 +12,8 @@ const CONSECUTIVE_FAILURES_TO_EMPTY = 3
 export interface ModelsPoll {
   chatModels: EnginedModelInfo[]
   rows: EnginedModelRow[]
+  /** One entry per configured door, in the caller's own order. */
+  doorStatus: readonly DoorReachability[]
 }
 
 export class ModelPoller {
@@ -19,6 +21,7 @@ export class ModelPoller {
   #onChange: (chatModels: EnginedModelInfo[]) => void
   #chatModels: EnginedModelInfo[] = []
   #rows: EnginedModelRow[] = []
+  #doorStatus: readonly DoorReachability[] = []
   #lastSerialized = ''
   #consecutiveFailures = 0
 
@@ -40,23 +43,41 @@ export class ModelPoller {
     return this.#rows
   }
 
-  /** False once 3 consecutive polls have failed -- the same threshold that empties `models`/`rows`. */
+  /** Per-door reachability from the last poll -- the status popup's one line per door. */
+  get doorStatus(): readonly DoorReachability[] {
+    return this.#doorStatus
+  }
+
+  /** False once 3 consecutive polls found every door unreachable -- the same threshold that empties `models`/`rows`. */
   get reachable(): boolean {
     return this.#consecutiveFailures < CONSECUTIVE_FAILURES_TO_EMPTY
   }
 
-  /** Poll once. A failed poll keeps the last lists; the 3rd straight failure empties them. Fires `onChange` only when the reported chat models or rows actually differ from last time. */
+  /** Poll once. Every configured door unreachable (including a thrown fetch) counts as one failure; the 3rd straight failure empties the lists. Fires `onChange` only when the reported chat models or rows actually differ from last time. */
   async pollNow(): Promise<void> {
     let poll: ModelsPoll
+    let failed: boolean
     try {
       poll = await this.#fetch()
-      this.#consecutiveFailures = 0
+      failed = poll.doorStatus.length > 0 && poll.doorStatus.every((d) => !d.reachable)
     } catch {
+      failed = true
+      poll = {
+        chatModels: [],
+        rows: [],
+        doorStatus: this.#doorStatus.map((d) => ({ ...d, reachable: false })),
+      }
+    }
+    this.#doorStatus = poll.doorStatus
+    if (failed) {
       this.#consecutiveFailures += 1
       if (this.#consecutiveFailures < CONSECUTIVE_FAILURES_TO_EMPTY) {
         return
       }
-      poll = { chatModels: [], rows: [] }
+      poll.chatModels = []
+      poll.rows = []
+    } else {
+      this.#consecutiveFailures = 0
     }
     const serialized = `${serializeModels(poll.chatModels)}|${serializeRows(poll.rows)}`
     if (serialized === this.#lastSerialized) {

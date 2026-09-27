@@ -140,9 +140,15 @@ function formatDefaultModelLine(line: DefaultModelLine): string {
     : `${line.label}: ${line.resolvedName} (automatic)`
 }
 
+export interface DoorLine {
+  name: string
+  url: string
+  reachable: boolean
+}
+
 export interface TooltipInput {
-  doorReachable: boolean
-  doorUrl: string
+  /** One entry per configured `engined.doors` door. */
+  doors: readonly DoorLine[]
   modelCount: number
   lastChat?: CallRecord
   /** The last tool-less chat request (e.g. Copilot's own title/summary calls) -- never the source of the status-bar text. */
@@ -176,12 +182,37 @@ function commandLink(label: string, command: string): string {
  * `supportThemeIcons: true` and `isTrusted.enabledCommands` set to
  * `Object.values(TOOLTIP_COMMANDS)`.
  */
+/** A single door -- the old plain reachable/unreachable header, unchanged for one-door compatibility. */
+function singleDoorHeaderLine(reachable: boolean): string {
+  return reachable
+    ? '$(pass-filled) reachable'
+    : '$(error) unreachable -- start it with `systemctl --user start engined`'
+}
+
+/** More than one door -- a summary count, `$(error)` only when every door is down. */
+function multiDoorHeaderLine(doors: readonly DoorLine[]): string {
+  const reachableCount = doors.filter((d) => d.reachable).length
+  const glyph =
+    reachableCount === 0
+      ? '$(error)'
+      : reachableCount === doors.length
+        ? '$(pass-filled)'
+        : '$(warning)'
+  return `${glyph} ${reachableCount}/${doors.length} doors reachable`
+}
+
+function doorLine(d: DoorLine): string {
+  const glyph = d.reachable ? '$(pass-filled)' : '$(error)'
+  const suffix = d.reachable ? '' : ' unreachable'
+  return `${glyph} ${d.name} -- ${d.url}${suffix}`
+}
+
 export function buildTooltip(input: TooltipInput): string {
   const header = [
     '**engined**',
-    input.doorReachable
-      ? '$(pass-filled) reachable'
-      : '$(error) unreachable -- start it with `systemctl --user start engined`',
+    input.doors.length <= 1
+      ? singleDoorHeaderLine(input.doors[0]?.reachable ?? false)
+      : multiDoorHeaderLine(input.doors),
     `${input.modelCount} model(s)`,
   ]
   if (input.heldEngines !== undefined && input.heldEngines.length > 0) {
@@ -192,6 +223,9 @@ export function buildTooltip(input: TooltipInput): string {
   }
 
   const sections = [header.join(' · ')]
+  if (input.doors.length > 1) {
+    sections.push(`**Doors**\n\n${input.doors.map(doorLine).join('  \n')}`)
+  }
   if (input.lastChat !== undefined) {
     sections.push(`**Last chat**\n\n${formatCallLine(input.lastChat)}`)
   }

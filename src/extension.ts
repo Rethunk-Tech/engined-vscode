@@ -20,21 +20,27 @@ import {
 import {
   getCompletionsEnabled,
   getDefaultModel,
+  getDoors,
   getNeighbourContextEnabled,
   getPollSeconds,
   getReasoningEffort,
   getReasoningEffortByModel,
-  getUrl,
   setDefaultModel,
   setReasoningEffort,
 } from './config.ts'
 import type { DefaultModelResolution, ModelRole } from './defaultModels.ts'
 import { qualifyingRows, ROLE_PATH, resolveDefaultModel } from './defaultModels.ts'
-import type { EnginedModelInfo, EnginedModelRow, ReasoningLevel } from './door.ts'
-import { REASONING_LEVELS, servesTokenize } from './door.ts'
+import type { Door, EnginedModelInfo, EnginedModelRow, ReasoningLevel } from './door.ts'
+import {
+  doorByName,
+  qualifiedEngineIds,
+  REASONING_LEVELS,
+  servesTokenize,
+  splitQualifiedId,
+} from './door.ts'
 import {
   DoorHttpError,
-  fetchModels,
+  fetchAllDoors,
   holdEngine,
   openEngineEventsStream,
   postChatCompletion,
@@ -109,10 +115,25 @@ const recentDocuments: vscode.TextDocument[] = []
 
 /** Engine ids this session has itself put on hold -- `GET /engined/v1/engines` reports no held-until field, so a hold placed elsewhere is invisible here. */
 const heldEngineIds = new Set<string>()
-let sseConnected = false
-let sseAbort: AbortController | undefined
-let sseAttempt = 0
-let sseReconnectTimer: ReturnType<typeof setTimeout> | undefined
+/** One events connection per door, keyed by door name -- each reconnects independently. */
+interface DoorSseState {
+  abort?: AbortController
+  attempt: number
+  connected: boolean
+  reconnectTimer?: ReturnType<typeof setTimeout>
+}
+const sseStates = new Map<string, DoorSseState>()
+function doorSseState(door: Door): DoorSseState {
+  let state = sseStates.get(door.name)
+  if (state === undefined) {
+    state = { attempt: 0, connected: false }
+    sseStates.set(door.name, state)
+  }
+  return state
+}
+function anySseConnected(): boolean {
+  return [...sseStates.values()].some((s) => s.connected)
+}
 let sseRefreshTimer: ReturnType<typeof setTimeout> | undefined
 /** Poll interval floor while the events stream is up -- it is the fallback, not the primary signal, once frames are actually arriving. */
 const CONNECTED_POLL_FLOOR_SECONDS = 300
@@ -214,7 +235,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
       const content = plainMessages.map(plainMessageContent).join('')
       void resolveTokenCount(
         tokenCountCache,
-        (m, c) => postTokenize(getUrl(), m, c, controller.signal),
+        () => postTokenize(model.row.door.url, model.row.routeId, content, controller.signal),
         model.id,
         content,
         true,
@@ -228,7 +249,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     let stream: ReadableStream<Uint8Array>
     let headers: Headers
     try {
-      const res = await postChatCompletion(getUrl(), body, controller.signal)
+      const res = await postChatCompletion(model.row.door.url, body, controller.signal)
       stream = res.body
       headers = res.headers
     } catch (error) {
@@ -291,7 +312,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     token.onCancellationRequested(() => controller.abort())
     return resolveTokenCount(
       tokenCountCache,
-      (m, c) => postTokenize(getUrl(), m, c, controller.signal),
+      (_m, c) => postTokenize(model.row.door.url, model.row.routeId, c, controller.signal),
       model.id,
       content,
       servesTokenize(model.row),
@@ -404,12 +425,17 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
             excludeGlobs(),
           )
         : undefined
-    const body = buildCompletionsRequestBody(model.id, prefix, suffix, extra)
+    const body = buildCompletionsRequestBody(model.routeId, prefix, suffix, extra)
     const startedAt = Date.now()
     let reply: unknown
     let headers: Headers
     try {
-      const res = await postJsonWithHeaders(getUrl(), COMPLETIONS_PATH, body, controller.signal)
+      const res = await postJsonWithHeaders(
+        model.door.url,
+        COMPLETIONS_PATH,
+        body,
+        controller.signal,
+      )
       reply = res.data
       headers = res.headers
     } catch (error) {
@@ -525,13 +551,16 @@ function maybeShowUnreachableNotice(): void {
     return
   }
   unreachableNoticeShown = true
+  const urls = getDoors()
+    .map((d) => d.url)
+    .join(', ')
   void vscode.window
-    .showInformationMessage(`engined isn't reachable at ${getUrl()}`, 'How to start it', 'Settings')
+    .showInformationMessage(`engined isn't reachable at ${urls}`, 'How to start it', 'Settings')
     .then((choice) => {
       if (choice === 'How to start it') {
         void revealReadmeTroubleshooting()
       } else if (choice === 'Settings') {
-        void vscode.commands.executeCommand('workbench.action.openSettings', 'engined.url')
+        void vscode.commands.executeCommand('workbench.action.openSettings', 'engined.doors')
       }
     })
 }
@@ -539,11 +568,19 @@ function maybeShowUnreachableNotice(): void {
 function tooltipMarkdown(): vscode.MarkdownString {
   const md = new vscode.MarkdownString(
     buildTooltip({
-      doorReachable,
+      // Before the first poll resolves, `doorStatus` is empty -- assume every configured door
+      // reachable, matching the sync default `renderStatusBar` shows at activation.
+      doors: (poller.doorStatus.length > 0
+        ? poller.doorStatus.map((d) => ({ door: d.door, reachable: d.reachable }))
+        : getDoors().map((door) => ({ door, reachable: true }))
+      ).map((d) => ({
+        name: d.door.name,
+        url: d.door.url,
+        reachable: d.reachable,
+      })),
       lastChat: lastChatCall,
       lastBackground: lastBackgroundCall,
       lastCompletion: lastCompletionCall,
-      doorUrl: getUrl(),
       modelCount: poller.models.length,
       defaults: DEFAULT_MODEL_TOOLTIP_ROLES.map((r) => {
         const configuredId = getDefaultModel(r.role)
@@ -679,7 +716,7 @@ function effectivePollMs(): number {
   if (seconds <= 0) {
     return 0
   }
-  return (sseConnected ? Math.max(seconds, CONNECTED_POLL_FLOOR_SECONDS) : seconds) * 1000
+  return (anySseConnected() ? Math.max(seconds, CONNECTED_POLL_FLOOR_SECONDS) : seconds) * 1000
 }
 
 function restartPollTimer(): void {
@@ -706,34 +743,36 @@ function scheduleSseRefresh(): void {
   }, SSE_REFRESH_DEBOUNCE_MS)
 }
 
-function scheduleSseReconnect(): void {
-  if (sseReconnectTimer !== undefined) {
+function scheduleSseReconnect(door: Door): void {
+  const state = doorSseState(door)
+  if (state.reconnectTimer !== undefined) {
     return
   }
-  const delay = backoffMs(sseAttempt)
-  sseAttempt += 1
-  sseReconnectTimer = setTimeout(() => {
-    sseReconnectTimer = undefined
-    void connectEngineEvents()
+  const delay = backoffMs(state.attempt)
+  state.attempt += 1
+  state.reconnectTimer = setTimeout(() => {
+    state.reconnectTimer = undefined
+    void connectEngineEvents(door)
   }, delay)
 }
 
-/** Opens `GET /engined/v1/engines/events` and stays connected until it errors or the extension deactivates, reconnecting with backoff either way. */
-async function connectEngineEvents(): Promise<void> {
+/** Opens `GET /engined/v1/engines/events` against one door and stays connected until it errors or the extension deactivates, reconnecting with backoff either way. */
+async function connectEngineEvents(door: Door): Promise<void> {
+  const state = doorSseState(door)
   const controller = new AbortController()
-  sseAbort = controller
+  state.abort = controller
   let stream: ReadableStream<Uint8Array>
   try {
-    stream = await openEngineEventsStream(getUrl(), controller.signal)
+    stream = await openEngineEventsStream(door.url, controller.signal)
   } catch (error) {
     if (!controller.signal.aborted) {
-      log(`engine events stream: ${describeError(error)}`)
-      scheduleSseReconnect()
+      log(`engine events stream (${door.name}): ${describeError(error)}`)
+      scheduleSseReconnect(door)
     }
     return
   }
-  sseConnected = true
-  sseAttempt = 0
+  state.connected = true
+  state.attempt = 0
   restartPollTimer()
   const reader = stream.getReader()
   const decoder = new TextDecoder()
@@ -753,23 +792,30 @@ async function connectEngineEvents(): Promise<void> {
     }
   } catch (error) {
     if (!controller.signal.aborted) {
-      log(`engine events stream error: ${describeError(error)}`)
+      log(`engine events stream error (${door.name}): ${describeError(error)}`)
     }
   }
-  sseConnected = false
+  state.connected = false
   restartPollTimer()
   if (!controller.signal.aborted) {
-    scheduleSseReconnect()
+    scheduleSseReconnect(door)
   }
 }
 
+/** Connects the events stream for every configured door. */
+async function connectAllEngineEvents(): Promise<void> {
+  await Promise.all(getDoors().map((door) => connectEngineEvents(door)))
+}
+
 function stopEngineEvents(): void {
-  sseAbort?.abort()
-  sseAbort = undefined
-  sseConnected = false
-  if (sseReconnectTimer !== undefined) {
-    clearTimeout(sseReconnectTimer)
-    sseReconnectTimer = undefined
+  for (const state of sseStates.values()) {
+    state.abort?.abort()
+    state.abort = undefined
+    state.connected = false
+    if (state.reconnectTimer !== undefined) {
+      clearTimeout(state.reconnectTimer)
+      state.reconnectTimer = undefined
+    }
   }
   if (sseRefreshTimer !== undefined) {
     clearTimeout(sseRefreshTimer)
@@ -777,13 +823,14 @@ function stopEngineEvents(): void {
   }
 }
 
-/** `engined: Warm Model`: pick any answerable row and `POST /engined/v1/start` it. */
+/** `engined: Warm Model`: pick any answerable row and `POST /engined/v1/start` it against the door that owns it. */
 async function warmModel(): Promise<void> {
+  const multiDoor = getDoors().length > 1
   const pick = await vscode.window.showQuickPick(
     poller.rows.map((row) => ({
       label: row.display_name ?? row.id,
-      description: row.id,
-      id: row.id,
+      description: multiDoor ? `${row.id} · ${row.door.name}` : row.id,
+      row,
     })),
     { title: 'engined: Warm model' },
   )
@@ -791,39 +838,34 @@ async function warmModel(): Promise<void> {
     return
   }
   try {
-    const rows = await startModel(getUrl(), pick.id)
+    const rows = await startModel(pick.row.door.url, pick.row.routeId)
     log(
-      `warmed ${pick.id}: ${rows.map((r) => `${r.address}=${r.state}`).join(', ') || 'no routes'}`,
+      `warmed ${pick.row.id}: ${rows.map((r) => `${r.address}=${r.state}`).join(', ') || 'no routes'}`,
     )
   } catch (error) {
-    const message = `warm ${pick.id} failed: ${describeError(error)}`
+    const message = `warm ${pick.row.id} failed: ${describeError(error)}`
     log(message)
     void vscode.window.showErrorMessage(`engined: ${message}`)
   }
   await poller.pollNow()
 }
 
-/** Every distinct engine id backing a currently-known row -- there is no separate engine picker in this unit, only the Engines view (later) reads `GET /engined/v1/engines` directly. */
-function knownEngineIds(): string[] {
-  const ids = new Set<string>()
-  for (const row of poller.rows) {
-    if (row.engine !== undefined) {
-      ids.add(row.engine)
-    }
-  }
-  return [...ids].sort()
-}
-
 /** `engined: Hold Model`: stop an engine and keep it stopped so another process can load the same weights. */
 async function holdModel(): Promise<void> {
-  const ids = knownEngineIds()
-  const id = await vscode.window.showQuickPick(ids, { title: 'engined: Hold engine' })
-  if (id === undefined) {
+  const engines = qualifiedEngineIds(poller.rows, getDoors().length)
+  const id = await vscode.window.showQuickPick(
+    engines.map((e) => e.id),
+    {
+      title: 'engined: Hold engine',
+    },
+  )
+  const engine = engines.find((e) => e.id === id)
+  if (engine === undefined) {
     return
   }
   try {
-    await holdEngine(getUrl(), id)
-    heldEngineIds.add(id)
+    await holdEngine(engine.door.url, engine.rawId)
+    heldEngineIds.add(engine.id)
     renderStatusBar()
   } catch (error) {
     void vscode.window.showErrorMessage(`engined: hold "${id}" failed: ${describeError(error)}`)
@@ -843,8 +885,11 @@ async function releaseHold(): Promise<void> {
   if (id === undefined) {
     return
   }
+  const doors = getDoors()
+  const { doorName, rawId } = splitQualifiedId(id, doors.length)
+  const door = doorByName(doors, doorName)
   try {
-    await unholdEngine(getUrl(), id)
+    await unholdEngine(door.url, rawId)
     heldEngineIds.delete(id)
     renderStatusBar()
   } catch (error) {
@@ -1015,8 +1060,8 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
       })
       const result =
         req.path === '/openai/v1/images/generations'
-          ? ((await postJson(getUrl(), req.path, req.body)) as { data: { b64_json: string }[] })
-          : ((await postForm(getUrl(), req.path, buildEditForm(req.form))) as {
+          ? ((await postJson(row.door.url, req.path, req.body)) as { data: { b64_json: string }[] })
+          : ((await postForm(row.door.url, req.path, buildEditForm(req.form))) as {
               data: { b64_json: string }[]
             })
       const png = result.data[0]?.b64_json
@@ -1076,7 +1121,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
         base64: Buffer.from(bytes).toString('base64'),
       })
       const { body: stream } = await postChatCompletion(
-        getUrl(),
+        row.door.url,
         { ...req, stream: true, stream_options: { include_usage: true } },
         new AbortController().signal,
       )
@@ -1118,7 +1163,9 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       const form = new FormData()
       form.set('model', req.form.model)
       form.set('file', req.form.file)
-      const result = (await postForm(getUrl(), req.path, form)) as { text?: string } | ArrayBuffer
+      const result = (await postForm(row.door.url, req.path, form)) as
+        | { text?: string }
+        | ArrayBuffer
       const text =
         typeof result === 'object' && result !== null && 'text' in result
           ? (result.text ?? '')
@@ -1161,7 +1208,7 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
         text: options.input.text,
         voice: options.input.voice,
       })
-      const audio = (await postJson(getUrl(), req.path, req.body)) as ArrayBuffer
+      const audio = (await postJson(row.door.url, req.path, req.body)) as ArrayBuffer
       await writeWorkspaceFile(options.input.outputPath, new Uint8Array(audio))
       return new vscode.LanguageModelToolResult([
         new vscode.LanguageModelTextPart(`Wrote ${options.input.outputPath}`),
@@ -1227,10 +1274,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const chatProvider = new EnginedChatProvider()
   poller = new ModelPoller(
     () =>
-      fetchModels(getUrl()).catch((error) => {
-        log(`poll failed: ${describeError(error)}`)
-        maybeShowUnreachableNotice()
-        throw error
+      fetchAllDoors(getDoors()).then((poll) => {
+        if (poll.doorStatus.length > 0 && poll.doorStatus.every((d) => !d.reachable)) {
+          log('poll failed: no configured door is reachable')
+          maybeShowUnreachableNotice()
+        }
+        return poll
       }),
     () => {
       doorReachable = poller.reachable
@@ -1251,7 +1300,7 @@ export function activate(context: vscode.ExtensionContext): void {
   )
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
 
-  engineExplorer = new EngineExplorer(heldEngineIds, log)
+  engineExplorer = new EngineExplorer(heldEngineIds, log, getDoors, () => poller.rows)
   void engineExplorer.refresh()
 
   context.subscriptions.push(
@@ -1289,13 +1338,13 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.refreshEngines', () => engineExplorer.refresh()),
     vscode.commands.registerCommand('engined.showEngineLogs', (item: EngineTreeItem) => {
       if (item.kind === 'engine') {
-        return engineExplorer.showLogs(item.node.id)
+        return engineExplorer.showLogs(item.node)
       }
       return undefined
     }),
     vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
       if (item.kind === 'engine') {
-        return engineExplorer.stop(item.node.id)
+        return engineExplorer.stop(item.node)
       }
       return undefined
     }),
@@ -1303,7 +1352,9 @@ export function activate(context: vscode.ExtensionContext): void {
       if (item.kind !== 'engine') {
         return
       }
-      const row = poller.rows.find((r) => r.engine === item.node.id)
+      const row = poller.rows.find(
+        (r) => r.engine === item.node.rawId && r.door.name === item.node.door.name,
+      )
       if (row === undefined) {
         void vscode.window.showErrorMessage(
           `engined: no known model route for engine "${item.node.id}"`,
@@ -1311,7 +1362,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return
       }
       try {
-        await startModel(getUrl(), row.id)
+        await startModel(row.door.url, row.routeId)
       } catch (error) {
         void vscode.window.showErrorMessage(
           `engined: warm "${row.id}" failed: ${describeError(error)}`,
@@ -1325,7 +1376,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return
       }
       try {
-        await holdEngine(getUrl(), item.node.id)
+        await holdEngine(item.node.door.url, item.node.rawId)
         heldEngineIds.add(item.node.id)
         renderStatusBar()
       } catch (error) {
@@ -1340,7 +1391,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return
       }
       try {
-        await unholdEngine(getUrl(), item.node.id)
+        await unholdEngine(item.node.door.url, item.node.rawId)
         heldEngineIds.delete(item.node.id)
         renderStatusBar()
       } catch (error) {
@@ -1360,10 +1411,10 @@ export function activate(context: vscode.ExtensionContext): void {
       if (e.affectsConfiguration('engined.pollSeconds')) {
         restartPollTimer()
       }
-      if (e.affectsConfiguration('engined.url')) {
+      if (e.affectsConfiguration('engined.doors')) {
         stopEngineEvents()
         restartPollTimer()
-        void connectEngineEvents()
+        void connectAllEngineEvents()
       }
       if (e.affectsConfiguration('engined.defaultModels')) {
         renderStatusBar()
@@ -1376,7 +1427,7 @@ export function activate(context: vscode.ExtensionContext): void {
       stopEngineEvents()
     }),
   )
-  void connectEngineEvents()
+  void connectAllEngineEvents()
 }
 
 export function deactivate(): void {

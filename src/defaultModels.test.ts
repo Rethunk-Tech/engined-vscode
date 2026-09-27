@@ -3,17 +3,20 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { qualifyingRows, resolveDefaultModel } from './defaultModels.ts'
-import type { EnginedModelRow } from './door.ts'
+import type { Door, EnginedModelRow } from './door.ts'
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const models: { data: EnginedModelRow[] } = JSON.parse(
   readFileSync(join(FIXTURES, 'models.json'), 'utf8'),
 )
 const rows = models.data
+const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
 
 const completionRows: EnginedModelRow[] = [
   {
     id: '@/llama/ornith',
+    routeId: '@/llama/ornith',
+    door: DOOR,
     tools: false,
     serves: ['/openai/v1/chat/completions', '/openai/v1/completions'],
     state: 'installed',
@@ -21,6 +24,8 @@ const completionRows: EnginedModelRow[] = [
   },
   {
     id: '@/llama/second',
+    routeId: '@/llama/second',
+    door: DOOR,
     tools: false,
     serves: ['/openai/v1/completions'],
     state: 'installed',
@@ -88,5 +93,15 @@ describe('resolveDefaultModel: completion', () => {
     expect(resolveDefaultModel(completionRows, 'completion', '@/llama/second').row?.id).toBe(
       '@/llama/second',
     )
+  })
+
+  test('a setting written before a second door existed still matches by its bare routeId', () => {
+    const qualifiedRows: EnginedModelRow[] = completionRows.map((row) => ({
+      ...row,
+      id: `${DOOR.name}/${row.id}`,
+    }))
+    const resolved = resolveDefaultModel(qualifiedRows, 'completion', '@/llama/second')
+    expect(resolved.row?.id).toBe(`${DOOR.name}/@/llama/second`)
+    expect(resolved.unusableReason).toBeUndefined()
   })
 })

@@ -5,6 +5,8 @@ import { buildChatRequestBody } from './requestBuilder.ts'
 function modelInfo(overrides: Partial<EnginedModelInfo['row']> = {}): EnginedModelInfo {
   const row = {
     id: '@/test/model',
+    routeId: '@/test/model',
+    door: { name: 'local', url: 'http://127.0.0.1:29200' },
     tools: true,
     serves: ['/openai/v1/chat/completions'],
     state: 'installed',
@@ -26,6 +28,16 @@ function modelInfo(overrides: Partial<EnginedModelInfo['row']> = {}): EnginedMod
 }
 
 describe('buildChatRequestBody', () => {
+  test('sends the door-owned routeId, not the qualified model id, as the request model', () => {
+    const model = modelInfo({ id: 'gpu-box/@/llama/ornith', routeId: '@/llama/ornith' })
+    const body = buildChatRequestBody(
+      model,
+      [{ role: 'user', parts: [{ type: 'text', text: 'hi' }] }],
+      { reasoningEffort: 'medium', reasoningEffortByModel: {} },
+    )
+    expect(body.model).toBe('@/llama/ornith')
+  })
+
   test('drops tools entirely for a row with tools: false', () => {
     const model = modelInfo({ tools: false })
     const body = buildChatRequestBody(

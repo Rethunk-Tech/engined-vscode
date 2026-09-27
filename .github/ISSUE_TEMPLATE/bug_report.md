@@ -12,7 +12,7 @@ What went wrong? Include whether it was the chat provider, a tool (`engined_gene
 
 ## To reproduce
 
-1. `engined.url` value and whether engined is local or Remote-SSH
+1. `engined.doors` value and whether engined is local or Remote-SSH
 2. Steps taken in VS Code (chat prompt, tool invocation, settings change)
 3. Observed output or error, and the "engined" output channel's log around that time
 

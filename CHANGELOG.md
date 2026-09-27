@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - An Engines view (its own activity-bar container) listing every engine with state, resource usage on expand, and per-item warm/hold/release/stop/logs/copy-fix actions.
 
 - Token counts (`provideTokenCount` and the status bar's "processing ~Nk-token prompt" label) call engined's `POST /engined/v1/tokenize` for a route that advertises it, cached by (model, content), falling back to the chars/3 estimate when the route doesn't serve it or the call fails.
+- `engined.doors` replaces `engined.url`: an array of `{ name, url }`, so this extension can poll and route to several engined doors at once. Model/engine ids stay plain with one door; with more than one, an id becomes `<door name>/<id>`, the model picker's detail names the door, `engined.defaultModels.*` accepts either the plain or the qualified form, the status popup shows one reachability line per door, and the Engines view groups by door.
 
 ### Fixed
 
@@ -27,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Inline completions now register for `file`, `untitled` and `vscode-notebook-cell` documents explicitly -- a `pattern`-only selector with no `scheme` is not guaranteed to score a notebook cell document, which never carries a `file` URI.
 - Status popup's "Last chat" now shows the last request that actually carried tools, not Copilot's own tool-less title/summary requests, which now show separately as "Last background".
 - Status popup's Defaults section now shows the resolved model name for every role (previously showed "automatic" whenever the row had no `display_name`), and marks whether it's the configured id, the automatic pick, or a configured id that fell through to automatic. It also updates immediately after `engined.defaultModels.*` changes.
+- Engines view: a non-running engine no longer expands to a raw door error (`{"error": ...}`) as a child. An agentic-cli engine, an unavailable one, and one backing only remote-egress rows now show a one-line explanation instead ("agent CLI, no container", its fix, "remote API"); an installed-but-idle local container says "idle, starts on demand"; only a running local container engine expands, showing its resources as one formatted line (`RAM 334 MiB · GPU 28.0 GiB`, 1024-based) instead of raw byte counts.
 
 ### Changed
 

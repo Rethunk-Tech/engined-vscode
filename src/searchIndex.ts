@@ -8,7 +8,7 @@
 
 import { Buffer } from 'node:buffer'
 import * as vscode from 'vscode'
-import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks, getUrl } from './config.ts'
+import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks } from './config.ts'
 import { resolveDefaultModel } from './defaultModels.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
@@ -130,7 +130,7 @@ export class SearchIndex {
   }
 
   async #embedTexts(row: EnginedModelRow, texts: string[]): Promise<(number[] | undefined)[]> {
-    return postEmbeddings(getUrl(), row.id, texts)
+    return postEmbeddings(row.door.url, row.routeId, texts)
   }
 
   /** Loads the on-disk index (once) and catches it up to the workspace's current files. Cheap to call before every search: a no-op refresh touches no files. */
@@ -293,8 +293,8 @@ export class SearchIndex {
     if (rerankRow !== undefined && ordered.length > 0) {
       try {
         const results = await postRerank(
-          getUrl(),
-          rerankRow.id,
+          rerankRow.door.url,
+          rerankRow.routeId,
           query,
           ordered.map((e) => e.text),
         )

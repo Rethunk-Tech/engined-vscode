@@ -135,7 +135,7 @@ export function buildChatRequestBody(
   options: ChatRequestOptions,
 ): OpenAiChatRequestBody {
   const body: OpenAiChatRequestBody = {
-    model: model.id,
+    model: model.row.routeId,
     messages: messages.flatMap(toOpenAiMessages),
     stream: true,
     stream_options: { include_usage: true },

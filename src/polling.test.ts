@@ -1,6 +1,20 @@
 import { describe, expect, test } from 'bun:test'
-import type { EnginedModelInfo, EnginedModelRow } from './door.ts'
+import type { Door, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { ModelPoller, type ModelsPoll } from './polling.ts'
+
+const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
+
+function row(id: string): EnginedModelRow {
+  return {
+    id,
+    routeId: id,
+    door: DOOR,
+    tools: false,
+    serves: [],
+    state: 'installed',
+    capabilities: {},
+  }
+}
 
 function model(id: string): EnginedModelInfo {
   return {
@@ -13,16 +27,12 @@ function model(id: string): EnginedModelInfo {
     maxInputTokens: 1,
     maxOutputTokens: 1,
     capabilities: { toolCalling: false, imageInput: false },
-    row: { id, tools: false, serves: [], state: 'installed', capabilities: {} },
+    row: row(id),
   }
 }
 
-function row(id: string): EnginedModelRow {
-  return { id, tools: false, serves: [], state: 'installed', capabilities: {} }
-}
-
 function poll(chatModels: EnginedModelInfo[], rows: EnginedModelRow[] = []): ModelsPoll {
-  return { chatModels, rows }
+  return { chatModels, rows, doorStatus: [{ door: DOOR, reachable: true }] }
 }
 
 describe('ModelPoller', () => {
@@ -131,5 +141,49 @@ describe('ModelPoller', () => {
     succeed = true
     await poller.pollNow()
     expect(poller.reachable).toBe(true)
+  })
+
+  test('one door down and one up: stays reachable, and doorStatus carries both lines', async () => {
+    const gpuBox: Door = { name: 'gpu-box', url: 'http://10.0.0.5:29200' }
+    const poller = new ModelPoller(
+      () =>
+        Promise.resolve({
+          chatModels: [model('a')],
+          rows: [row('a')],
+          doorStatus: [
+            { door: DOOR, reachable: true },
+            { door: gpuBox, reachable: false },
+          ],
+        }),
+      () => {},
+    )
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+    expect(poller.doorStatus).toEqual([
+      { door: DOOR, reachable: true },
+      { door: gpuBox, reachable: false },
+    ])
+  })
+
+  test('every configured door down counts as a failure, same as a thrown fetch', async () => {
+    const gpuBox: Door = { name: 'gpu-box', url: 'http://10.0.0.5:29200' }
+    const poller = new ModelPoller(
+      () =>
+        Promise.resolve({
+          chatModels: [],
+          rows: [],
+          doorStatus: [
+            { door: DOOR, reachable: false },
+            { door: gpuBox, reachable: false },
+          ],
+        }),
+      () => {},
+    )
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+    await poller.pollNow()
+    expect(poller.reachable).toBe(true)
+    await poller.pollNow()
+    expect(poller.reachable).toBe(false)
   })
 })

@@ -5,8 +5,66 @@
  * `bun test` with no extension host.
  */
 
-/** The subset of engined's `ModelRow` (src/responses.ts) this extension reads. */
-export interface EnginedModelRow {
+/** One configured `engined.doors` entry. */
+export interface Door {
+  name: string
+  url: string
+}
+
+/** `rawId` unqualified with one door (existing single-door settings keep working); `<door name>/<rawId>` with more than one. */
+export function qualifyId(doorName: string, rawId: string, doorCount: number): string {
+  return doorCount > 1 ? `${doorName}/${rawId}` : rawId
+}
+
+export interface DoorReachability {
+  door: Door
+  reachable: boolean
+}
+
+/** `qualifyId`'s inverse: with more than one door, `<door name>/<rawId>` splits on the first `/` (a door name never contains one); with one door, the id was never qualified. */
+export function splitQualifiedId(
+  id: string,
+  doorCount: number,
+): { doorName: string | undefined; rawId: string } {
+  if (doorCount <= 1) {
+    return { doorName: undefined, rawId: id }
+  }
+  const i = id.indexOf('/')
+  return i === -1
+    ? { doorName: undefined, rawId: id }
+    : { doorName: id.slice(0, i), rawId: id.slice(i + 1) }
+}
+
+/** The named door, or the first configured one when `doorName` is `undefined` or unknown -- a plain (unqualified) id under multiple doors picks the first door that has it, same as `defaultModels.ts`'s "either form" rule. */
+export function doorByName(doors: readonly Door[], doorName: string | undefined): Door {
+  const named = doorName === undefined ? undefined : doors.find((d) => d.name === doorName)
+  const fallback = doors[0]
+  if (fallback === undefined) {
+    throw new Error('doorByName: no doors configured')
+  }
+  return named ?? fallback
+}
+
+/** Every distinct engine id backing a currently-known row, qualified the same way a model id is -- there is no separate engine picker, only the rows this extension already polled. */
+export function qualifiedEngineIds(
+  rows: readonly EnginedModelRow[],
+  doorCount: number,
+): { id: string; door: Door; rawId: string }[] {
+  const seen = new Map<string, { id: string; door: Door; rawId: string }>()
+  for (const row of rows) {
+    if (row.engine === undefined) {
+      continue
+    }
+    const id = qualifyId(row.door.name, row.engine, doorCount)
+    if (!seen.has(id)) {
+      seen.set(id, { id, door: row.door, rawId: row.engine })
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.id.localeCompare(b.id))
+}
+
+/** The wire shape of one `GET /openai/v1/models` row (engined `ModelRow`), before it is qualified against a door. */
+interface RawModelRow {
   id: string
   engine?: string
   display_name?: string
@@ -26,8 +84,17 @@ export interface EnginedModelRow {
   }
 }
 
+/** A `RawModelRow` qualified against the door it came from. */
+export interface EnginedModelRow extends RawModelRow {
+  /** VS Code/settings-facing id -- `qualifyId`'s output. Use `routeId` for what a request sends the door. */
+  id: string
+  /** The door's own row id, unqualified -- what a request body's `model` field must carry. */
+  routeId: string
+  door: Door
+}
+
 interface ModelsResponse {
-  data: EnginedModelRow[]
+  data: RawModelRow[]
 }
 
 /** The plain shape the adapter turns into `vscode.LanguageModelChatInformation`. */
@@ -73,6 +140,11 @@ function tooltipFor(row: EnginedModelRow): string {
   return parts.join(' · ')
 }
 
+/** A wire row, qualified against the door it came from. */
+function qualifyRow(raw: RawModelRow, door: Door, doorCount: number): EnginedModelRow {
+  return { ...raw, id: qualifyId(door.name, raw.id, doorCount), routeId: raw.id, door }
+}
+
 /** One row -> the model info the provider reports, or `undefined` for a row this extension does not offer as a chat model. */
 export function mapModelRow(row: EnginedModelRow): EnginedModelInfo | undefined {
   // `running` and `warming` are the same model in use; only `unavailable` cannot answer.
@@ -81,12 +153,15 @@ export function mapModelRow(row: EnginedModelRow): EnginedModelInfo | undefined 
   if (!row.serves.includes(CHAT_PATH) || row.state === 'unavailable' || row.role === 'vision') {
     return undefined
   }
+  // Qualified only once more than one door is configured (`qualifyId`) -- that's also when the
+  // picker detail needs the door name to tell same-named routes on different doors apart.
+  const multiDoor = row.id !== row.routeId
   return {
     id: row.id,
     name: row.display_name ?? row.id,
     family: row.engine ?? 'chain',
     version: row.id,
-    detail: row.egress ?? '',
+    detail: multiDoor ? `${row.egress ?? ''} · ${row.door.name}`.trim() : (row.egress ?? ''),
     tooltip: tooltipFor(row),
     maxInputTokens: row.capabilities.context_in ?? FALLBACK_MAX_INPUT_TOKENS,
     maxOutputTokens: row.capabilities.context_out ?? FALLBACK_MAX_OUTPUT_TOKENS,
@@ -105,9 +180,14 @@ export function mapModelRow(row: EnginedModelRow): EnginedModelInfo | undefined 
  * `mapModels`' chat-only list (as the chat provider itself does) would never
  * find it.
  */
-export function mapAnswerableRows(body: unknown): EnginedModelRow[] {
+export function mapAnswerableRows(body: unknown, door: Door, doorCount: number): EnginedModelRow[] {
   const data = (body as Partial<ModelsResponse> | undefined)?.data
-  return Array.isArray(data) ? data.filter((row) => row.state !== 'unavailable') : []
+  if (!Array.isArray(data)) {
+    return []
+  }
+  return data
+    .filter((row) => row.state !== 'unavailable')
+    .map((row) => qualifyRow(row, door, doorCount))
 }
 
 /** A stable string a poll can diff `mapAnswerableRows`' output against, ignoring key order. */
@@ -116,14 +196,14 @@ export function serializeRows(rows: readonly EnginedModelRow[]): string {
 }
 
 /** The full `/openai/v1/models` response body -> the models this extension exposes. */
-export function mapModels(body: unknown): EnginedModelInfo[] {
+export function mapModels(body: unknown, door: Door, doorCount: number): EnginedModelInfo[] {
   const data = (body as Partial<ModelsResponse> | undefined)?.data
   if (!Array.isArray(data)) {
     return []
   }
   const mapped: EnginedModelInfo[] = []
   for (const row of data) {
-    const info = mapModelRow(row)
+    const info = mapModelRow(qualifyRow(row, door, doorCount))
     if (info !== undefined) {
       mapped.push(info)
     }

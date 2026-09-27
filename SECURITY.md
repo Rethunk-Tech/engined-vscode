@@ -33,7 +33,7 @@ We will acknowledge receipt promptly and work with you to understand and address
 
 ## Risk profile
 
-- **No authentication on the door** — engined's own door is loopback-only with no auth by design. `engined.url` should never be pointed at a non-loopback address unless you have separately secured that connection (e.g. an SSH tunnel via Remote-SSH), because this extension performs no authentication of its own.
+- **No authentication on the door** — engined's own door is loopback-only with no auth by design. No `engined.doors` entry should ever point at a non-loopback address unless you have separately secured that connection (e.g. an SSH tunnel via Remote-SSH), because this extension performs no authentication of its own.
 - **Filesystem writes from a language model** — the four `engined_*` tools write files (images, audio) at a path the model chooses. Every path is resolved through `src/pathGuard.ts` and rejected if it would land outside an open workspace folder; there is no other sandboxing.
 - **Egress from tool confirmations** — a tool's confirmation prompt names the route it will use and states when that route's `egress` is not local, meaning the prompt or file content leaves this machine. Review that prompt before approving.
 - **No prompt/response logging** — the "engined" output channel and this extension's own code never log request or response content, by design; do not add such logging in a PR.

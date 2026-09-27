@@ -139,8 +139,7 @@ describe('hasExceededLoadingThreshold', () => {
 describe('buildTooltip', () => {
   test('lists header, last chat, last completion, and defaults, separated by rules', () => {
     const tooltip = buildTooltip({
-      doorReachable: true,
-      doorUrl: 'http://127.0.0.1:29200',
+      doors: [{ name: 'local', url: 'http://x', reachable: true }],
       modelCount: 5,
       lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 1000 },
       lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
@@ -157,8 +156,7 @@ describe('buildTooltip', () => {
 
   test('shows a tool-less background call separately from the last agent chat call', () => {
     const tooltip = buildTooltip({
-      doorReachable: true,
-      doorUrl: 'http://x',
+      doors: [{ name: 'local', url: 'http://x', reachable: true }],
       modelCount: 1,
       lastChat: {
         route: '@/claude/sonnet-5',
@@ -182,8 +180,7 @@ describe('buildTooltip', () => {
 
   test('default-model lines: configured and usable, empty setting, and unusable-configured', () => {
     const tooltip = buildTooltip({
-      doorReachable: true,
-      doorUrl: 'http://x',
+      doors: [{ name: 'local', url: 'http://x', reachable: true }],
       modelCount: 3,
       defaults: [
         { label: 'Image', resolvedName: '@/comfy/local', configured: true },
@@ -204,8 +201,7 @@ describe('buildTooltip', () => {
 
   test('shows the unreachable header with how to start it', () => {
     const tooltip = buildTooltip({
-      doorReachable: false,
-      doorUrl: 'http://x',
+      doors: [{ name: 'local', url: 'http://x', reachable: false }],
       modelCount: 0,
       defaults: [],
     })
@@ -216,8 +212,7 @@ describe('buildTooltip', () => {
 
   test('says when chat features are routed to engined, and shows Restore instead of Use everywhere', () => {
     const tooltip = buildTooltip({
-      doorReachable: true,
-      doorUrl: 'http://x',
+      doors: [{ name: 'local', url: 'http://x', reachable: true }],
       modelCount: 0,
       defaults: [],
       chatSettingsRouted: true,
@@ -229,10 +224,25 @@ describe('buildTooltip', () => {
     expect(actions).not.toContain('Use engined everywhere')
   })
 
+  test('more than one door: a summary count in the header and a Doors section, one line per door', () => {
+    const tooltip = buildTooltip({
+      doors: [
+        { name: 'local', url: 'http://127.0.0.1:29200', reachable: true },
+        { name: 'gpu-box', url: 'http://10.0.0.5:29200', reachable: false },
+      ],
+      modelCount: 4,
+      defaults: [],
+    })
+    const sections = tooltip.split('\n\n---\n\n')
+    expect(sections[0]).toBe('**engined** · $(warning) 1/2 doors reachable · 4 model(s)')
+    expect(sections[1]).toBe(
+      '**Doors**\n\n$(pass-filled) local -- http://127.0.0.1:29200  \n$(error) gpu-box -- http://10.0.0.5:29200 unreachable',
+    )
+  })
+
   test('omits chat/completion/defaults sections when there is nothing to show', () => {
     const tooltip = buildTooltip({
-      doorReachable: true,
-      doorUrl: 'http://x',
+      doors: [{ name: 'local', url: 'http://x', reachable: true }],
       modelCount: 0,
       defaults: [],
     })

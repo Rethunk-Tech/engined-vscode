@@ -5,10 +5,10 @@
 
 import * as vscode from 'vscode'
 import type { ModelRole } from './defaultModels.ts'
-import type { ReasoningLevel } from './door.ts'
+import type { Door, ReasoningLevel } from './door.ts'
 import { REASONING_LEVELS } from './door.ts'
 
-export const DEFAULT_URL = 'http://127.0.0.1:29200'
+export const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
 export const DEFAULT_POLL_SECONDS = 30
 export const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
 
@@ -16,8 +16,10 @@ function config(): vscode.WorkspaceConfiguration {
   return vscode.workspace.getConfiguration('engined')
 }
 
-export function getUrl(): string {
-  return config().get<string>('url', DEFAULT_URL)
+/** `engined.doors`, or the single local default when unset/empty. */
+export function getDoors(): Door[] {
+  const doors = config().get<Door[]>('doors', DEFAULT_DOORS)
+  return doors.length > 0 ? doors : DEFAULT_DOORS
 }
 
 export function getPollSeconds(): number {

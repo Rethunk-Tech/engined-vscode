@@ -5,7 +5,7 @@
  * the network.
  */
 
-import type { EnginedModelInfo, EnginedModelRow } from './door.ts'
+import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { mapAnswerableRows, mapModels } from './door.ts'
 
 export class DoorHttpError extends Error {
@@ -24,14 +24,48 @@ export interface ModelsPoll {
   rows: EnginedModelRow[]
 }
 
-/** `GET /openai/v1/models`, mapped both ways. Never triggers a model load: listing is always safe to poll. */
-export async function fetchModels(baseUrl: string, signal?: AbortSignal): Promise<ModelsPoll> {
-  const res = await fetch(`${baseUrl}/openai/v1/models`, { signal })
+/** `GET /openai/v1/models` against one door, mapped both ways and qualified against it. Never triggers a model load: listing is always safe to poll. */
+export async function fetchModels(
+  door: Door,
+  doorCount: number,
+  signal?: AbortSignal,
+): Promise<ModelsPoll> {
+  const res = await fetch(`${door.url}/openai/v1/models`, { signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
   const body = await res.json()
-  return { chatModels: mapModels(body), rows: mapAnswerableRows(body) }
+  return {
+    chatModels: mapModels(body, door, doorCount),
+    rows: mapAnswerableRows(body, door, doorCount),
+  }
+}
+
+export interface DoorsPoll extends ModelsPoll {
+  /** One entry per configured door, in `doors`' own order -- the status popup's one reachability line per door. */
+  doorStatus: DoorReachability[]
+}
+
+/** Polls every configured door and merges the reachable ones' rows/models. A door that fails contributes nothing, not a thrown error -- one down door must not blank out the rest. */
+export async function fetchAllDoors(
+  doors: readonly Door[],
+  signal?: AbortSignal,
+): Promise<DoorsPoll> {
+  const results = await Promise.allSettled(
+    doors.map((door) => fetchModels(door, doors.length, signal)),
+  )
+  const chatModels: EnginedModelInfo[] = []
+  const rows: EnginedModelRow[] = []
+  const doorStatus: DoorReachability[] = doors.map((door, i) => {
+    const result = results[i]
+    if (result?.status === 'fulfilled') {
+      chatModels.push(...result.value.chatModels)
+      rows.push(...result.value.rows)
+      return { door, reachable: true }
+    }
+    return { door, reachable: false }
+  })
+  return { chatModels, rows, doorStatus }
 }
 
 /** `GET /engined/v1/engines`, unparsed beyond JSON -- `engineTree.ts` maps it to tree rows. */
@@ -58,17 +92,22 @@ export async function fetchEngineLogs(
   return body.lines ?? []
 }
 
+export interface EngineResources {
+  memory_bytes: number | null
+  graphics_bytes: number | null
+}
+
 /** `GET /engined/v1/engines/<id>/resources`. `{error}` when the engine is not running -- returned as-is, not thrown, since "not running" is a normal answer here. */
 export async function fetchEngineResources(
   baseUrl: string,
   id: string,
   signal?: AbortSignal,
-): Promise<Record<string, unknown>> {
+): Promise<EngineResources | { error: string }> {
   const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/resources`, { signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
-  return (await res.json()) as Record<string, unknown>
+  return (await res.json()) as EngineResources | { error: string }
 }
 
 /** `POST /engined/v1/engines/<id>/stop`. */

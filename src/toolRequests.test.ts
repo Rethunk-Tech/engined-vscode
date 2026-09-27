@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import type { EnginedModelRow } from './door.ts'
+import type { Door, EnginedModelRow } from './door.ts'
 import {
   buildImageRequest,
   buildReadImageRequest,
@@ -8,8 +8,14 @@ import {
   confirmationMessage,
 } from './toolRequests.ts'
 
+const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
+
+// `id` is qualified as `gpu-box/@/comfy/local` to prove a request body sends `routeId`
+// (the door's own raw id), never the VS Code/settings-facing qualified id.
 const comfy: EnginedModelRow = {
-  id: '@/comfy/local',
+  id: 'gpu-box/@/comfy/local',
+  routeId: '@/comfy/local',
+  door: DOOR,
   tools: false,
   serves: ['/openai/v1/images/generations', '/openai/v1/images/edits'],
   state: 'installed',
@@ -18,6 +24,8 @@ const comfy: EnginedModelRow = {
 
 const ocrRow: EnginedModelRow = {
   id: '@/llama/ocr',
+  routeId: '@/llama/ocr',
+  door: DOOR,
   tools: true,
   serves: ['/openai/v1/chat/completions'],
   role: 'vision',
@@ -28,6 +36,8 @@ const ocrRow: EnginedModelRow = {
 
 const whisper: EnginedModelRow = {
   id: '@/whisper/large-v3-turbo',
+  routeId: '@/whisper/large-v3-turbo',
+  door: DOOR,
   tools: false,
   serves: ['/openai/v1/audio/transcriptions', '/openai/v1/audio/translations'],
   translate: true,
@@ -37,6 +47,8 @@ const whisper: EnginedModelRow = {
 
 const piper: EnginedModelRow = {
   id: '@/piper/local',
+  routeId: '@/piper/local',
+  door: DOOR,
   tools: false,
   serves: ['/openai/v1/audio/speech'],
   egress: 'none',
@@ -95,6 +107,8 @@ describe('confirmationMessage', () => {
   test('warns when egress is not local', () => {
     const remoteRow: EnginedModelRow = {
       id: '@/claude/sonnet-5',
+      routeId: '@/claude/sonnet-5',
+      door: DOOR,
       tools: false,
       serves: [],
       egress: 'remote',

@@ -209,10 +209,30 @@
     "configuration": {
       "title": "engined",
       "properties": {
-        "engined.url": {
-          "type": "string",
-          "default": "http://127.0.0.1:29200",
-          "description": "Base URL of the engined door."
+        "engined.doors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "url"
+            ]
+          },
+          "default": [
+            {
+              "name": "local",
+              "url": "http://127.0.0.1:29200"
+            }
+          ],
+          "description": "Every engined door to poll and route to. With one door, model ids stay plain; with more than one, a model's id becomes \"<door name>/<row id>\" and every request routes to the door that owns it."
         },
         "engined.pollSeconds": {
           "type": "number",
