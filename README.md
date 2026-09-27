@@ -19,6 +19,8 @@ Requires **engined** running on the same machine or reached via VS Code Remote-S
 
 Registers an `engined` chat provider (`vendor: "engined"`) backed by engined's `GET /openai/v1/models` and `POST /openai/v1/chat/completions`. The model list is polled on a timer and VS Code's picker refreshes only when it actually changes; see [docs/polling.md](docs/polling.md) for the internals. Tool calls and images are forwarded to models that support them, and a reasoning-effort setting is snapped to whatever level each model actually lists -- see [docs/reasoning-effort.md](docs/reasoning-effort.md).
 
+engined's text-only routes (agent CLIs such as Claude or Cursor via engined, `tools: false`) don't show up in the picker -- VS Code only lists tool-calling models there; reach those routes from another engined consumer.
+
 ## Agent tools
 
 Four tools reach engined's image, vision and audio routes: `engined_generateImage`, `engined_readImage`, `engined_transcribe`, `engined_speak`. They work under any chat model in the picker, not only engined's own -- the tool itself always runs against engined's local door, but its result goes back to whichever model is running the conversation. Each confirms the route it will use and warns when content will leave the machine. Full parameters and route-selection details: [docs/tools.md](docs/tools.md).

@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Bun
+        uses: Rethunk-Tech/gh-actions/setup-bun@99dfb9093ab089d28f76d8036322a7c062259e76 # v1.13
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint, typecheck, test, build
+        run: bun run ci
+
+      - name: Package extension
+        run: bunx @vscode/vsce package --no-dependencies
+
+      - name: Attach .vsix to the release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        with:
+          files: "*.vsix"
