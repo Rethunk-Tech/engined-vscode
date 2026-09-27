@@ -147,6 +147,7 @@ export interface TodayUsage {
   requests: number
   promptTokens?: number
   completionTokens?: number
+  costUsd?: number
 }
 
 /** `vscode.ColorThemeKind`, collapsed to the two palettes a static SVG meter needs (a high-contrast theme reads fine off the dark palette). */
@@ -246,7 +247,7 @@ function meterImg(fraction: number, theme: ThemeKind, title: string): string {
 // --- table rows ----------------------------------------------------------
 
 function row(label: string, value: string): string {
-  return `<tr><td>${muted(label)}</td><td align="right">${value}</td></tr>`
+  return `<tr><td>${muted(label)}</td><td align="left">${value}</td></tr>`
 }
 
 function table(rows: readonly string[]): string {
@@ -312,6 +313,9 @@ function hasContextMeter(call: CallRecord): boolean {
   )
 }
 
+/** Below 2% of the window, a meter reads as empty and meaningless -- show the plain numbers only. */
+const CONTEXT_METER_THRESHOLD = 0.02
+
 function contextCell(call: CallRecord, theme: ThemeKind): string {
   if (
     call.promptTokens === undefined ||
@@ -321,30 +325,35 @@ function contextCell(call: CallRecord, theme: ThemeKind): string {
     return muted('—')
   }
   const fraction = call.promptTokens / call.promptTokenMax
-  return `${meterImg(fraction, theme, 'prompt tokens used')} ${abbreviateTokenCount(call.promptTokens)} / ${abbreviateTokenCount(call.promptTokenMax)}`
+  const numbers = `${abbreviateTokenCount(call.promptTokens)} / ${abbreviateTokenCount(call.promptTokenMax)}`
+  if (fraction < CONTEXT_METER_THRESHOLD) {
+    return numbers
+  }
+  return `${meterImg(fraction, theme, 'prompt tokens used')} ${numbers}`
 }
 
-/** `<tr><td>Route</td><td>chip</td><td>chip</td>...</tr>`, one column per call, label column left as-is (muted) and value columns left-aligned so they read as columns. */
+/** `<tr><td>Model</td><td align="left">chip</td>...</tr>`, one column per call, label column muted and value columns explicitly left-aligned so they read as columns, not a right-ragged block. */
 function callsRow(
   label: string,
   columns: readonly CallColumn[],
   cell: (call: CallRecord) => string,
 ): string {
-  const cells = columns.map((c) => `<td>${cell(c.call)}</td>`).join('')
+  const cells = columns.map((c) => `<td align="left">${cell(c.call)}</td>`).join('')
   return `<tr><td>${muted(label)}</td>${cells}</tr>`
 }
 
 /**
  * ONE table for every in-flight call kind, calls as columns instead of one
  * narrow table per section -- a header row naming only the calls that
- * exist, then a row per fact, each row present only when some column has
- * that fact (Cost/Context are usually completion-only or absent entirely).
+ * exist (label cell reads "Last", not blank), then a row per fact, each row
+ * present only when some column has that fact (Cost/Context are usually
+ * completion-only or absent entirely).
  */
 function callsTable(columns: readonly CallColumn[], theme: ThemeKind): string {
-  const header = `<tr><td></td>${columns.map((c) => `<td>${muted(c.label)}</td>`).join('')}</tr>`
+  const header = `<tr><td>${muted('Last')}</td>${columns.map((c) => `<td align="left">${muted(c.label)}</td>`).join('')}</tr>`
   const rows = [
     header,
-    callsRow('Route', columns, routeCell),
+    callsRow('Model', columns, routeCell),
     callsRow('Tokens', columns, tokensCell),
     callsRow('Time', columns, (call) => formatSeconds(call.wallMs)),
   ]
@@ -357,49 +366,69 @@ function callsTable(columns: readonly CallColumn[], theme: ThemeKind): string {
   return `<table width="100%">${rows.join('')}</table>`
 }
 
-// --- today/defaults (one row, two cells) ----------------------------------
+// --- today/defaults (one flat table, four columns) -------------------------
 
-function todayTable(usage: TodayUsage): string {
-  const rows = [row('Requests', String(usage.requests))]
+/** [label, value] pairs -- Requests/Tokens/Cost, only the facts actually known. */
+function todayRowPairs(usage: TodayUsage): Array<[string, string]> {
+  const pairs: Array<[string, string]> = [['Requests', String(usage.requests)]]
   if (usage.promptTokens !== undefined || usage.completionTokens !== undefined) {
     const inTokens =
       usage.promptTokens === undefined ? '?' : abbreviateTokenCount(usage.promptTokens)
     const outTokens =
       usage.completionTokens === undefined ? '?' : abbreviateTokenCount(usage.completionTokens)
-    rows.push(row('Tokens', `${inTokens} → ${outTokens}`))
+    pairs.push(['Tokens', `${inTokens} → ${outTokens}`])
   }
-  return table(rows)
+  if (usage.costUsd !== undefined) {
+    pairs.push(['Cost', formatCostUsd(usage.costUsd)])
+  }
+  return pairs
 }
 
-/** `Image: @/comfy/local` / `Image: @/comfy/local (automatic)` / `Image: @/whisper/x unavailable, using @/comfy/local`, as a table row. */
-function defaultRow(line: DefaultModelLine): string {
+/** `[Image, @/comfy/local]` / `[Image, @/comfy/local auto]` / `[Speech, @/whisper/x unavailable, using @/chatterbox-en/local]`. */
+function defaultRowPair(line: DefaultModelLine): [string, string] {
   if (line.resolvedName === undefined) {
-    return row(line.label, muted('none available'))
+    return [line.label, muted('none available')]
   }
   if (line.unusableConfigured !== undefined) {
-    return row(
+    return [
       line.label,
       `${chip(`${line.unusableConfigured} unavailable`, COLOR_WARN)}, using ${line.resolvedName}`,
-    )
+    ]
   }
-  return row(
-    line.label,
-    line.configured ? line.resolvedName : `${line.resolvedName} ${muted('(automatic)')}`,
-  )
+  return [line.label, line.configured ? line.resolvedName : `${line.resolvedName} ${muted('auto')}`]
 }
 
 /**
- * Today's totals and the configured defaults side by side, as one 2-cell
- * row instead of two stacked full-width tables -- both are short, so
- * stacking them wasted the popup's height for no reason.
+ * Today's totals and the configured defaults as ONE flat table, four
+ * columns wide (Today label/value, Defaults role/model), instead of nesting
+ * a per-block table inside each side's cell -- VS Code's sanitizer strips
+ * `valign` and td `style`, so a nested table in a taller cell can't be
+ * top-aligned and reads as vertically centered. Rows pair up top-down;
+ * once Today's rows run out its two cells stay empty and Defaults
+ * continues alone.
  */
-function todayDefaultsRow(
+function todayDefaultsTable(
   usage: TodayUsage | undefined,
   defaults: readonly DefaultModelLine[],
 ): string {
-  const left = usage === undefined ? '' : todayTable(usage)
-  const right = defaults.length === 0 ? '' : table(defaults.map(defaultRow))
-  return `<table width="100%"><tr><td><b>Today</b><br>${left}</td><td><b>Defaults</b><br>${right}</td></tr></table>`
+  const todayPairs = usage === undefined ? [] : todayRowPairs(usage)
+  const defaultPairs = defaults.map(defaultRowPair)
+  const rowCount = Math.max(todayPairs.length, defaultPairs.length)
+  const bodyRows: string[] = []
+  for (let i = 0; i < rowCount; i++) {
+    const t = todayPairs[i]
+    const d = defaultPairs[i]
+    const todayLabel = t === undefined ? '' : muted(t[0])
+    const todayValue = t === undefined ? '' : t[1]
+    const defaultsLabel = d === undefined ? '' : muted(d[0])
+    const defaultsValue = d === undefined ? '' : d[1]
+    bodyRows.push(
+      `<tr><td>${todayLabel}</td><td align="left">${todayValue}</td>` +
+        `<td>${defaultsLabel}</td><td align="left">${defaultsValue}</td></tr>`,
+    )
+  }
+  const header = '<tr><td colspan="2"><b>Today</b></td><td colspan="2"><b>Defaults</b></td></tr>'
+  return `<table width="100%">${header}${bodyRows.join('')}</table>`
 }
 
 // --- actions ---------------------------------------------------------------
@@ -460,7 +489,7 @@ export function buildTooltip(input: TooltipInput): string {
 
   const todayDefaultsBlock =
     input.todayUsage !== undefined || input.defaults.length > 0
-      ? todayDefaultsRow(input.todayUsage, input.defaults)
+      ? todayDefaultsTable(input.todayUsage, input.defaults)
       : undefined
 
   // At most one rule between these two blocks -- more would stack rules for

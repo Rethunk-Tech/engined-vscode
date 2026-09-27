@@ -259,7 +259,7 @@ describe('buildTooltip', () => {
     })
     // one calls table, not three -- a single header row naming all three columns.
     expect(allThree.match(/<table width="100%">/g)?.length).toBeGreaterThanOrEqual(1)
-    const headerRow = allThree.match(/<tr><td><\/td>.*?<\/tr>/)?.[0]
+    const headerRow = allThree.match(/<tr><td>.*?Last.*?<\/td>.*?<\/tr>/)?.[0]
     expect(headerRow).toBeDefined()
     expect(headerRow).toContain('Chat')
     expect(headerRow).toContain('Background')
@@ -346,13 +346,98 @@ describe('buildTooltip', () => {
     expect(both.slice(todayIdx, defaultsIdx)).not.toContain('<table width="100%">')
     expect(both).toContain('12')
     expect(both).toContain('@/comfy/local')
-    expect(both).toContain('(automatic)')
+    expect(both).toContain('>auto<')
     expect(both).toContain('@/whisper/x unavailable')
     expect(both).toContain('using @/chatterbox-en/local')
+    // one flat table, not a table nested inside a <td> -- the nested form
+    // can't be top-aligned once VS Code's sanitizer strips td `style`.
+    expect(both).not.toMatch(/<td>[^<]*<table/)
 
     const neither = buildTooltip(baseInput)
     expect(neither).not.toContain('<b>Today</b>')
     expect(neither).not.toContain('<b>Defaults</b>')
+  })
+
+  test('the calls table label column reads "Last", not a blank header cell', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
+    })
+    const headerRow = tooltip.match(/<tr><td>.*?<\/tr>/)?.[0]
+    expect(headerRow).toContain('>Last<')
+  })
+
+  test('context cell shows the meter only at or above 2% of the window, plain numbers below it', () => {
+    const belowThreshold = buildTooltip({
+      ...baseInput,
+      lastBackground: {
+        route: '@/llama/ornith',
+        egress: 'none',
+        wallMs: 300,
+        promptTokens: 268,
+        promptTokenMax: 262144,
+      },
+    })
+    expect(belowThreshold).toContain('268 / 262.1k')
+    expect(belowThreshold).not.toContain('data:image/svg+xml;base64,')
+
+    const atThreshold = buildTooltip({
+      ...baseInput,
+      lastBackground: {
+        route: '@/llama/ornith',
+        egress: 'none',
+        wallMs: 300,
+        promptTokens: 33000,
+        promptTokenMax: 262144,
+      },
+    })
+    expect(atThreshold).toContain('33.0k / 262.1k')
+    expect(atThreshold).toContain('data:image/svg+xml;base64,')
+  })
+
+  test('calls table values are explicitly left-aligned', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      lastChat: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
+    })
+    expect(tooltip).toContain('<td align="left">')
+  })
+
+  test('Today rows pair up with Defaults top-down; once Today runs out its cells stay empty', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      todayUsage: { requests: 26, promptTokens: 392300, completionTokens: 5000, costUsd: 1.23 },
+      defaults: [
+        { label: 'Image', resolvedName: 'Chroma1-HD', configured: true },
+        { label: 'OCR', resolvedName: 'PaddleOCR-VL 1.6', configured: true },
+        { label: 'Vision', resolvedName: 'Some-Vision', configured: true },
+        { label: 'Speech', resolvedName: 'Some-Speech', configured: true },
+      ],
+    })
+    // header is one row, colspan 2 over each side.
+    expect(tooltip).toContain('<td colspan="2"><b>Today</b></td>')
+    expect(tooltip).toContain('<td colspan="2"><b>Defaults</b></td>')
+    // Requests | 26 | Image | Chroma1-HD share one row.
+    const requestsRow = tooltip.match(/<tr>(?:(?!<\/tr>).)*Requests(?:(?!<\/tr>).)*<\/tr>/)?.[0]
+    expect(requestsRow).toContain('26')
+    expect(requestsRow).toContain('Image')
+    expect(requestsRow).toContain('Chroma1-HD')
+    // Cost | $1.2300 pairs with the third Defaults row (Vision), since
+    // Today only has three rows (Requests, Tokens, Cost).
+    const costRow = tooltip.match(/<tr>(?:(?!<\/tr>).)*Cost(?:(?!<\/tr>).)*<\/tr>/)?.[0]
+    expect(costRow).toContain('$1.2300')
+    expect(costRow).toContain('Some-Vision')
+    // Defaults' fourth row (Speech) has no Today counterpart left -- empty leading cells, not a stray label.
+    const speechRow = tooltip.match(/<tr>(?:(?!<\/tr>).)*Speech(?:(?!<\/tr>).)*<\/tr>/)?.[0]
+    expect(speechRow?.startsWith('<tr><td></td><td align="left"></td><td>')).toBe(true)
+  })
+
+  test('the Cost row is skipped when Today usage has no cost figure', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      todayUsage: { requests: 12, promptTokens: 4000, completionTokens: 900 },
+    })
+    expect(tooltip).not.toContain('>Cost<')
   })
 
   test('at most one <hr> sits between the calls table and the Today/Defaults row', () => {

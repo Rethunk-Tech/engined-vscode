@@ -629,6 +629,7 @@ function refreshTodayUsageIfStale(): void {
         requests: t.requests,
         promptTokens: t.promptTokens,
         completionTokens: t.completionTokens,
+        costUsd: t.costUsd,
       }
       todayUsageFetchedAt = Date.now()
       renderStatusBar()
