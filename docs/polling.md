@@ -1,6 +1,6 @@
 # Model-list polling internals
 
-See the [README](../README.md#status-bar) for the status bar overview.
+See [HUMANS.md](../HUMANS.md#usage) for the status bar overview.
 
 `src/polling.ts`'s `ModelPoller` polls `GET /openai/v1/models` on `engined.pollSeconds` (default `30`; `0` disables the timer -- use the `engined: Refresh Models` command instead). It never calls any other route: listing is always safe to poll and never loads a model.
 

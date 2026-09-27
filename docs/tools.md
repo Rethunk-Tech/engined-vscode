@@ -1,6 +1,6 @@
 # Agent tools reference
 
-Detailed parameters for the four `engined_*` tools. See the [README](../README.md#agent-tools) for the overview.
+Detailed parameters for the four `engined_*` tools. See [HUMANS.md](../HUMANS.md#usage) for the overview.
 
 Every tool works from whatever chat model is currently answering -- engined's own models or any other vendor's (Copilot's included). The tool itself always runs against engined's local door; only the tool's result travels back to whichever model is running the conversation, so with a cloud model that result leaves the machine even though the tool ran locally.
 
