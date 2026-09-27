@@ -13,7 +13,7 @@ function section(name: string, lines: number): string {
 
 describe('splitAtBoundaries', () => {
   test('rejoins exactly and leaves short text whole', () => {
-    const text = section('instructions', 60) + '\n' + section('toolUseInstructions', 40)
+    const text = `${section('instructions', 60)}\n${section('toolUseInstructions', 40)}`
     expect(splitAtBoundaries(text, opts).join('')).toBe(text)
     expect(splitAtBoundaries('short', opts)).toEqual(['short'])
   })
@@ -30,7 +30,7 @@ describe('splitAtBoundaries', () => {
 
   test('never cuts inside a JSON value or a code fence when a line end outside exists', () => {
     const json = `{\n${Array.from({ length: 12 }, (_, i) => `  "key${i}": "value ${i}",`).join('\n')}\n  "last": [1, 2, 3]\n}\n`
-    const fence = '```ts\n' + 'const x = 1\n'.repeat(15) + '```\n'
+    const fence = `\`\`\`ts\n${'const x = 1\n'.repeat(15)}\`\`\`\n`
     const text = `${'intro line.\n'.repeat(10)}${json}${'middle line.\n'.repeat(10)}${fence}${'outro line.\n'.repeat(60)}`
     for (const piece of splitAtBoundaries(text, opts).slice(0, -1)) {
       const opens = (piece.match(/[{[]/g) ?? []).length
