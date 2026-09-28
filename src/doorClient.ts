@@ -8,12 +8,35 @@
 import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { mapAnswerableRows, mapModels } from './door.ts'
 
+/** OpenAI `{error:{message}}` or the older `{error:"..."}` string. */
+export function doorErrorMessage(error: unknown): string | undefined {
+  if (typeof error === 'string') {
+    return error
+  }
+  if (error !== null && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message: unknown }).message
+    if (typeof message === 'string') {
+      return message
+    }
+  }
+  return undefined
+}
+
+function messageFromRawBody(raw: string): string {
+  try {
+    const body = JSON.parse(raw) as { error?: unknown }
+    return doorErrorMessage(body.error) ?? raw
+  } catch {
+    return raw
+  }
+}
+
 export class DoorHttpError extends Error {
   constructor(
     readonly status: number,
-    message: string,
+    rawBody: string,
   ) {
-    super(message)
+    super(messageFromRawBody(rawBody))
   }
 }
 
