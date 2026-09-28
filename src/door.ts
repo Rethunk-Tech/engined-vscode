@@ -66,6 +66,9 @@ export function qualifiedEngineIds(
 /** The wire shape of one `GET /openai/v1/models` row (engined `ModelRow`), before it is qualified against a door. */
 interface RawModelRow {
   id: string
+  object?: 'model'
+  created?: number
+  owned_by?: string
   engine?: string
   display_name?: string
   egress?: string

@@ -1,1 +1,4624 @@
-{"object":"list","data":[{"id":"@/llama/ornith","engine":"llama","upstream":"local","model":"ornith","egress":"none","streaming":true,"tools":true,"serves":["/openai/v1/chat/completions"],"role":"chat","state":"running","capabilities":{"input":["text"],"output":["text"]}},{"id":"@/llama/embed","engine":"llama","upstream":"local","model":"embed","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/embeddings"],"role":"embedding","state":"running","capabilities":{}},{"id":"@/llama/vision","engine":"llama","upstream":"local","model":"vision","egress":"none","streaming":true,"tools":true,"serves":["/openai/v1/chat/completions"],"role":"vision","vision":"describe","state":"running","capabilities":{"input":["text","image"],"output":["text"]}},{"id":"@/llama/ocr","engine":"llama","upstream":"local","model":"ocr","egress":"none","streaming":true,"tools":true,"serves":["/openai/v1/chat/completions"],"role":"vision","vision":"read","state":"running","capabilities":{"input":["text","image"],"output":["text"]}},{"id":"@/claude/opus-5-5","engine":"claude","model":"opus-5-5","display_name":"Claude Opus 5.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/fable-5-1","engine":"claude","model":"fable-5-1","display_name":"Claude Fable 5.1","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/sonnet-5","engine":"claude","model":"sonnet-5","display_name":"Claude Sonnet 5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{"input":["text","image"],"output":["text"],"context_in":200000,"context_out":64000,"reasoning":["none","low","high"]}},{"id":"@/claude/haiku-4-5","engine":"claude","model":"haiku-4-5","display_name":"Claude Haiku 4.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/fable-5","engine":"claude","model":"fable-5","display_name":"Claude Fable 5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/opus-5","engine":"claude","model":"opus-5","display_name":"Claude Opus 5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/opus-4-8","engine":"claude","model":"opus-4-8","display_name":"Claude Opus 4.8","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/opus-4-7","engine":"claude","model":"opus-4-7","display_name":"Claude Opus 4.7","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/opus-4-6","engine":"claude","model":"opus-4-6","display_name":"Claude Opus 4.6","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/opus-4-5","engine":"claude","model":"opus-4-5","display_name":"Claude Opus 4.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/sonnet-4-6","engine":"claude","model":"sonnet-4-6","display_name":"Claude Sonnet 4.6","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/claude/sonnet-4-5","engine":"claude","model":"sonnet-4-5","display_name":"Claude Sonnet 4.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/opencode/ornith","engine":"opencode","upstream":"local","model":"ornith","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/auto","engine":"cursor","model":"auto","display_name":"Auto (default)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-low","engine":"cursor","model":"gpt-5.3-codex-low","display_name":"Codex 5.3 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-low-fast","engine":"cursor","model":"gpt-5.3-codex-low-fast","display_name":"Codex 5.3 Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex","engine":"cursor","model":"gpt-5.3-codex","display_name":"Codex 5.3","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-fast","engine":"cursor","model":"gpt-5.3-codex-fast","display_name":"Codex 5.3 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-high","engine":"cursor","model":"gpt-5.3-codex-high","display_name":"Codex 5.3 High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-high-fast","engine":"cursor","model":"gpt-5.3-codex-high-fast","display_name":"Codex 5.3 High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-xhigh","engine":"cursor","model":"gpt-5.3-codex-xhigh","display_name":"Codex 5.3 Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.3-codex-xhigh-fast","engine":"cursor","model":"gpt-5.3-codex-xhigh-fast","display_name":"Codex 5.3 Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2","engine":"cursor","model":"gpt-5.2","display_name":"GPT-5.2","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/composer-2.5","engine":"cursor","model":"composer-2.5","display_name":"Composer 2.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-high","engine":"cursor","model":"claude-opus-5-thinking-high","display_name":"Claude Opus 5 1M Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-high-fast","engine":"cursor","model":"claude-opus-5-thinking-high-fast","display_name":"Claude Opus 5 1M Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-high","engine":"cursor","model":"gpt-5.6-sol-high","display_name":"GPT-5.6 Sol 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-high-fast","engine":"cursor","model":"gpt-5.6-sol-high-fast","display_name":"GPT-5.6 Sol 1M High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-xhigh","engine":"cursor","model":"gpt-5.6-sol-xhigh","display_name":"GPT-5.6 Sol 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-xhigh-fast","engine":"cursor","model":"gpt-5.6-sol-xhigh-fast","display_name":"GPT-5.6 Sol 1M Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-thinking-high","engine":"cursor","model":"claude-fable-5-thinking-high","display_name":"Claude Fable 5 1M Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-thinking-xhigh","engine":"cursor","model":"claude-fable-5-thinking-xhigh","display_name":"Claude Fable 5 1M Extra High Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.5-high","engine":"cursor","model":"cursor-grok-4.5-high","display_name":"Grok 4.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.5-high-fast","engine":"cursor","model":"cursor-grok-4.5-high-fast","display_name":"Grok 4.5 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.7-flash-high","engine":"cursor","model":"gemini-3.7-flash-high","display_name":"Gemini 3.7 Flash","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-thinking-high","engine":"cursor","model":"claude-sonnet-5-thinking-high","display_name":"Claude Sonnet 5 1M Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-thinking-xhigh","engine":"cursor","model":"claude-sonnet-5-thinking-xhigh","display_name":"Claude Sonnet 5 1M Extra High Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-high","engine":"cursor","model":"gpt-5.6-luna-high","display_name":"GPT-5.6 Luna 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-low","engine":"cursor","model":"grok-4.7-low","display_name":"Grok 4.7 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-low-fast","engine":"cursor","model":"grok-4.7-low-fast","display_name":"Grok 4.7 Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-medium","engine":"cursor","model":"grok-4.7-medium","display_name":"Grok 4.7 Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-medium-fast","engine":"cursor","model":"grok-4.7-medium-fast","display_name":"Grok 4.7 Medium Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-high","engine":"cursor","model":"grok-4.7-high","display_name":"Grok 4.7 High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-high-fast","engine":"cursor","model":"grok-4.7-high-fast","display_name":"Grok 4.7 High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-xhigh","engine":"cursor","model":"grok-4.7-xhigh","display_name":"Grok 4.7 Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/grok-4.7-xhigh-fast","engine":"cursor","model":"grok-4.7-xhigh-fast","display_name":"Grok 4.7 Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-low","engine":"cursor","model":"cursor-grok-4.6-low","display_name":"Grok 4.6 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-low-fast","engine":"cursor","model":"cursor-grok-4.6-low-fast","display_name":"Grok 4.6 Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-medium","engine":"cursor","model":"cursor-grok-4.6-medium","display_name":"Grok 4.6 Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-medium-fast","engine":"cursor","model":"cursor-grok-4.6-medium-fast","display_name":"Grok 4.6 Medium Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-high","engine":"cursor","model":"cursor-grok-4.6-high","display_name":"Grok 4.6","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-high-fast","engine":"cursor","model":"cursor-grok-4.6-high-fast","display_name":"Grok 4.6 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-xhigh","engine":"cursor","model":"cursor-grok-4.6-xhigh","display_name":"Grok 4.6 Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.6-xhigh-fast","engine":"cursor","model":"cursor-grok-4.6-xhigh-fast","display_name":"Grok 4.6 Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/composer-2.5-fast","engine":"cursor","model":"composer-2.5-fast","display_name":"Composer 2.5 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-low","engine":"cursor","model":"claude-opus-5-5-low","display_name":"Claude Opus 5.5 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-low-fast","engine":"cursor","model":"claude-opus-5-5-low-fast","display_name":"Claude Opus 5.5 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-medium","engine":"cursor","model":"claude-opus-5-5-medium","display_name":"Claude Opus 5.5 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-medium-fast","engine":"cursor","model":"claude-opus-5-5-medium-fast","display_name":"Claude Opus 5.5 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-high","engine":"cursor","model":"claude-opus-5-5-high","display_name":"Claude Opus 5.5 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-high-fast","engine":"cursor","model":"claude-opus-5-5-high-fast","display_name":"Claude Opus 5.5 1M High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-xhigh","engine":"cursor","model":"claude-opus-5-5-xhigh","display_name":"Claude Opus 5.5 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-xhigh-fast","engine":"cursor","model":"claude-opus-5-5-xhigh-fast","display_name":"Claude Opus 5.5 1M Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-max","engine":"cursor","model":"claude-opus-5-5-max","display_name":"Claude Opus 5.5 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-5-max-fast","engine":"cursor","model":"claude-opus-5-5-max-fast","display_name":"Claude Opus 5.5 1M Max Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-low","engine":"cursor","model":"claude-opus-5-low","display_name":"Claude Opus 5 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-low-fast","engine":"cursor","model":"claude-opus-5-low-fast","display_name":"Claude Opus 5 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-medium","engine":"cursor","model":"claude-opus-5-medium","display_name":"Claude Opus 5 1M Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-medium-fast","engine":"cursor","model":"claude-opus-5-medium-fast","display_name":"Claude Opus 5 1M Medium Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-high","engine":"cursor","model":"claude-opus-5-high","display_name":"Claude Opus 5 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-high-fast","engine":"cursor","model":"claude-opus-5-high-fast","display_name":"Claude Opus 5 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-low","engine":"cursor","model":"claude-opus-5-thinking-low","display_name":"Claude Opus 5 1M Low Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-low-fast","engine":"cursor","model":"claude-opus-5-thinking-low-fast","display_name":"Claude Opus 5 1M Low Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-medium","engine":"cursor","model":"claude-opus-5-thinking-medium","display_name":"Claude Opus 5 1M Medium Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-medium-fast","engine":"cursor","model":"claude-opus-5-thinking-medium-fast","display_name":"Claude Opus 5 1M Medium Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-xhigh","engine":"cursor","model":"claude-opus-5-thinking-xhigh","display_name":"Claude Opus 5 1M Extra High Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-xhigh-fast","engine":"cursor","model":"claude-opus-5-thinking-xhigh-fast","display_name":"Claude Opus 5 1M Extra High Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-max","engine":"cursor","model":"claude-opus-5-thinking-max","display_name":"Claude Opus 5 1M Max Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-5-thinking-max-fast","engine":"cursor","model":"claude-opus-5-thinking-max-fast","display_name":"Claude Opus 5 1M Max Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-low","engine":"cursor","model":"claude-opus-4-8-low","display_name":"Claude Opus 4.8 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-low-fast","engine":"cursor","model":"claude-opus-4-8-low-fast","display_name":"Claude Opus 4.8 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-medium","engine":"cursor","model":"claude-opus-4-8-medium","display_name":"Claude Opus 4.8 1M Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-medium-fast","engine":"cursor","model":"claude-opus-4-8-medium-fast","display_name":"Claude Opus 4.8 1M Medium Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-high","engine":"cursor","model":"claude-opus-4-8-high","display_name":"Claude Opus 4.8 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-high-fast","engine":"cursor","model":"claude-opus-4-8-high-fast","display_name":"Claude Opus 4.8 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-xhigh","engine":"cursor","model":"claude-opus-4-8-xhigh","display_name":"Claude Opus 4.8 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-xhigh-fast","engine":"cursor","model":"claude-opus-4-8-xhigh-fast","display_name":"Claude Opus 4.8 1M Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-max","engine":"cursor","model":"claude-opus-4-8-max","display_name":"Claude Opus 4.8 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-max-fast","engine":"cursor","model":"claude-opus-4-8-max-fast","display_name":"Claude Opus 4.8 1M Max Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-low","engine":"cursor","model":"claude-opus-4-8-thinking-low","display_name":"Claude Opus 4.8 1M Low Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-low-fast","engine":"cursor","model":"claude-opus-4-8-thinking-low-fast","display_name":"Claude Opus 4.8 1M Low Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-medium","engine":"cursor","model":"claude-opus-4-8-thinking-medium","display_name":"Claude Opus 4.8 1M Medium Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-medium-fast","engine":"cursor","model":"claude-opus-4-8-thinking-medium-fast","display_name":"Claude Opus 4.8 1M Medium Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-high","engine":"cursor","model":"claude-opus-4-8-thinking-high","display_name":"Claude Opus 4.8 1M Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-high-fast","engine":"cursor","model":"claude-opus-4-8-thinking-high-fast","display_name":"Claude Opus 4.8 1M Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-xhigh","engine":"cursor","model":"claude-opus-4-8-thinking-xhigh","display_name":"Claude Opus 4.8 1M Extra High Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-xhigh-fast","engine":"cursor","model":"claude-opus-4-8-thinking-xhigh-fast","display_name":"Claude Opus 4.8 1M Extra High Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-max","engine":"cursor","model":"claude-opus-4-8-thinking-max","display_name":"Claude Opus 4.8 1M Max Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-8-thinking-max-fast","engine":"cursor","model":"claude-opus-4-8-thinking-max-fast","display_name":"Claude Opus 4.8 1M Max Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-none","engine":"cursor","model":"gpt-5.6-sol-none","display_name":"GPT-5.6 Sol 1M None","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-none-fast","engine":"cursor","model":"gpt-5.6-sol-none-fast","display_name":"GPT-5.6 Sol 1M None Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-low","engine":"cursor","model":"gpt-5.6-sol-low","display_name":"GPT-5.6 Sol 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-low-fast","engine":"cursor","model":"gpt-5.6-sol-low-fast","display_name":"GPT-5.6 Sol 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-medium","engine":"cursor","model":"gpt-5.6-sol-medium","display_name":"GPT-5.6 Sol 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-medium-fast","engine":"cursor","model":"gpt-5.6-sol-medium-fast","display_name":"GPT-5.6 Sol 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-max","engine":"cursor","model":"gpt-5.6-sol-max","display_name":"GPT-5.6 Sol 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-sol-max-fast","engine":"cursor","model":"gpt-5.6-sol-max-fast","display_name":"GPT-5.6 Sol 1M Max Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-none","engine":"cursor","model":"gpt-5.5-none","display_name":"GPT-5.5 1M None","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-none-fast","engine":"cursor","model":"gpt-5.5-none-fast","display_name":"GPT-5.5 None Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-low","engine":"cursor","model":"gpt-5.5-low","display_name":"GPT-5.5 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-low-fast","engine":"cursor","model":"gpt-5.5-low-fast","display_name":"GPT-5.5 Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-medium","engine":"cursor","model":"gpt-5.5-medium","display_name":"GPT-5.5 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-medium-fast","engine":"cursor","model":"gpt-5.5-medium-fast","display_name":"GPT-5.5 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-high","engine":"cursor","model":"gpt-5.5-high","display_name":"GPT-5.5 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-high-fast","engine":"cursor","model":"gpt-5.5-high-fast","display_name":"GPT-5.5 High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-extra-high","engine":"cursor","model":"gpt-5.5-extra-high","display_name":"GPT-5.5 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.5-extra-high-fast","engine":"cursor","model":"gpt-5.5-extra-high-fast","display_name":"GPT-5.5 Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-low","engine":"cursor","model":"claude-fable-5-1-low","display_name":"Claude Fable 5.1 1M Low (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-medium","engine":"cursor","model":"claude-fable-5-1-medium","display_name":"Claude Fable 5.1 1M Medium (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-high","engine":"cursor","model":"claude-fable-5-1-high","display_name":"Claude Fable 5.1 1M (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-xhigh","engine":"cursor","model":"claude-fable-5-1-xhigh","display_name":"Claude Fable 5.1 1M Extra High (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-max","engine":"cursor","model":"claude-fable-5-1-max","display_name":"Claude Fable 5.1 1M Max (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-thinking-low","engine":"cursor","model":"claude-fable-5-1-thinking-low","display_name":"Claude Fable 5.1 1M Low Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-thinking-medium","engine":"cursor","model":"claude-fable-5-1-thinking-medium","display_name":"Claude Fable 5.1 1M Medium Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-thinking-high","engine":"cursor","model":"claude-fable-5-1-thinking-high","display_name":"Claude Fable 5.1 1M Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-thinking-xhigh","engine":"cursor","model":"claude-fable-5-1-thinking-xhigh","display_name":"Claude Fable 5.1 1M Extra High Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-1-thinking-max","engine":"cursor","model":"claude-fable-5-1-thinking-max","display_name":"Claude Fable 5.1 1M Max Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-low","engine":"cursor","model":"claude-fable-5-low","display_name":"Claude Fable 5 1M Low (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-medium","engine":"cursor","model":"claude-fable-5-medium","display_name":"Claude Fable 5 1M Medium (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-high","engine":"cursor","model":"claude-fable-5-high","display_name":"Claude Fable 5 1M (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-xhigh","engine":"cursor","model":"claude-fable-5-xhigh","display_name":"Claude Fable 5 1M Extra High (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-max","engine":"cursor","model":"claude-fable-5-max","display_name":"Claude Fable 5 1M Max (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-thinking-low","engine":"cursor","model":"claude-fable-5-thinking-low","display_name":"Claude Fable 5 1M Low Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-thinking-medium","engine":"cursor","model":"claude-fable-5-thinking-medium","display_name":"Claude Fable 5 1M Medium Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-fable-5-thinking-max","engine":"cursor","model":"claude-fable-5-thinking-max","display_name":"Claude Fable 5 1M Max Thinking (NO ZDR)","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.5-low","engine":"cursor","model":"cursor-grok-4.5-low","display_name":"Grok 4.5 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.5-low-fast","engine":"cursor","model":"cursor-grok-4.5-low-fast","display_name":"Grok 4.5 Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.5-medium","engine":"cursor","model":"cursor-grok-4.5-medium","display_name":"Grok 4.5 Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/cursor-grok-4.5-medium-fast","engine":"cursor","model":"cursor-grok-4.5-medium-fast","display_name":"Grok 4.5 Medium Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.8-flash-low","engine":"cursor","model":"gemini-3.8-flash-low","display_name":"Gemini 3.8 Flash Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.8-flash-medium","engine":"cursor","model":"gemini-3.8-flash-medium","display_name":"Gemini 3.8 Flash Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.8-flash-high","engine":"cursor","model":"gemini-3.8-flash-high","display_name":"Gemini 3.8 Flash High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.7-flash-low","engine":"cursor","model":"gemini-3.7-flash-low","display_name":"Gemini 3.7 Flash Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.7-flash-medium","engine":"cursor","model":"gemini-3.7-flash-medium","display_name":"Gemini 3.7 Flash Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/muse-spark-1.3-minimal","engine":"cursor","model":"muse-spark-1.3-minimal","display_name":"Muse Spark 1.3 1M Minimal","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/muse-spark-1.3-low","engine":"cursor","model":"muse-spark-1.3-low","display_name":"Muse Spark 1.3 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/muse-spark-1.3-medium","engine":"cursor","model":"muse-spark-1.3-medium","display_name":"Muse Spark 1.3 1M Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/muse-spark-1.3-high","engine":"cursor","model":"muse-spark-1.3-high","display_name":"Muse Spark 1.3 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/muse-spark-1.3-xhigh","engine":"cursor","model":"muse-spark-1.3-xhigh","display_name":"Muse Spark 1.3 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/muse-spark-1.3-max","engine":"cursor","model":"muse-spark-1.3-max","display_name":"Muse Spark 1.3 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-none","engine":"cursor","model":"gpt-5.6-terra-none","display_name":"GPT-5.6 Terra 1M None","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-none-fast","engine":"cursor","model":"gpt-5.6-terra-none-fast","display_name":"GPT-5.6 Terra 1M None Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-low","engine":"cursor","model":"gpt-5.6-terra-low","display_name":"GPT-5.6 Terra 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-low-fast","engine":"cursor","model":"gpt-5.6-terra-low-fast","display_name":"GPT-5.6 Terra 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-medium","engine":"cursor","model":"gpt-5.6-terra-medium","display_name":"GPT-5.6 Terra 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-medium-fast","engine":"cursor","model":"gpt-5.6-terra-medium-fast","display_name":"GPT-5.6 Terra 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-high","engine":"cursor","model":"gpt-5.6-terra-high","display_name":"GPT-5.6 Terra 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-high-fast","engine":"cursor","model":"gpt-5.6-terra-high-fast","display_name":"GPT-5.6 Terra 1M High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-xhigh","engine":"cursor","model":"gpt-5.6-terra-xhigh","display_name":"GPT-5.6 Terra 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-xhigh-fast","engine":"cursor","model":"gpt-5.6-terra-xhigh-fast","display_name":"GPT-5.6 Terra 1M Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-max","engine":"cursor","model":"gpt-5.6-terra-max","display_name":"GPT-5.6 Terra 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-terra-max-fast","engine":"cursor","model":"gpt-5.6-terra-max-fast","display_name":"GPT-5.6 Terra 1M Max Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-low","engine":"cursor","model":"claude-sonnet-5-low","display_name":"Claude Sonnet 5 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-medium","engine":"cursor","model":"claude-sonnet-5-medium","display_name":"Claude Sonnet 5 1M Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-high","engine":"cursor","model":"claude-sonnet-5-high","display_name":"Claude Sonnet 5 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-xhigh","engine":"cursor","model":"claude-sonnet-5-xhigh","display_name":"Claude Sonnet 5 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-max","engine":"cursor","model":"claude-sonnet-5-max","display_name":"Claude Sonnet 5 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-thinking-low","engine":"cursor","model":"claude-sonnet-5-thinking-low","display_name":"Claude Sonnet 5 1M Low Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-thinking-medium","engine":"cursor","model":"claude-sonnet-5-thinking-medium","display_name":"Claude Sonnet 5 1M Medium Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-sonnet-5-thinking-max","engine":"cursor","model":"claude-sonnet-5-thinking-max","display_name":"Claude Sonnet 5 1M Max Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.6-sonnet-medium","engine":"cursor","model":"claude-4.6-sonnet-medium","display_name":"Claude Sonnet 4.6 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.6-sonnet-medium-thinking","engine":"cursor","model":"claude-4.6-sonnet-medium-thinking","display_name":"Claude Sonnet 4.6 1M Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-low","engine":"cursor","model":"claude-opus-4-7-low","display_name":"Claude Opus 4.7 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-low-fast","engine":"cursor","model":"claude-opus-4-7-low-fast","display_name":"Claude Opus 4.7 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-medium","engine":"cursor","model":"claude-opus-4-7-medium","display_name":"Claude Opus 4.7 1M Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-medium-fast","engine":"cursor","model":"claude-opus-4-7-medium-fast","display_name":"Claude Opus 4.7 1M Medium Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-high","engine":"cursor","model":"claude-opus-4-7-high","display_name":"Claude Opus 4.7 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-high-fast","engine":"cursor","model":"claude-opus-4-7-high-fast","display_name":"Claude Opus 4.7 1M High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-xhigh","engine":"cursor","model":"claude-opus-4-7-xhigh","display_name":"Claude Opus 4.7 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-xhigh-fast","engine":"cursor","model":"claude-opus-4-7-xhigh-fast","display_name":"Claude Opus 4.7 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-max","engine":"cursor","model":"claude-opus-4-7-max","display_name":"Claude Opus 4.7 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-max-fast","engine":"cursor","model":"claude-opus-4-7-max-fast","display_name":"Claude Opus 4.7 1M Max Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-low","engine":"cursor","model":"claude-opus-4-7-thinking-low","display_name":"Claude Opus 4.7 1M Low Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-low-fast","engine":"cursor","model":"claude-opus-4-7-thinking-low-fast","display_name":"Claude Opus 4.7 1M Low Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-medium","engine":"cursor","model":"claude-opus-4-7-thinking-medium","display_name":"Claude Opus 4.7 1M Medium Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-medium-fast","engine":"cursor","model":"claude-opus-4-7-thinking-medium-fast","display_name":"Claude Opus 4.7 1M Medium Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-high","engine":"cursor","model":"claude-opus-4-7-thinking-high","display_name":"Claude Opus 4.7 1M High Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-high-fast","engine":"cursor","model":"claude-opus-4-7-thinking-high-fast","display_name":"Claude Opus 4.7 1M High Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-xhigh","engine":"cursor","model":"claude-opus-4-7-thinking-xhigh","display_name":"Claude Opus 4.7 1M Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-xhigh-fast","engine":"cursor","model":"claude-opus-4-7-thinking-xhigh-fast","display_name":"Claude Opus 4.7 1M Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-max","engine":"cursor","model":"claude-opus-4-7-thinking-max","display_name":"Claude Opus 4.7 1M Max Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-opus-4-7-thinking-max-fast","engine":"cursor","model":"claude-opus-4-7-thinking-max-fast","display_name":"Claude Opus 4.7 1M Max Thinking Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-low","engine":"cursor","model":"gpt-5.4-low","display_name":"GPT-5.4 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-medium","engine":"cursor","model":"gpt-5.4-medium","display_name":"GPT-5.4 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-medium-fast","engine":"cursor","model":"gpt-5.4-medium-fast","display_name":"GPT-5.4 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-high","engine":"cursor","model":"gpt-5.4-high","display_name":"GPT-5.4 1M High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-high-fast","engine":"cursor","model":"gpt-5.4-high-fast","display_name":"GPT-5.4 High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-xhigh","engine":"cursor","model":"gpt-5.4-xhigh","display_name":"GPT-5.4 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-xhigh-fast","engine":"cursor","model":"gpt-5.4-xhigh-fast","display_name":"GPT-5.4 Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.6-opus-high","engine":"cursor","model":"claude-4.6-opus-high","display_name":"Claude Opus 4.6 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.6-opus-max","engine":"cursor","model":"claude-4.6-opus-max","display_name":"Claude Opus 4.6 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.6-opus-high-thinking","engine":"cursor","model":"claude-4.6-opus-high-thinking","display_name":"Claude Opus 4.6 1M Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.6-opus-max-thinking","engine":"cursor","model":"claude-4.6-opus-max-thinking","display_name":"Claude Opus 4.6 1M Max Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.5-opus-high","engine":"cursor","model":"claude-4.5-opus-high","display_name":"Claude Opus 4.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.5-opus-high-thinking","engine":"cursor","model":"claude-4.5-opus-high-thinking","display_name":"Claude Opus 4.5 Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-low","engine":"cursor","model":"gpt-5.2-low","display_name":"GPT-5.2 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-low-fast","engine":"cursor","model":"gpt-5.2-low-fast","display_name":"GPT-5.2 Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-fast","engine":"cursor","model":"gpt-5.2-fast","display_name":"GPT-5.2 Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-high","engine":"cursor","model":"gpt-5.2-high","display_name":"GPT-5.2 High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-high-fast","engine":"cursor","model":"gpt-5.2-high-fast","display_name":"GPT-5.2 High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-xhigh","engine":"cursor","model":"gpt-5.2-xhigh","display_name":"GPT-5.2 Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.2-xhigh-fast","engine":"cursor","model":"gpt-5.2-xhigh-fast","display_name":"GPT-5.2 Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-none","engine":"cursor","model":"gpt-5.6-luna-none","display_name":"GPT-5.6 Luna 1M None","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-none-fast","engine":"cursor","model":"gpt-5.6-luna-none-fast","display_name":"GPT-5.6 Luna 1M None Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-low","engine":"cursor","model":"gpt-5.6-luna-low","display_name":"GPT-5.6 Luna 1M Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-low-fast","engine":"cursor","model":"gpt-5.6-luna-low-fast","display_name":"GPT-5.6 Luna 1M Low Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-medium","engine":"cursor","model":"gpt-5.6-luna-medium","display_name":"GPT-5.6 Luna 1M","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-medium-fast","engine":"cursor","model":"gpt-5.6-luna-medium-fast","display_name":"GPT-5.6 Luna 1M Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-high-fast","engine":"cursor","model":"gpt-5.6-luna-high-fast","display_name":"GPT-5.6 Luna 1M High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-xhigh","engine":"cursor","model":"gpt-5.6-luna-xhigh","display_name":"GPT-5.6 Luna 1M Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-xhigh-fast","engine":"cursor","model":"gpt-5.6-luna-xhigh-fast","display_name":"GPT-5.6 Luna 1M Extra High Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-max","engine":"cursor","model":"gpt-5.6-luna-max","display_name":"GPT-5.6 Luna 1M Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.6-luna-max-fast","engine":"cursor","model":"gpt-5.6-luna-max-fast","display_name":"GPT-5.6 Luna 1M Max Fast","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.6-flash-minimal","engine":"cursor","model":"gemini-3.6-flash-minimal","display_name":"Gemini 3.6 Flash Minimal","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.6-flash-low","engine":"cursor","model":"gemini-3.6-flash-low","display_name":"Gemini 3.6 Flash Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.6-flash-medium","engine":"cursor","model":"gemini-3.6-flash-medium","display_name":"Gemini 3.6 Flash Medium","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.6-flash-high","engine":"cursor","model":"gemini-3.6-flash-high","display_name":"Gemini 3.6 Flash","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.1-pro","engine":"cursor","model":"gemini-3.1-pro","display_name":"Gemini 3.1 Pro","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-mini-none","engine":"cursor","model":"gpt-5.4-mini-none","display_name":"GPT-5.4 Mini None","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-mini-low","engine":"cursor","model":"gpt-5.4-mini-low","display_name":"GPT-5.4 Mini Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-mini-medium","engine":"cursor","model":"gpt-5.4-mini-medium","display_name":"GPT-5.4 Mini","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-mini-high","engine":"cursor","model":"gpt-5.4-mini-high","display_name":"GPT-5.4 Mini High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-mini-xhigh","engine":"cursor","model":"gpt-5.4-mini-xhigh","display_name":"GPT-5.4 Mini Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-nano-none","engine":"cursor","model":"gpt-5.4-nano-none","display_name":"GPT-5.4 Nano None","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-nano-low","engine":"cursor","model":"gpt-5.4-nano-low","display_name":"GPT-5.4 Nano Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-nano-medium","engine":"cursor","model":"gpt-5.4-nano-medium","display_name":"GPT-5.4 Nano","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-nano-high","engine":"cursor","model":"gpt-5.4-nano-high","display_name":"GPT-5.4 Nano High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.4-nano-xhigh","engine":"cursor","model":"gpt-5.4-nano-xhigh","display_name":"GPT-5.4 Nano Extra High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.5-sonnet","engine":"cursor","model":"claude-4.5-sonnet","display_name":"Claude Sonnet 4.5","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4.5-sonnet-thinking","engine":"cursor","model":"claude-4.5-sonnet-thinking","display_name":"Claude Sonnet 4.5 Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.1-low","engine":"cursor","model":"gpt-5.1-low","display_name":"GPT-5.1 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.1","engine":"cursor","model":"gpt-5.1","display_name":"GPT-5.1","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5.1-high","engine":"cursor","model":"gpt-5.1-high","display_name":"GPT-5.1 High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3-flash","engine":"cursor","model":"gemini-3-flash","display_name":"Gemini 3 Flash","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gemini-3.5-flash","engine":"cursor","model":"gemini-3.5-flash","display_name":"Gemini 3.5 Flash","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4-sonnet","engine":"cursor","model":"claude-4-sonnet","display_name":"Claude Sonnet 4","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/claude-4-sonnet-thinking","engine":"cursor","model":"claude-4-sonnet-thinking","display_name":"Claude Sonnet 4 Thinking","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/gpt-5-mini","engine":"cursor","model":"gpt-5-mini","display_name":"GPT-5 Mini","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/kimi-k3-low","engine":"cursor","model":"kimi-k3-low","display_name":"Kimi K3 Low","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/kimi-k3-high","engine":"cursor","model":"kimi-k3-high","display_name":"Kimi K3 High","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/kimi-k3-max","engine":"cursor","model":"kimi-k3-max","display_name":"Kimi K3","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/kimi-k2.7-code","engine":"cursor","model":"kimi-k2.7-code","display_name":"Kimi K2.7 Code","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/glm-5.2-high","engine":"cursor","model":"glm-5.2-high","display_name":"GLM 5.2","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/cursor/glm-5.2-max","engine":"cursor","model":"glm-5.2-max","display_name":"GLM 5.2 Max","egress":"remote","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"installed","capabilities":{}},{"id":"@/chatterbox-multi/local","engine":"chatterbox-multi","upstream":"local","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/speech"],"state":"installed","capabilities":{}},{"id":"@/chatterbox-en/local","engine":"chatterbox-en","upstream":"local","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/speech"],"state":"installed","capabilities":{}},{"id":"@/kokoro/local","engine":"kokoro","upstream":"local","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/speech"],"state":"installed","capabilities":{}},{"id":"@/piper/local","engine":"piper","upstream":"local","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/speech"],"state":"installed","capabilities":{}},{"id":"@/whisper/medium.en","engine":"whisper","upstream":"local","model":"medium.en","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/transcriptions"],"state":"installed","capabilities":{}},{"id":"@/whisper/small.en","engine":"whisper","upstream":"local","model":"small.en","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/transcriptions"],"state":"installed","capabilities":{}},{"id":"@/whisper/large-v3-turbo","engine":"whisper","upstream":"local","model":"large-v3-turbo","egress":"none","streaming":true,"tools":false,"serves":["/openai/v1/audio/transcriptions","/openai/v1/audio/translations"],"translate":true,"state":"installed","capabilities":{}},{"id":"@/comfy/local","engine":"comfy","upstream":"local","egress":"none","streaming":false,"tools":false,"serves":["/openai/v1/images/generations","/openai/v1/images/edits","/engined/v1/comfy/:engine/:upstream/object_info/:nodeType","/engined/v1/comfy/:engine/:upstream/prompt","/engined/v1/comfy/:engine/:upstream/upload/image","/engined/v1/comfy/:engine/:upstream/view","/engined/v1/comfy/:engine/:upstream/ws","/engined/v1/comfy/:engine/:upstream/history/:promptId","/engined/v1/comfy/:engine/:upstream/queue","/engined/v1/comfy/:engine/:upstream/system_stats"],"state":"installed","capabilities":{}},{"id":"chain-private","streaming":true,"tools":true,"serves":["/openai/v1/chat/completions"],"state":"running","capabilities":{"input":["text"],"output":["text"]},"hops":["@/llama/ornith"]},{"id":"chain-public","streaming":true,"tools":false,"serves":["/openai/v1/chat/completions"],"state":"running","capabilities":{"input":["text"],"output":["text"]},"hops":["@/llama/ornith","@/claude/sonnet-5"]}]}
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "@/llama/ornith",
+      "engine": "llama",
+      "upstream": "local",
+      "model": "ornith",
+      "egress": "none",
+      "streaming": true,
+      "tools": true,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "role": "chat",
+      "state": "running",
+      "capabilities": {
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/llama/embed",
+      "engine": "llama",
+      "upstream": "local",
+      "model": "embed",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/embeddings"
+      ],
+      "role": "embedding",
+      "state": "running",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/llama/vision",
+      "engine": "llama",
+      "upstream": "local",
+      "model": "vision",
+      "egress": "none",
+      "streaming": true,
+      "tools": true,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "role": "vision",
+      "vision": "describe",
+      "state": "running",
+      "capabilities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/llama/ocr",
+      "engine": "llama",
+      "upstream": "local",
+      "model": "ocr",
+      "egress": "none",
+      "streaming": true,
+      "tools": true,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "role": "vision",
+      "vision": "read",
+      "state": "running",
+      "capabilities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/opus-5-5",
+      "engine": "claude",
+      "model": "opus-5-5",
+      "display_name": "Claude Opus 5.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/fable-5-1",
+      "engine": "claude",
+      "model": "fable-5-1",
+      "display_name": "Claude Fable 5.1",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/sonnet-5",
+      "engine": "claude",
+      "model": "sonnet-5",
+      "display_name": "Claude Sonnet 5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_in": 200000,
+        "context_out": 64000,
+        "reasoning": [
+          "none",
+          "low",
+          "high"
+        ]
+      },
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/haiku-4-5",
+      "engine": "claude",
+      "model": "haiku-4-5",
+      "display_name": "Claude Haiku 4.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/fable-5",
+      "engine": "claude",
+      "model": "fable-5",
+      "display_name": "Claude Fable 5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/opus-5",
+      "engine": "claude",
+      "model": "opus-5",
+      "display_name": "Claude Opus 5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/opus-4-8",
+      "engine": "claude",
+      "model": "opus-4-8",
+      "display_name": "Claude Opus 4.8",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/opus-4-7",
+      "engine": "claude",
+      "model": "opus-4-7",
+      "display_name": "Claude Opus 4.7",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/opus-4-6",
+      "engine": "claude",
+      "model": "opus-4-6",
+      "display_name": "Claude Opus 4.6",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/opus-4-5",
+      "engine": "claude",
+      "model": "opus-4-5",
+      "display_name": "Claude Opus 4.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/sonnet-4-6",
+      "engine": "claude",
+      "model": "sonnet-4-6",
+      "display_name": "Claude Sonnet 4.6",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/claude/sonnet-4-5",
+      "engine": "claude",
+      "model": "sonnet-4-5",
+      "display_name": "Claude Sonnet 4.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/opencode/ornith",
+      "engine": "opencode",
+      "upstream": "local",
+      "model": "ornith",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/auto",
+      "engine": "cursor",
+      "model": "auto",
+      "display_name": "Auto (default)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-low",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-low",
+      "display_name": "Codex 5.3 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-low-fast",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-low-fast",
+      "display_name": "Codex 5.3 Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex",
+      "display_name": "Codex 5.3",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-fast",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-fast",
+      "display_name": "Codex 5.3 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-high",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-high",
+      "display_name": "Codex 5.3 High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-high-fast",
+      "display_name": "Codex 5.3 High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-xhigh",
+      "display_name": "Codex 5.3 Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.3-codex-xhigh-fast",
+      "engine": "cursor",
+      "model": "gpt-5.3-codex-xhigh-fast",
+      "display_name": "Codex 5.3 Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2",
+      "engine": "cursor",
+      "model": "gpt-5.2",
+      "display_name": "GPT-5.2",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/composer-2.5",
+      "engine": "cursor",
+      "model": "composer-2.5",
+      "display_name": "Composer 2.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-high",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-high",
+      "display_name": "Claude Opus 5 1M Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-high-fast",
+      "display_name": "Claude Opus 5 1M Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-high",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-high",
+      "display_name": "GPT-5.6 Sol 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-high-fast",
+      "display_name": "GPT-5.6 Sol 1M High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-xhigh",
+      "display_name": "GPT-5.6 Sol 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-xhigh-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-xhigh-fast",
+      "display_name": "GPT-5.6 Sol 1M Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-thinking-high",
+      "engine": "cursor",
+      "model": "claude-fable-5-thinking-high",
+      "display_name": "Claude Fable 5 1M Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-thinking-xhigh",
+      "engine": "cursor",
+      "model": "claude-fable-5-thinking-xhigh",
+      "display_name": "Claude Fable 5 1M Extra High Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.5-high",
+      "engine": "cursor",
+      "model": "cursor-grok-4.5-high",
+      "display_name": "Grok 4.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.5-high-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.5-high-fast",
+      "display_name": "Grok 4.5 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.7-flash-high",
+      "engine": "cursor",
+      "model": "gemini-3.7-flash-high",
+      "display_name": "Gemini 3.7 Flash",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-thinking-high",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-thinking-high",
+      "display_name": "Claude Sonnet 5 1M Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-thinking-xhigh",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-thinking-xhigh",
+      "display_name": "Claude Sonnet 5 1M Extra High Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-high",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-high",
+      "display_name": "GPT-5.6 Luna 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-low",
+      "engine": "cursor",
+      "model": "grok-4.7-low",
+      "display_name": "Grok 4.7 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-low-fast",
+      "engine": "cursor",
+      "model": "grok-4.7-low-fast",
+      "display_name": "Grok 4.7 Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-medium",
+      "engine": "cursor",
+      "model": "grok-4.7-medium",
+      "display_name": "Grok 4.7 Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-medium-fast",
+      "engine": "cursor",
+      "model": "grok-4.7-medium-fast",
+      "display_name": "Grok 4.7 Medium Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-high",
+      "engine": "cursor",
+      "model": "grok-4.7-high",
+      "display_name": "Grok 4.7 High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-high-fast",
+      "engine": "cursor",
+      "model": "grok-4.7-high-fast",
+      "display_name": "Grok 4.7 High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-xhigh",
+      "engine": "cursor",
+      "model": "grok-4.7-xhigh",
+      "display_name": "Grok 4.7 Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/grok-4.7-xhigh-fast",
+      "engine": "cursor",
+      "model": "grok-4.7-xhigh-fast",
+      "display_name": "Grok 4.7 Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-low",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-low",
+      "display_name": "Grok 4.6 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-low-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-low-fast",
+      "display_name": "Grok 4.6 Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-medium",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-medium",
+      "display_name": "Grok 4.6 Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-medium-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-medium-fast",
+      "display_name": "Grok 4.6 Medium Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-high",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-high",
+      "display_name": "Grok 4.6",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-high-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-high-fast",
+      "display_name": "Grok 4.6 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-xhigh",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-xhigh",
+      "display_name": "Grok 4.6 Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.6-xhigh-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.6-xhigh-fast",
+      "display_name": "Grok 4.6 Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/composer-2.5-fast",
+      "engine": "cursor",
+      "model": "composer-2.5-fast",
+      "display_name": "Composer 2.5 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-low",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-low",
+      "display_name": "Claude Opus 5.5 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-low-fast",
+      "display_name": "Claude Opus 5.5 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-medium",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-medium",
+      "display_name": "Claude Opus 5.5 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-medium-fast",
+      "display_name": "Claude Opus 5.5 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-high",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-high",
+      "display_name": "Claude Opus 5.5 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-high-fast",
+      "display_name": "Claude Opus 5.5 1M High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-xhigh",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-xhigh",
+      "display_name": "Claude Opus 5.5 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-xhigh-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-xhigh-fast",
+      "display_name": "Claude Opus 5.5 1M Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-max",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-max",
+      "display_name": "Claude Opus 5.5 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-5-max-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-5-max-fast",
+      "display_name": "Claude Opus 5.5 1M Max Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-low",
+      "engine": "cursor",
+      "model": "claude-opus-5-low",
+      "display_name": "Claude Opus 5 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-low-fast",
+      "display_name": "Claude Opus 5 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-medium",
+      "engine": "cursor",
+      "model": "claude-opus-5-medium",
+      "display_name": "Claude Opus 5 1M Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-medium-fast",
+      "display_name": "Claude Opus 5 1M Medium Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-high",
+      "engine": "cursor",
+      "model": "claude-opus-5-high",
+      "display_name": "Claude Opus 5 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-high-fast",
+      "display_name": "Claude Opus 5 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-low",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-low",
+      "display_name": "Claude Opus 5 1M Low Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-low-fast",
+      "display_name": "Claude Opus 5 1M Low Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-medium",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-medium",
+      "display_name": "Claude Opus 5 1M Medium Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-medium-fast",
+      "display_name": "Claude Opus 5 1M Medium Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-xhigh",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-xhigh",
+      "display_name": "Claude Opus 5 1M Extra High Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-xhigh-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-xhigh-fast",
+      "display_name": "Claude Opus 5 1M Extra High Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-max",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-max",
+      "display_name": "Claude Opus 5 1M Max Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-5-thinking-max-fast",
+      "engine": "cursor",
+      "model": "claude-opus-5-thinking-max-fast",
+      "display_name": "Claude Opus 5 1M Max Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-low",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-low",
+      "display_name": "Claude Opus 4.8 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-low-fast",
+      "display_name": "Claude Opus 4.8 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-medium",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-medium",
+      "display_name": "Claude Opus 4.8 1M Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-medium-fast",
+      "display_name": "Claude Opus 4.8 1M Medium Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-high",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-high",
+      "display_name": "Claude Opus 4.8 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-high-fast",
+      "display_name": "Claude Opus 4.8 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-xhigh",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-xhigh",
+      "display_name": "Claude Opus 4.8 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-xhigh-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-xhigh-fast",
+      "display_name": "Claude Opus 4.8 1M Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-max",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-max",
+      "display_name": "Claude Opus 4.8 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-max-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-max-fast",
+      "display_name": "Claude Opus 4.8 1M Max Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-low",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-low",
+      "display_name": "Claude Opus 4.8 1M Low Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-low-fast",
+      "display_name": "Claude Opus 4.8 1M Low Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-medium",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-medium",
+      "display_name": "Claude Opus 4.8 1M Medium Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-medium-fast",
+      "display_name": "Claude Opus 4.8 1M Medium Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-high",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-high",
+      "display_name": "Claude Opus 4.8 1M Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-high-fast",
+      "display_name": "Claude Opus 4.8 1M Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-xhigh",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-xhigh",
+      "display_name": "Claude Opus 4.8 1M Extra High Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-xhigh-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-xhigh-fast",
+      "display_name": "Claude Opus 4.8 1M Extra High Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-max",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-max",
+      "display_name": "Claude Opus 4.8 1M Max Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-8-thinking-max-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-8-thinking-max-fast",
+      "display_name": "Claude Opus 4.8 1M Max Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-none",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-none",
+      "display_name": "GPT-5.6 Sol 1M None",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-none-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-none-fast",
+      "display_name": "GPT-5.6 Sol 1M None Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-low",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-low",
+      "display_name": "GPT-5.6 Sol 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-low-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-low-fast",
+      "display_name": "GPT-5.6 Sol 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-medium",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-medium",
+      "display_name": "GPT-5.6 Sol 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-medium-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-medium-fast",
+      "display_name": "GPT-5.6 Sol 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-max",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-max",
+      "display_name": "GPT-5.6 Sol 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-sol-max-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-sol-max-fast",
+      "display_name": "GPT-5.6 Sol 1M Max Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-none",
+      "engine": "cursor",
+      "model": "gpt-5.5-none",
+      "display_name": "GPT-5.5 1M None",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-none-fast",
+      "engine": "cursor",
+      "model": "gpt-5.5-none-fast",
+      "display_name": "GPT-5.5 None Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-low",
+      "engine": "cursor",
+      "model": "gpt-5.5-low",
+      "display_name": "GPT-5.5 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-low-fast",
+      "engine": "cursor",
+      "model": "gpt-5.5-low-fast",
+      "display_name": "GPT-5.5 Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-medium",
+      "engine": "cursor",
+      "model": "gpt-5.5-medium",
+      "display_name": "GPT-5.5 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-medium-fast",
+      "engine": "cursor",
+      "model": "gpt-5.5-medium-fast",
+      "display_name": "GPT-5.5 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-high",
+      "engine": "cursor",
+      "model": "gpt-5.5-high",
+      "display_name": "GPT-5.5 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.5-high-fast",
+      "display_name": "GPT-5.5 High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-extra-high",
+      "engine": "cursor",
+      "model": "gpt-5.5-extra-high",
+      "display_name": "GPT-5.5 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.5-extra-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.5-extra-high-fast",
+      "display_name": "GPT-5.5 Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-low",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-low",
+      "display_name": "Claude Fable 5.1 1M Low (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-medium",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-medium",
+      "display_name": "Claude Fable 5.1 1M Medium (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-high",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-high",
+      "display_name": "Claude Fable 5.1 1M (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-xhigh",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-xhigh",
+      "display_name": "Claude Fable 5.1 1M Extra High (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-max",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-max",
+      "display_name": "Claude Fable 5.1 1M Max (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-thinking-low",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-thinking-low",
+      "display_name": "Claude Fable 5.1 1M Low Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-thinking-medium",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-thinking-medium",
+      "display_name": "Claude Fable 5.1 1M Medium Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-thinking-high",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-thinking-high",
+      "display_name": "Claude Fable 5.1 1M Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-thinking-xhigh",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-thinking-xhigh",
+      "display_name": "Claude Fable 5.1 1M Extra High Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-1-thinking-max",
+      "engine": "cursor",
+      "model": "claude-fable-5-1-thinking-max",
+      "display_name": "Claude Fable 5.1 1M Max Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-low",
+      "engine": "cursor",
+      "model": "claude-fable-5-low",
+      "display_name": "Claude Fable 5 1M Low (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-medium",
+      "engine": "cursor",
+      "model": "claude-fable-5-medium",
+      "display_name": "Claude Fable 5 1M Medium (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-high",
+      "engine": "cursor",
+      "model": "claude-fable-5-high",
+      "display_name": "Claude Fable 5 1M (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-xhigh",
+      "engine": "cursor",
+      "model": "claude-fable-5-xhigh",
+      "display_name": "Claude Fable 5 1M Extra High (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-max",
+      "engine": "cursor",
+      "model": "claude-fable-5-max",
+      "display_name": "Claude Fable 5 1M Max (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-thinking-low",
+      "engine": "cursor",
+      "model": "claude-fable-5-thinking-low",
+      "display_name": "Claude Fable 5 1M Low Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-thinking-medium",
+      "engine": "cursor",
+      "model": "claude-fable-5-thinking-medium",
+      "display_name": "Claude Fable 5 1M Medium Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-fable-5-thinking-max",
+      "engine": "cursor",
+      "model": "claude-fable-5-thinking-max",
+      "display_name": "Claude Fable 5 1M Max Thinking (NO ZDR)",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.5-low",
+      "engine": "cursor",
+      "model": "cursor-grok-4.5-low",
+      "display_name": "Grok 4.5 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.5-low-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.5-low-fast",
+      "display_name": "Grok 4.5 Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.5-medium",
+      "engine": "cursor",
+      "model": "cursor-grok-4.5-medium",
+      "display_name": "Grok 4.5 Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/cursor-grok-4.5-medium-fast",
+      "engine": "cursor",
+      "model": "cursor-grok-4.5-medium-fast",
+      "display_name": "Grok 4.5 Medium Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.8-flash-low",
+      "engine": "cursor",
+      "model": "gemini-3.8-flash-low",
+      "display_name": "Gemini 3.8 Flash Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.8-flash-medium",
+      "engine": "cursor",
+      "model": "gemini-3.8-flash-medium",
+      "display_name": "Gemini 3.8 Flash Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.8-flash-high",
+      "engine": "cursor",
+      "model": "gemini-3.8-flash-high",
+      "display_name": "Gemini 3.8 Flash High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.7-flash-low",
+      "engine": "cursor",
+      "model": "gemini-3.7-flash-low",
+      "display_name": "Gemini 3.7 Flash Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.7-flash-medium",
+      "engine": "cursor",
+      "model": "gemini-3.7-flash-medium",
+      "display_name": "Gemini 3.7 Flash Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/muse-spark-1.3-minimal",
+      "engine": "cursor",
+      "model": "muse-spark-1.3-minimal",
+      "display_name": "Muse Spark 1.3 1M Minimal",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/muse-spark-1.3-low",
+      "engine": "cursor",
+      "model": "muse-spark-1.3-low",
+      "display_name": "Muse Spark 1.3 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/muse-spark-1.3-medium",
+      "engine": "cursor",
+      "model": "muse-spark-1.3-medium",
+      "display_name": "Muse Spark 1.3 1M Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/muse-spark-1.3-high",
+      "engine": "cursor",
+      "model": "muse-spark-1.3-high",
+      "display_name": "Muse Spark 1.3 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/muse-spark-1.3-xhigh",
+      "engine": "cursor",
+      "model": "muse-spark-1.3-xhigh",
+      "display_name": "Muse Spark 1.3 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/muse-spark-1.3-max",
+      "engine": "cursor",
+      "model": "muse-spark-1.3-max",
+      "display_name": "Muse Spark 1.3 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-none",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-none",
+      "display_name": "GPT-5.6 Terra 1M None",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-none-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-none-fast",
+      "display_name": "GPT-5.6 Terra 1M None Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-low",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-low",
+      "display_name": "GPT-5.6 Terra 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-low-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-low-fast",
+      "display_name": "GPT-5.6 Terra 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-medium",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-medium",
+      "display_name": "GPT-5.6 Terra 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-medium-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-medium-fast",
+      "display_name": "GPT-5.6 Terra 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-high",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-high",
+      "display_name": "GPT-5.6 Terra 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-high-fast",
+      "display_name": "GPT-5.6 Terra 1M High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-xhigh",
+      "display_name": "GPT-5.6 Terra 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-xhigh-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-xhigh-fast",
+      "display_name": "GPT-5.6 Terra 1M Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-max",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-max",
+      "display_name": "GPT-5.6 Terra 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-terra-max-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-terra-max-fast",
+      "display_name": "GPT-5.6 Terra 1M Max Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-low",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-low",
+      "display_name": "Claude Sonnet 5 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-medium",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-medium",
+      "display_name": "Claude Sonnet 5 1M Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-high",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-high",
+      "display_name": "Claude Sonnet 5 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-xhigh",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-xhigh",
+      "display_name": "Claude Sonnet 5 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-max",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-max",
+      "display_name": "Claude Sonnet 5 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-thinking-low",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-thinking-low",
+      "display_name": "Claude Sonnet 5 1M Low Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-thinking-medium",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-thinking-medium",
+      "display_name": "Claude Sonnet 5 1M Medium Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-sonnet-5-thinking-max",
+      "engine": "cursor",
+      "model": "claude-sonnet-5-thinking-max",
+      "display_name": "Claude Sonnet 5 1M Max Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.6-sonnet-medium",
+      "engine": "cursor",
+      "model": "claude-4.6-sonnet-medium",
+      "display_name": "Claude Sonnet 4.6 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.6-sonnet-medium-thinking",
+      "engine": "cursor",
+      "model": "claude-4.6-sonnet-medium-thinking",
+      "display_name": "Claude Sonnet 4.6 1M Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-low",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-low",
+      "display_name": "Claude Opus 4.7 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-low-fast",
+      "display_name": "Claude Opus 4.7 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-medium",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-medium",
+      "display_name": "Claude Opus 4.7 1M Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-medium-fast",
+      "display_name": "Claude Opus 4.7 1M Medium Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-high",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-high",
+      "display_name": "Claude Opus 4.7 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-high-fast",
+      "display_name": "Claude Opus 4.7 1M High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-xhigh",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-xhigh",
+      "display_name": "Claude Opus 4.7 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-xhigh-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-xhigh-fast",
+      "display_name": "Claude Opus 4.7 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-max",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-max",
+      "display_name": "Claude Opus 4.7 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-max-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-max-fast",
+      "display_name": "Claude Opus 4.7 1M Max Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-low",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-low",
+      "display_name": "Claude Opus 4.7 1M Low Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-low-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-low-fast",
+      "display_name": "Claude Opus 4.7 1M Low Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-medium",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-medium",
+      "display_name": "Claude Opus 4.7 1M Medium Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-medium-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-medium-fast",
+      "display_name": "Claude Opus 4.7 1M Medium Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-high",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-high",
+      "display_name": "Claude Opus 4.7 1M High Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-high-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-high-fast",
+      "display_name": "Claude Opus 4.7 1M High Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-xhigh",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-xhigh",
+      "display_name": "Claude Opus 4.7 1M Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-xhigh-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-xhigh-fast",
+      "display_name": "Claude Opus 4.7 1M Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-max",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-max",
+      "display_name": "Claude Opus 4.7 1M Max Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-opus-4-7-thinking-max-fast",
+      "engine": "cursor",
+      "model": "claude-opus-4-7-thinking-max-fast",
+      "display_name": "Claude Opus 4.7 1M Max Thinking Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-low",
+      "engine": "cursor",
+      "model": "gpt-5.4-low",
+      "display_name": "GPT-5.4 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-medium",
+      "engine": "cursor",
+      "model": "gpt-5.4-medium",
+      "display_name": "GPT-5.4 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-medium-fast",
+      "engine": "cursor",
+      "model": "gpt-5.4-medium-fast",
+      "display_name": "GPT-5.4 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-high",
+      "engine": "cursor",
+      "model": "gpt-5.4-high",
+      "display_name": "GPT-5.4 1M High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.4-high-fast",
+      "display_name": "GPT-5.4 High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.4-xhigh",
+      "display_name": "GPT-5.4 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-xhigh-fast",
+      "engine": "cursor",
+      "model": "gpt-5.4-xhigh-fast",
+      "display_name": "GPT-5.4 Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.6-opus-high",
+      "engine": "cursor",
+      "model": "claude-4.6-opus-high",
+      "display_name": "Claude Opus 4.6 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.6-opus-max",
+      "engine": "cursor",
+      "model": "claude-4.6-opus-max",
+      "display_name": "Claude Opus 4.6 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.6-opus-high-thinking",
+      "engine": "cursor",
+      "model": "claude-4.6-opus-high-thinking",
+      "display_name": "Claude Opus 4.6 1M Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.6-opus-max-thinking",
+      "engine": "cursor",
+      "model": "claude-4.6-opus-max-thinking",
+      "display_name": "Claude Opus 4.6 1M Max Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.5-opus-high",
+      "engine": "cursor",
+      "model": "claude-4.5-opus-high",
+      "display_name": "Claude Opus 4.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.5-opus-high-thinking",
+      "engine": "cursor",
+      "model": "claude-4.5-opus-high-thinking",
+      "display_name": "Claude Opus 4.5 Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-low",
+      "engine": "cursor",
+      "model": "gpt-5.2-low",
+      "display_name": "GPT-5.2 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-low-fast",
+      "engine": "cursor",
+      "model": "gpt-5.2-low-fast",
+      "display_name": "GPT-5.2 Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-fast",
+      "engine": "cursor",
+      "model": "gpt-5.2-fast",
+      "display_name": "GPT-5.2 Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-high",
+      "engine": "cursor",
+      "model": "gpt-5.2-high",
+      "display_name": "GPT-5.2 High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.2-high-fast",
+      "display_name": "GPT-5.2 High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.2-xhigh",
+      "display_name": "GPT-5.2 Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.2-xhigh-fast",
+      "engine": "cursor",
+      "model": "gpt-5.2-xhigh-fast",
+      "display_name": "GPT-5.2 Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-none",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-none",
+      "display_name": "GPT-5.6 Luna 1M None",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-none-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-none-fast",
+      "display_name": "GPT-5.6 Luna 1M None Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-low",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-low",
+      "display_name": "GPT-5.6 Luna 1M Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-low-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-low-fast",
+      "display_name": "GPT-5.6 Luna 1M Low Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-medium",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-medium",
+      "display_name": "GPT-5.6 Luna 1M",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-medium-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-medium-fast",
+      "display_name": "GPT-5.6 Luna 1M Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-high-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-high-fast",
+      "display_name": "GPT-5.6 Luna 1M High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-xhigh",
+      "display_name": "GPT-5.6 Luna 1M Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-xhigh-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-xhigh-fast",
+      "display_name": "GPT-5.6 Luna 1M Extra High Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-max",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-max",
+      "display_name": "GPT-5.6 Luna 1M Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.6-luna-max-fast",
+      "engine": "cursor",
+      "model": "gpt-5.6-luna-max-fast",
+      "display_name": "GPT-5.6 Luna 1M Max Fast",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.6-flash-minimal",
+      "engine": "cursor",
+      "model": "gemini-3.6-flash-minimal",
+      "display_name": "Gemini 3.6 Flash Minimal",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.6-flash-low",
+      "engine": "cursor",
+      "model": "gemini-3.6-flash-low",
+      "display_name": "Gemini 3.6 Flash Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.6-flash-medium",
+      "engine": "cursor",
+      "model": "gemini-3.6-flash-medium",
+      "display_name": "Gemini 3.6 Flash Medium",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.6-flash-high",
+      "engine": "cursor",
+      "model": "gemini-3.6-flash-high",
+      "display_name": "Gemini 3.6 Flash",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.1-pro",
+      "engine": "cursor",
+      "model": "gemini-3.1-pro",
+      "display_name": "Gemini 3.1 Pro",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-mini-none",
+      "engine": "cursor",
+      "model": "gpt-5.4-mini-none",
+      "display_name": "GPT-5.4 Mini None",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-mini-low",
+      "engine": "cursor",
+      "model": "gpt-5.4-mini-low",
+      "display_name": "GPT-5.4 Mini Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-mini-medium",
+      "engine": "cursor",
+      "model": "gpt-5.4-mini-medium",
+      "display_name": "GPT-5.4 Mini",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-mini-high",
+      "engine": "cursor",
+      "model": "gpt-5.4-mini-high",
+      "display_name": "GPT-5.4 Mini High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-mini-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.4-mini-xhigh",
+      "display_name": "GPT-5.4 Mini Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-nano-none",
+      "engine": "cursor",
+      "model": "gpt-5.4-nano-none",
+      "display_name": "GPT-5.4 Nano None",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-nano-low",
+      "engine": "cursor",
+      "model": "gpt-5.4-nano-low",
+      "display_name": "GPT-5.4 Nano Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-nano-medium",
+      "engine": "cursor",
+      "model": "gpt-5.4-nano-medium",
+      "display_name": "GPT-5.4 Nano",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-nano-high",
+      "engine": "cursor",
+      "model": "gpt-5.4-nano-high",
+      "display_name": "GPT-5.4 Nano High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.4-nano-xhigh",
+      "engine": "cursor",
+      "model": "gpt-5.4-nano-xhigh",
+      "display_name": "GPT-5.4 Nano Extra High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.5-sonnet",
+      "engine": "cursor",
+      "model": "claude-4.5-sonnet",
+      "display_name": "Claude Sonnet 4.5",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4.5-sonnet-thinking",
+      "engine": "cursor",
+      "model": "claude-4.5-sonnet-thinking",
+      "display_name": "Claude Sonnet 4.5 Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.1-low",
+      "engine": "cursor",
+      "model": "gpt-5.1-low",
+      "display_name": "GPT-5.1 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.1",
+      "engine": "cursor",
+      "model": "gpt-5.1",
+      "display_name": "GPT-5.1",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5.1-high",
+      "engine": "cursor",
+      "model": "gpt-5.1-high",
+      "display_name": "GPT-5.1 High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3-flash",
+      "engine": "cursor",
+      "model": "gemini-3-flash",
+      "display_name": "Gemini 3 Flash",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gemini-3.5-flash",
+      "engine": "cursor",
+      "model": "gemini-3.5-flash",
+      "display_name": "Gemini 3.5 Flash",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4-sonnet",
+      "engine": "cursor",
+      "model": "claude-4-sonnet",
+      "display_name": "Claude Sonnet 4",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/claude-4-sonnet-thinking",
+      "engine": "cursor",
+      "model": "claude-4-sonnet-thinking",
+      "display_name": "Claude Sonnet 4 Thinking",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/gpt-5-mini",
+      "engine": "cursor",
+      "model": "gpt-5-mini",
+      "display_name": "GPT-5 Mini",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/kimi-k3-low",
+      "engine": "cursor",
+      "model": "kimi-k3-low",
+      "display_name": "Kimi K3 Low",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/kimi-k3-high",
+      "engine": "cursor",
+      "model": "kimi-k3-high",
+      "display_name": "Kimi K3 High",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/kimi-k3-max",
+      "engine": "cursor",
+      "model": "kimi-k3-max",
+      "display_name": "Kimi K3",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/kimi-k2.7-code",
+      "engine": "cursor",
+      "model": "kimi-k2.7-code",
+      "display_name": "Kimi K2.7 Code",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/glm-5.2-high",
+      "engine": "cursor",
+      "model": "glm-5.2-high",
+      "display_name": "GLM 5.2",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/cursor/glm-5.2-max",
+      "engine": "cursor",
+      "model": "glm-5.2-max",
+      "display_name": "GLM 5.2 Max",
+      "egress": "remote",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/chatterbox-multi/local",
+      "engine": "chatterbox-multi",
+      "upstream": "local",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/speech"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/chatterbox-en/local",
+      "engine": "chatterbox-en",
+      "upstream": "local",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/speech"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/kokoro/local",
+      "engine": "kokoro",
+      "upstream": "local",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/speech"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/piper/local",
+      "engine": "piper",
+      "upstream": "local",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/speech"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/whisper/medium.en",
+      "engine": "whisper",
+      "upstream": "local",
+      "model": "medium.en",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/transcriptions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/whisper/small.en",
+      "engine": "whisper",
+      "upstream": "local",
+      "model": "small.en",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/transcriptions"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/whisper/large-v3-turbo",
+      "engine": "whisper",
+      "upstream": "local",
+      "model": "large-v3-turbo",
+      "egress": "none",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/audio/transcriptions",
+        "/openai/v1/audio/translations"
+      ],
+      "translate": true,
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "@/comfy/local",
+      "engine": "comfy",
+      "upstream": "local",
+      "egress": "none",
+      "streaming": false,
+      "tools": false,
+      "serves": [
+        "/openai/v1/images/generations",
+        "/openai/v1/images/edits",
+        "/engined/v1/comfy/:engine/:upstream/object_info/:nodeType",
+        "/engined/v1/comfy/:engine/:upstream/prompt",
+        "/engined/v1/comfy/:engine/:upstream/upload/image",
+        "/engined/v1/comfy/:engine/:upstream/view",
+        "/engined/v1/comfy/:engine/:upstream/ws",
+        "/engined/v1/comfy/:engine/:upstream/history/:promptId",
+        "/engined/v1/comfy/:engine/:upstream/queue",
+        "/engined/v1/comfy/:engine/:upstream/system_stats"
+      ],
+      "state": "installed",
+      "capabilities": {},
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "chain-private",
+      "streaming": true,
+      "tools": true,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "running",
+      "capabilities": {
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "hops": [
+        "@/llama/ornith"
+      ],
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    },
+    {
+      "id": "chain-public",
+      "streaming": true,
+      "tools": false,
+      "serves": [
+        "/openai/v1/chat/completions"
+      ],
+      "state": "running",
+      "capabilities": {
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "hops": [
+        "@/llama/ornith",
+        "@/claude/sonnet-5"
+      ],
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "engined"
+    }
+  ]
+}
