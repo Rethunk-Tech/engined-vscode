@@ -11,12 +11,12 @@ export class ToolRouteError extends Error {}
 
 export interface ImageGenerationRequest {
   path: '/openai/v1/images/generations'
-  body: { model: string; prompt: string; size?: string }
+  body: { model: string; prompt: string; size?: string; response_format: 'b64_json' }
 }
 
 export interface ImageEditRequest {
   path: '/openai/v1/images/edits'
-  form: { model: string; prompt: string; image: Blob }
+  form: { model: string; prompt: string; image: Blob; response_format: 'b64_json' }
 }
 
 /** No `source` -> generation; a `source` -> an edit of it. Both need the `comfy` image route (engined src/images.ts / src/imageEdits.ts). */
@@ -27,12 +27,22 @@ export function buildImageRequest(
   if (input.source !== undefined) {
     return {
       path: '/openai/v1/images/edits',
-      form: { model: row.routeId, prompt: input.prompt, image: input.source },
+      form: {
+        model: row.routeId,
+        prompt: input.prompt,
+        image: input.source,
+        response_format: 'b64_json',
+      },
     }
   }
   return {
     path: '/openai/v1/images/generations',
-    body: { model: row.routeId, prompt: input.prompt, size: input.size },
+    body: {
+      model: row.routeId,
+      prompt: input.prompt,
+      size: input.size,
+      response_format: 'b64_json',
+    },
   }
 }
 

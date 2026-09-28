@@ -1182,11 +1182,17 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   },
 }
 
-function buildEditForm(form: { model: string; prompt: string; image: Blob }): FormData {
+function buildEditForm(form: {
+  model: string
+  prompt: string
+  image: Blob
+  response_format: 'b64_json'
+}): FormData {
   const data = new FormData()
   data.set('model', form.model)
   data.set('prompt', form.prompt)
   data.set('image', form.image)
+  data.set('response_format', form.response_format)
   return data
 }
 

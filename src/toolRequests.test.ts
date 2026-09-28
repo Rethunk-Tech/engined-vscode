@@ -61,7 +61,12 @@ describe('request builders', () => {
     const req = buildImageRequest(comfy, { prompt: 'a cat' })
     expect(req).toEqual({
       path: '/openai/v1/images/generations',
-      body: { model: '@/comfy/local', prompt: 'a cat', size: undefined },
+      body: {
+        model: '@/comfy/local',
+        prompt: 'a cat',
+        size: undefined,
+        response_format: 'b64_json',
+      },
     })
   })
 
@@ -69,7 +74,10 @@ describe('request builders', () => {
     const source = new Blob(['x'])
     const req = buildImageRequest(comfy, { prompt: 'a cat', source })
     expect(req.path).toBe('/openai/v1/images/edits')
-    expect((req as { form: { model: string } }).form.model).toBe('@/comfy/local')
+    expect((req as { form: { model: string; response_format: string } }).form.model).toBe(
+      '@/comfy/local',
+    )
+    expect((req as { form: { response_format: string } }).form.response_format).toBe('b64_json')
   })
 
   test('read image builds a data-URI chat request against the given row', () => {
