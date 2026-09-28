@@ -120,17 +120,30 @@ export interface EngineResources {
   graphics_bytes: number | null
 }
 
-/** `GET /engined/v1/engines/<id>/resources`. `{error}` when the engine is not running -- returned as-is, not thrown, since "not running" is a normal answer here. */
+/** `GET /engined/v1/engines/<id>/resources`. A stopped engine is 404 with `{error}`; that message is returned, not thrown, since "not running" is a normal answer here. */
 export async function fetchEngineResources(
   baseUrl: string,
   id: string,
   signal?: AbortSignal,
 ): Promise<EngineResources | { error: string }> {
   const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/resources`, { signal })
-  if (!res.ok) {
-    throw new DoorHttpError(res.status, await res.text())
+  const raw = await res.text()
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    throw new DoorHttpError(res.status, raw)
   }
-  return (await res.json()) as EngineResources | { error: string }
+  if (parsed !== null && typeof parsed === 'object' && 'error' in parsed) {
+    const message = doorErrorMessage((parsed as { error: unknown }).error)
+    if (message !== undefined) {
+      return { error: message }
+    }
+  }
+  if (!res.ok) {
+    throw new DoorHttpError(res.status, raw)
+  }
+  return parsed as EngineResources
 }
 
 /** `POST /engined/v1/engines/<id>/stop`. */

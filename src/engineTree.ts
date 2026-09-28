@@ -7,6 +7,7 @@
 
 import type { Door } from './door.ts'
 import { qualifyId } from './door.ts'
+import { doorErrorMessage } from './doorClient.ts'
 
 export interface EngineRow {
   id: string
@@ -142,12 +143,12 @@ function formatBytes(bytes: number): string {
   return `${Math.round(bytes / KIB)} KiB`
 }
 
-/** engined's `EngineResources` (`memory_bytes`/`graphics_bytes`, either nullable) -> `"RAM 334 MiB · GPU 28.0 GiB"`, or `{error}` rendered as the one line it is. */
+/** engined's `EngineResources` (`memory_bytes`/`graphics_bytes`, either nullable) -> `"RAM 334 MiB · GPU 28.0 GiB"`, or `{error}`'s message as the one line it is. */
 export function formatResourceLine(
-  resources: { memory_bytes: number | null; graphics_bytes: number | null } | { error: string },
+  resources: { memory_bytes: number | null; graphics_bytes: number | null } | { error: unknown },
 ): string {
   if ('error' in resources) {
-    return resources.error
+    return doorErrorMessage(resources.error) ?? String(resources.error)
   }
   const parts: string[] = []
   if (resources.memory_bytes !== null) {

@@ -102,7 +102,16 @@ describe('stateIcon', () => {
 
 describe('formatResourceLine', () => {
   test('an error response becomes its one line', () => {
-    expect(formatResourceLine({ error: '"llama" is not running' })).toBe('"llama" is not running')
+    expect(
+      formatResourceLine({
+        error: {
+          message: '"llama" is not running',
+          type: 'not_found_error',
+          param: null,
+          code: null,
+        },
+      }),
+    ).toBe('"llama" is not running')
   })
 
   test('both figures, 1024-based, one decimal from GiB up', () => {
