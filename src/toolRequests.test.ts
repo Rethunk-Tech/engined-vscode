@@ -6,6 +6,7 @@ import {
   buildSpeakRequest,
   buildTranscribeRequest,
   confirmationMessage,
+  ToolRouteError,
 } from './toolRequests.ts'
 
 const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
@@ -57,6 +58,29 @@ const piper: EnginedModelRow = {
 }
 
 describe('request builders', () => {
+  test('image generation size must be WxH with sides 64-4096 and multiples of 8', () => {
+    expect(() => buildImageRequest(comfy, { prompt: 'a cat', size: '1024x768' })).not.toThrow()
+    expect(() => buildImageRequest(comfy, { prompt: 'a cat', size: '64x64' })).not.toThrow()
+    expect(() => buildImageRequest(comfy, { prompt: 'a cat', size: '4096x4096' })).not.toThrow()
+    const reject = (size: string): void => {
+      expect(() => buildImageRequest(comfy, { prompt: 'a cat', size })).toThrow(ToolRouteError)
+      expect(() => buildImageRequest(comfy, { prompt: 'a cat', size })).toThrow(
+        'size must be WxH with each side 64-4096 and a multiple of 8',
+      )
+    }
+    reject('1024')
+    reject('63x64')
+    reject('65x64')
+    reject('4104x64')
+    reject('512x512.0')
+  })
+
+  test('image edit rejects an invalid size before sending', () => {
+    expect(() =>
+      buildImageRequest(comfy, { prompt: 'a cat', size: '10x10', source: new Blob(['x']) }),
+    ).toThrow('size must be WxH with each side 64-4096 and a multiple of 8')
+  })
+
   test('image generation, no source', () => {
     const req = buildImageRequest(comfy, { prompt: 'a cat' })
     expect(req).toEqual({

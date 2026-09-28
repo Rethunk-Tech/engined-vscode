@@ -19,11 +19,24 @@ export interface ImageEditRequest {
   form: { model: string; prompt: string; image: Blob; response_format: 'b64_json' }
 }
 
+/** WxH, each side 64–4096 and a multiple of 8 — the door's `/openai/v1/images` `size` rule. */
+export function assertImageSize(size: string | undefined): void {
+  if (size === undefined) {
+    return
+  }
+  const match = /^([0-9]+)x([0-9]+)$/.exec(size)
+  const sideOk = (n: number): boolean => n >= 64 && n <= 4096 && n % 8 === 0
+  if (match === null || !sideOk(Number(match[1])) || !sideOk(Number(match[2]))) {
+    throw new ToolRouteError('size must be WxH with each side 64-4096 and a multiple of 8')
+  }
+}
+
 /** No `source` -> generation; a `source` -> an edit of it. Both need the `comfy` image route (engined src/images.ts / src/imageEdits.ts). */
 export function buildImageRequest(
   row: EnginedModelRow,
   input: { prompt: string; size?: string; source?: Blob },
 ): ImageGenerationRequest | ImageEditRequest {
+  assertImageSize(input.size)
   if (input.source !== undefined) {
     return {
       path: '/openai/v1/images/edits',
