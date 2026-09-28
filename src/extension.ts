@@ -370,7 +370,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
 
 function describeError(error: unknown): string {
   if (error instanceof DoorHttpError) {
-    return `HTTP ${error.status}: ${error.message}`
+    return error.status === 429 ? error.message : `HTTP ${error.status}: ${error.message}`
   }
   return error instanceof Error ? error.message : String(error)
 }

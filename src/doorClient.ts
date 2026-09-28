@@ -40,6 +40,35 @@ export class DoorHttpError extends Error {
   }
 }
 
+/** Message Copilot's chat view shows when the door answers 429 for an agentic-launch cap. */
+export function agenticBusyMessage(retryAfterSeconds: number): string {
+  return `engined is busy (agentic launches at capacity), retry in ${retryAfterSeconds} s`
+}
+
+function retryAfterSeconds(headers: Headers): number | undefined {
+  const raw = headers.get('retry-after')
+  if (raw === null) {
+    return undefined
+  }
+  const n = Number(raw)
+  return Number.isFinite(n) && n >= 0 ? n : undefined
+}
+
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms)
+    const onAbort = (): void => {
+      clearTimeout(timer)
+      reject(signal?.reason ?? new Error('aborted'))
+    }
+    if (signal?.aborted) {
+      onAbort()
+      return
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
+}
+
 export interface ModelsPoll {
   /** The chat-answerable subset -- what the `LanguageModelChatProvider` reports. */
   chatModels: EnginedModelInfo[]
@@ -225,18 +254,38 @@ export interface DoorResponse<T> {
   headers: Headers
 }
 
-/** POST a chat completion. Non-2xx surfaces the door's own error text (never a generic status message) so the chat view shows what actually went wrong. Headers ride along so the caller can read `x-engined-route`/`-egress`/`-chain`, when engined sends them. */
+function busyError(status: number, seconds: number): DoorHttpError {
+  return new DoorHttpError(
+    status,
+    JSON.stringify({ error: { message: agenticBusyMessage(seconds) } }),
+  )
+}
+
+/** POST a chat completion. Non-2xx surfaces the door's own error text (never a generic status message) so the chat view shows what actually went wrong. Headers ride along so the caller can read `x-engined-route`/`-egress`/`-chain`, when engined sends them. A 429 from the agentic-launch cap retries once when `Retry-After` is at most 10 s. */
 export async function postChatCompletion(
   baseUrl: string,
   body: unknown,
   signal: AbortSignal,
 ): Promise<{ body: ReadableStream<Uint8Array>; headers: Headers }> {
-  const res = await fetch(`${baseUrl}/openai/v1/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  })
+  const send = (): Promise<Response> =>
+    fetch(`${baseUrl}/openai/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    })
+  let res = await send()
+  if (res.status === 429) {
+    const wait = retryAfterSeconds(res.headers)
+    await res.arrayBuffer()
+    if (wait !== undefined && wait <= 10) {
+      await delay(wait * 1000, signal)
+      res = await send()
+    }
+    if (res.status === 429) {
+      throw busyError(429, retryAfterSeconds(res.headers) ?? wait ?? 0)
+    }
+  }
   if (!res.ok || res.body === null) {
     throw new DoorHttpError(res.status, await res.text())
   }
