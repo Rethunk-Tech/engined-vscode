@@ -5,6 +5,16 @@
  * `vscode` import -- `searchIndex.ts` is the workspace/storage adapter.
  */
 
+import { isLocalEgress } from './status.ts'
+
+/** Rows workspace content may be sent through: only egress-none routes unless `allowRemote`. */
+export function searchableRows<T extends { egress?: string }>(
+  rows: readonly T[],
+  allowRemote: boolean,
+): T[] {
+  return rows.filter((row) => allowRemote || isLocalEgress(row.egress))
+}
+
 export interface TextChunk {
   path: string
   /** 0-indexed, inclusive. */

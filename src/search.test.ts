@@ -4,6 +4,7 @@ import {
   cosineSimilarity,
   mergeRerank,
   planIndexUpdate,
+  searchableRows,
   topK,
   truncateSnippet,
 } from './search.ts'
@@ -133,5 +134,17 @@ describe('mergeRerank', () => {
       1,
     )
     expect(merged).toEqual(['a'])
+  })
+})
+
+describe('searchableRows', () => {
+  const rows = [{ id: 'local', egress: 'none' }, { id: 'remote', egress: 'cloud' }, { id: 'unset' }]
+
+  test('drops non-local egress rows by default', () => {
+    expect(searchableRows(rows, false).map((r) => r.id)).toEqual(['local'])
+  })
+
+  test('keeps every row when remote is allowed', () => {
+    expect(searchableRows(rows, true)).toHaveLength(3)
   })
 })

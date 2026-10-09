@@ -13,8 +13,7 @@ import { resolveDefaultModel } from './defaultModels.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
 import type { TextChunk } from './search.ts'
-import { chunkFile, mergeRerank, planIndexUpdate, topK } from './search.ts'
-import { isLocalEgress } from './status.ts'
+import { chunkFile, mergeRerank, planIndexUpdate, searchableRows, topK } from './search.ts'
 
 /** Above this, a file is skipped rather than embedded -- the brief's own cap. */
 const MAX_FILE_BYTES = 256 * 1024
@@ -102,17 +101,17 @@ export class SearchIndex {
   }
 
   #embeddingRow(): EnginedModelRow | undefined {
-    return resolveDefaultModel(this.#rowsProvider(), 'embedding', getDefaultModel('embedding')).row
+    return resolveDefaultModel(
+      searchableRows(this.#rowsProvider(), getSearchAllowRemote()),
+      'embedding',
+      getDefaultModel('embedding'),
+    ).row
   }
 
   /** The first row that reranks and, unless `engined.search.allowRemote` is set, keeps content local. */
   #rerankRow(): EnginedModelRow | undefined {
-    const allowRemote = getSearchAllowRemote()
-    return this.#rowsProvider().find(
-      (row) =>
-        row.state !== 'unavailable' &&
-        row.serves.includes('/openai/v1/rerank') &&
-        (allowRemote || isLocalEgress(row.egress)),
+    return searchableRows(this.#rowsProvider(), getSearchAllowRemote()).find(
+      (row) => row.state !== 'unavailable' && row.serves.includes('/openai/v1/rerank'),
     )
   }
 
