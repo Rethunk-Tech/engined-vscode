@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { Door, EnginedModelInfo, EnginedModelRow } from './door.ts'
-import { ModelPoller, type ModelsPoll } from './polling.ts'
+import { effectivePollSeconds, ModelPoller, type ModelsPoll } from './polling.ts'
 
 const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
 
@@ -233,5 +233,17 @@ describe('ModelPoller failures', () => {
     await second
     expect(seen).toEqual(['old', 'new'])
     expect(poller.busy).toBe(false)
+  })
+})
+
+describe('effectivePollSeconds', () => {
+  test('polling stays disabled at 0 even with the events stream up', () => {
+    expect(effectivePollSeconds(0, true)).toBe(0)
+  })
+
+  test('the events stream raises a short interval to the floor, never lowers a long one', () => {
+    expect(effectivePollSeconds(30, false)).toBe(30)
+    expect(effectivePollSeconds(30, true)).toBe(300)
+    expect(effectivePollSeconds(900, true)).toBe(900)
   })
 })

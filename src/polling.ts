@@ -106,3 +106,14 @@ export class ModelPoller {
     this.#onChange(poll.chatModels)
   }
 }
+
+/** Poll interval floor while the events stream is up -- it is the fallback, not the primary signal, once frames are actually arriving. */
+export const CONNECTED_POLL_FLOOR_SECONDS = 300
+
+/** Effective poll period in seconds: the configured one (0 disables polling), floored while the events stream is delivering frames. */
+export function effectivePollSeconds(configured: number, eventsConnected: boolean): number {
+  if (configured <= 0) {
+    return 0
+  }
+  return eventsConnected ? Math.max(configured, CONNECTED_POLL_FLOOR_SECONDS) : configured
+}

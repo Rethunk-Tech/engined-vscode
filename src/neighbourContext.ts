@@ -95,3 +95,15 @@ export function selectSnippets(
   }
   return out
 }
+
+/** Moves `item` to the front of `recent` (most recent first), dropping the oldest past `cap`. */
+export function trackRecent<T>(recent: T[], item: T, cap: number): void {
+  const existing = recent.indexOf(item)
+  if (existing !== -1) {
+    recent.splice(existing, 1)
+  }
+  recent.unshift(item)
+  if (recent.length > cap) {
+    recent.length = cap
+  }
+}

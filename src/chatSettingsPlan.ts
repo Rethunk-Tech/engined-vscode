@@ -43,3 +43,12 @@ export function describePlan(plan: readonly SettingWrite[]): string {
 export function buildRestorePlan(saved: readonly SavedSetting[]): SettingWrite[] {
   return saved.map((s) => ({ key: s.key, value: s.previous }))
 }
+
+export const SAVED_CHAT_SETTINGS_KEY = 'engined.savedChatSettings'
+
+/** The settings `useForAllChatFeatures` saved, or undefined when chat is not routed to engined. */
+export function readSavedSettings(state: {
+  get<T>(key: string): T | undefined
+}): SavedSetting[] | undefined {
+  return state.get<SavedSetting[]>(SAVED_CHAT_SETTINGS_KEY)
+}

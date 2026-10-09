@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url'
 import { compareCodeUnits } from './compareCodeUnits.ts'
 import {
   DEFAULT_MODEL_ROLES,
+  logUnusableIfChanged,
+  type ModelRole,
   qualifyingRows,
   ROLE_PATH,
   resolveDefaultModel,
@@ -136,5 +138,23 @@ describe('DEFAULT_MODEL_ROLES', () => {
       expect(r.chooserLabel.length).toBeGreaterThan(0)
       expect(r.popupLabel.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('logUnusableIfChanged', () => {
+  test('logs a reason once per change and re-logs after it clears', () => {
+    const seen = new Map<ModelRole, string>()
+    const lines: string[] = []
+    const log = (line: string) => lines.push(line)
+    logUnusableIfChanged(seen, log, 'ocr', 'gone')
+    logUnusableIfChanged(seen, log, 'ocr', 'gone')
+    logUnusableIfChanged(seen, log, 'ocr', 'busy')
+    logUnusableIfChanged(seen, log, 'ocr', undefined)
+    logUnusableIfChanged(seen, log, 'ocr', 'busy')
+    expect(lines).toEqual([
+      'engined.defaultModels.ocr: gone',
+      'engined.defaultModels.ocr: busy',
+      'engined.defaultModels.ocr: busy',
+    ])
   })
 })

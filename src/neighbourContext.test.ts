@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { isExcluded, selectSnippets } from './neighbourContext.ts'
+import { isExcluded, selectSnippets, trackRecent } from './neighbourContext.ts'
 
 function candidate(
   filename: string,
@@ -98,5 +98,15 @@ describe('selectSnippets', () => {
     const total = out.reduce((sum, f) => sum + f.text.length, 0)
     expect(total).toBeLessThanOrEqual(4500)
     expect(out).toHaveLength(3)
+  })
+})
+
+describe('trackRecent', () => {
+  test('most recent first, no duplicates, capped', () => {
+    const recent: string[] = []
+    for (const item of ['a', 'b', 'c', 'a', 'd']) {
+      trackRecent(recent, item, 3)
+    }
+    expect(recent).toEqual(['d', 'a', 'c'])
   })
 })

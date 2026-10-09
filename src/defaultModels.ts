@@ -124,3 +124,21 @@ export function resolveDefaultModel(
     unusableReason: unusableReasonFor(existing, configuredId, role, path),
   }
 }
+
+/** Logs an unusable configured id once per change, never once per call; `seen` remembers what was last logged per role. */
+export function logUnusableIfChanged(
+  seen: Map<ModelRole, string>,
+  log: (line: string) => void,
+  role: ModelRole,
+  reason: string | undefined,
+): void {
+  if (reason === undefined) {
+    seen.delete(role)
+    return
+  }
+  if (seen.get(role) === reason) {
+    return
+  }
+  seen.set(role, reason)
+  log(`engined.defaultModels.${role}: ${reason}`)
+}
