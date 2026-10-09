@@ -1,0 +1,8 @@
+# CI's `bun run ci` ends with a vsce package listing, which catches a manifest or .vscodeignore that would fail
+# `vsce package`. It reads the build output, so it follows the build.
+[gates.build]
+serial = true
+
+[gates.vsce]
+run = "bunx @vscode/vsce ls --no-dependencies >/dev/null"
+serial = true

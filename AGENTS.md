@@ -59,3 +59,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 ## Testing
 
 `bun test`, no VS Code host, no mocks: see [CONTRIBUTING.md](CONTRIBUTING.md) § Testing.
+
+## Gate budget
+
+`.gate.toml` adds the one CI step detection missed: `bun run ci` ends with `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build. Measured 2026-10-09 with `gate --profile` at load 19 to 21 (CPU is the evidence): warm 0.17 to 0.4 s wall and 1.1 to 1.6 CPU-s; cold (a clone without `dist`, throwaway bun cache) 0.37 s wall and 1.7 CPU-s. Far inside budget; the 246 tests take 41 ms and nothing repeats work.
