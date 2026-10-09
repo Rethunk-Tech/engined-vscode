@@ -308,20 +308,6 @@
           }
         }
       }
-    },
-    {
-      "includes": ["src/extension.ts"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noExcessiveLinesPerFile": "off",
-            "noExcessiveClassesPerFile": "off"
-          },
-          "complexity": {
-            "useMaxParams": "off"
-          }
-        }
-      }
     }
   ]
 }
