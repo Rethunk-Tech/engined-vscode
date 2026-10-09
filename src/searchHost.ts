@@ -8,6 +8,7 @@
 import * as vscode from 'vscode'
 import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks } from './config.ts'
 import type { ModelRole } from './defaultModels.ts'
+import { postEmbeddings, postRerank } from './doorClient.ts'
 
 export interface HostUri {
   readonly fsPath: string
@@ -37,6 +38,19 @@ export interface SearchHost {
     title: string,
     task: (report: (message: string) => void) => Promise<void>,
   ): Promise<void>
+  /** The door's embeddings route; one vector (or undefined) per text. */
+  embed(
+    baseUrl: string,
+    model: string,
+    texts: string[],
+    signal?: AbortSignal,
+  ): ReturnType<typeof postEmbeddings>
+  /** The door's rerank route. */
+  rerank(
+    baseUrl: string,
+    request: Parameters<typeof postRerank>[1],
+    signal?: AbortSignal,
+  ): ReturnType<typeof postRerank>
   defaultModel(role: ModelRole): string
   allowRemote(): boolean
   maxChunks(): number
@@ -82,6 +96,8 @@ export const vscodeSearchHost: SearchHost = {
       (progress) => task((message) => progress.report({ message })),
     )
   },
+  embed: postEmbeddings,
+  rerank: postRerank,
   defaultModel: getDefaultModel,
   allowRemote: getSearchAllowRemote,
   maxChunks: getSearchMaxChunks,

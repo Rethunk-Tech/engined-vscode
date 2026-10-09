@@ -1,19 +1,10 @@
-import { beforeEach, describe, expect, jest, mock, test } from 'bun:test'
+import { beforeEach, describe, expect, jest, test } from 'bun:test'
 import type { EnginedModelRow } from './door.ts'
 import type { HostUri, SearchHost } from './searchHost.ts'
+import { SearchIndex } from './searchIndex.ts'
 
 const embedCalls: number[] = []
 let rerankImpl: (signal?: AbortSignal) => Promise<never[]> = () => Promise.resolve([])
-
-mock.module('./doorClient.ts', () => ({
-  postEmbeddings: (_url: string, _model: string, texts: string[]) => {
-    embedCalls.push(texts.length)
-    return Promise.resolve(texts.map(() => [1, 0]))
-  },
-  postRerank: (_url: string, _body: unknown, signal?: AbortSignal) => rerankImpl(signal),
-}))
-
-const { SearchIndex } = await import('./searchIndex.ts')
 
 const ROW = {
   id: '@/llama/embed',
@@ -55,6 +46,11 @@ function fakeHost(over: Partial<SearchHost> = {}) {
     asRelativePath: (u) => u.fsPath.replace('/ws/', ''),
     excludeSettings: () => [{ '**/node_modules': true, '**/skip': false }],
     withProgress: (_title, task) => task(() => undefined),
+    embed: (_url, _model, texts) => {
+      embedCalls.push(texts.length)
+      return Promise.resolve(texts.map(() => [1, 0]))
+    },
+    rerank: (_url, _request, signal) => rerankImpl(signal),
     defaultModel: () => '',
     allowRemote: () => false,
     maxChunks: () => 100,

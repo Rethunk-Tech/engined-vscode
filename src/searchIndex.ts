@@ -11,7 +11,6 @@ import { runInBackground } from './background.ts'
 import { BYTES_PER_KIB } from './constants.ts'
 import { resolveDefaultModel } from './defaultModels.ts'
 import type { EnginedModelRow } from './door.ts'
-import { postEmbeddings, postRerank } from './doorClient.ts'
 import type { TextChunk } from './search.ts'
 import { chunkFile, mergeRerank, planIndexUpdate, searchableRows, topK } from './search.ts'
 import type { HostUri, SearchHost } from './searchHost.ts'
@@ -146,7 +145,7 @@ export class SearchIndex {
     texts: string[],
     signal?: AbortSignal,
   ): Promise<(number[] | undefined)[]> {
-    return postEmbeddings(row.door.url, row.routeId, texts, signal)
+    return this.#host.embed(row.door.url, row.routeId, texts, signal)
   }
 
   /** Loads the on-disk index (once) and catches it up to the workspace's current files. Cheap to call before every search: a no-op refresh touches no files. */
@@ -351,7 +350,7 @@ export class SearchIndex {
     const rerankRow = this.#rerankRow()
     if (rerankRow !== undefined && ordered.length > 0) {
       try {
-        const results = await postRerank(
+        const results = await this.#host.rerank(
           rerankRow.door.url,
           { model: rerankRow.routeId, query, documents: ordered.map((e) => e.text) },
           signal,
