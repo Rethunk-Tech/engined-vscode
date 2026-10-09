@@ -51,7 +51,7 @@ describe('backoffMs', () => {
   })
 
   test('caps at maxMs', () => {
-    expect(backoffMs(10)).toBe(60000)
+    expect(backoffMs(10)).toBe(60_000)
   })
 
   test('never goes below baseMs for a negative attempt', () => {

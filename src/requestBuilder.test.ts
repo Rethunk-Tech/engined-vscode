@@ -20,7 +20,7 @@ function modelInfo(overrides: Partial<EnginedModelInfo['row']> = {}): EnginedMod
     version: row.id,
     detail: '',
     tooltip: '',
-    maxInputTokens: 32768,
+    maxInputTokens: 32_768,
     maxOutputTokens: 8192,
     capabilities: { toolCalling: row.tools, imageInput: false },
     row,
@@ -207,7 +207,7 @@ describe('long user messages', () => {
   })
 
   test('splitAboveChars 0 sends the message whole', () => {
-    const long = 'x\n'.repeat(10000)
+    const long = 'x\n'.repeat(10_000)
     const body = buildChatRequestBody(
       modelInfo(),
       [{ role: 'user', parts: [{ type: 'text', text: long }] }],

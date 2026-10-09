@@ -129,7 +129,7 @@ export function servesTokenize(row: EnginedModelRow): boolean {
  * rather than overflowing anything.
  */
 const FALLBACK_MAX_OUTPUT_TOKENS = 8192
-const FALLBACK_MAX_INPUT_TOKENS = 32768
+const FALLBACK_MAX_INPUT_TOKENS = 32_768
 
 function tooltipFor(row: EnginedModelRow): string {
   const parts = [`serves: ${row.serves.join(', ')}`]

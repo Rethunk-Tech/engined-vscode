@@ -706,10 +706,10 @@ function renderStatusBar(): void {
       inFlightChat.modelId,
       inFlightChat.promptTokenEstimate,
     )
-  } else if (lastChatCall !== undefined) {
-    statusBarItem.text = formatCallLine(lastChatCall)
-  } else {
+  } else if (lastChatCall === undefined) {
     statusBarItem.text = `$(server) engined (${poller.models.length})`
+  } else {
+    statusBarItem.text = formatCallLine(lastChatCall)
   }
   statusBarItem.tooltip = tooltipMarkdown()
 }
@@ -1157,7 +1157,7 @@ interface GenerateImageInput {
 }
 
 function imagePath(sourcePath: string | undefined): string {
-  return sourcePath !== undefined ? '/openai/v1/images/edits' : '/openai/v1/images/generations'
+  return sourcePath === undefined ? '/openai/v1/images/generations' : '/openai/v1/images/edits'
 }
 
 /** An `AbortSignal` that fires when the user cancels the tool call. */
@@ -1175,9 +1175,9 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   async invoke(options, token) {
     try {
       const source =
-        options.input.sourcePath !== undefined
-          ? new Blob([await readWorkspaceFile(options.input.sourcePath)])
-          : undefined
+        options.input.sourcePath === undefined
+          ? undefined
+          : new Blob([await readWorkspaceFile(options.input.sourcePath)])
       const row = resolveRoleRow('image', imagePath(options.input.sourcePath))
       const req = buildImageRequest(row, {
         prompt: options.input.prompt,
@@ -1504,13 +1504,13 @@ export function activate(context: vscode.ExtensionContext): void {
       if (item.kind === 'engine') {
         return engineExplorer.showLogs(item.node)
       }
-      return undefined
+      return
     }),
     vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
       if (item.kind === 'engine') {
         return engineExplorer.stop(item.node)
       }
-      return undefined
+      return
     }),
     vscode.commands.registerCommand('engined.warmEngine', async (item: EngineTreeItem) => {
       if (item.kind !== 'engine') {
@@ -1569,7 +1569,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (item.kind === 'engine') {
         return copyFixCommand(item.node.fix)
       }
-      return undefined
+      return
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('engined.pollSeconds')) {

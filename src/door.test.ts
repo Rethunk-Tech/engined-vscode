@@ -57,12 +57,12 @@ describe('mapModels', () => {
   test('falls back to default context windows when the row reports none', () => {
     const mapped = mapModels(models, DOOR, 1)
     const opus = mapped.find((m) => m.id === '@/claude/opus-5-5')
-    expect(opus?.maxInputTokens).toBe(32768)
+    expect(opus?.maxInputTokens).toBe(32_768)
     expect(opus?.maxOutputTokens).toBe(8192)
 
     const sonnet = mapped.find((m) => m.id === '@/claude/sonnet-5')
-    expect(sonnet?.maxInputTokens).toBe(200000)
-    expect(sonnet?.maxOutputTokens).toBe(64000)
+    expect(sonnet?.maxInputTokens).toBe(200_000)
+    expect(sonnet?.maxOutputTokens).toBe(64_000)
   })
 
   test('malformed body maps to an empty list rather than throwing', () => {

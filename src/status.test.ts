@@ -37,7 +37,7 @@ describe('abbreviateTokenCount', () => {
   })
 
   test('one-decimal thousands at and above 1000', () => {
-    expect(abbreviateTokenCount(29123)).toBe('29.1k')
+    expect(abbreviateTokenCount(29_123)).toBe('29.1k')
     expect(abbreviateTokenCount(1000)).toBe('1.0k')
   })
 })
@@ -48,7 +48,7 @@ describe('formatSeconds', () => {
   })
 
   test('rounds to a whole number at and above ten seconds', () => {
-    expect(formatSeconds(12345)).toBe('12s')
+    expect(formatSeconds(12_345)).toBe('12s')
   })
 })
 
@@ -88,7 +88,7 @@ describe('formatCallLine', () => {
       formatCallLine({
         route: '@/claude/sonnet-5',
         egress: 'remote',
-        promptTokens: 29123,
+        promptTokens: 29_123,
         completionTokens: undefined,
         wallMs: 800,
       }),
@@ -110,22 +110,22 @@ describe('formatLoadingText', () => {
 
 describe('formatProcessingText', () => {
   test('rounds the estimate to the nearest thousand', () => {
-    expect(formatProcessingText(30779)).toBe('$(loading~spin) processing ~31k-token prompt…')
+    expect(formatProcessingText(30_779)).toBe('$(loading~spin) processing ~31k-token prompt…')
   })
 })
 
 describe('formatWaitingText', () => {
   test('warming, or no row resolved yet, is honestly "loading"', () => {
-    expect(formatWaitingText('warming', '@/llama/ornith', 30779)).toBe(
+    expect(formatWaitingText('warming', '@/llama/ornith', 30_779)).toBe(
       '$(loading~spin) loading ornith…',
     )
-    expect(formatWaitingText(undefined, '@/llama/ornith', 30779)).toBe(
+    expect(formatWaitingText(undefined, '@/llama/ornith', 30_779)).toBe(
       '$(loading~spin) loading ornith…',
     )
   })
 
   test('a running row that has not answered yet is processing the prompt', () => {
-    expect(formatWaitingText('running', '@/llama/ornith', 30779)).toBe(
+    expect(formatWaitingText('running', '@/llama/ornith', 30_779)).toBe(
       '$(loading~spin) processing ~31k-token prompt…',
     )
   })
@@ -165,11 +165,11 @@ describe('buildTooltip', () => {
       lastChat: {
         route: '@/claude/sonnet-5',
         egress: 'remote',
-        promptTokens: 25300,
+        promptTokens: 25_300,
         completionTokens: 900,
-        wallMs: 54000,
+        wallMs: 54_000,
         costUsd: 0.0123,
-        promptTokenMax: 262144,
+        promptTokenMax: 262_144,
       },
       lastBackground: { route: '@/llama/ornith', egress: 'none', wallMs: 300 },
       lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
@@ -298,9 +298,9 @@ describe('buildTooltip', () => {
       lastChat: {
         route: '@/claude/sonnet-5',
         egress: 'remote',
-        promptTokens: 25300,
+        promptTokens: 25_300,
         wallMs: 1000,
-        promptTokenMax: 262144,
+        promptTokenMax: 262_144,
       },
       lastCompletion: { route: '@/llama/ornith', egress: 'none', wallMs: 100 },
     })
@@ -313,7 +313,7 @@ describe('buildTooltip', () => {
       lastChat: {
         route: '@/claude/sonnet-5',
         egress: 'remote',
-        promptTokens: 25300,
+        promptTokens: 25_300,
         wallMs: 1000,
       },
     })
@@ -375,7 +375,7 @@ describe('buildTooltip', () => {
         egress: 'none',
         wallMs: 300,
         promptTokens: 268,
-        promptTokenMax: 262144,
+        promptTokenMax: 262_144,
       },
     })
     expect(belowThreshold).toContain('268 / 262.1k')
@@ -387,8 +387,8 @@ describe('buildTooltip', () => {
         route: '@/llama/ornith',
         egress: 'none',
         wallMs: 300,
-        promptTokens: 33000,
-        promptTokenMax: 262144,
+        promptTokens: 33_000,
+        promptTokenMax: 262_144,
       },
     })
     expect(atThreshold).toContain('33.0k / 262.1k')
@@ -406,7 +406,7 @@ describe('buildTooltip', () => {
   test('Today rows pair up with Defaults top-down; once Today runs out its cells stay empty', () => {
     const tooltip = buildTooltip({
       ...baseInput,
-      todayUsage: { requests: 26, promptTokens: 392300, completionTokens: 5000, costUsd: 1.23 },
+      todayUsage: { requests: 26, promptTokens: 392_300, completionTokens: 5000, costUsd: 1.23 },
       defaults: [
         { label: 'Image', resolvedName: 'Chroma1-HD', configured: true },
         { label: 'OCR', resolvedName: 'PaddleOCR-VL 1.6', configured: true },

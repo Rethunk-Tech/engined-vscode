@@ -52,7 +52,7 @@ describe('formatTotalsLine', () => {
 
   test('formats known cost to 4 decimals and known tokens abbreviated', () => {
     const line = formatTotalsLine(
-      totalsFor([row({ cost_usd: 1.5, prompt_tokens: 29123, completion_tokens: 400 })]),
+      totalsFor([row({ cost_usd: 1.5, prompt_tokens: 29_123, completion_tokens: 400 })]),
     )
     expect(line).toContain('$1.5000')
     expect(line).toContain('29.1k in / 400 out')

@@ -63,7 +63,7 @@ export function parseSseChunk(buffer: string): SseParseResult {
 }
 
 const DEFAULT_BASE_MS = 1000
-const DEFAULT_MAX_MS = 60000
+const DEFAULT_MAX_MS = 60_000
 
 /** Reconnect delay for the `attempt`th retry (0-indexed): `baseMs` doubling each time, capped at `maxMs`. */
 export function backoffMs(
