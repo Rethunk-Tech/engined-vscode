@@ -1,6 +1,7 @@
 /** The five `engined_*` language-model tools and the workspace-path plumbing they share. */
 
 import * as vscode from 'vscode'
+import { cancellationSignal } from './cancellation.ts'
 import { readChatStream } from './chatStream.ts'
 import type { ModelRole } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
@@ -102,17 +103,6 @@ interface GenerateImageInput {
 
 function imagePath(sourcePath: string | undefined): string {
   return sourcePath === undefined ? '/openai/v1/images/generations' : '/openai/v1/images/edits'
-}
-
-/** An `AbortSignal` that fires when the user cancels the tool call. */
-function cancellationSignal(token: vscode.CancellationToken): AbortSignal {
-  const controller = new AbortController()
-  if (token.isCancellationRequested) {
-    controller.abort()
-  } else {
-    token.onCancellationRequested(() => controller.abort())
-  }
-  return controller.signal
 }
 
 const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
