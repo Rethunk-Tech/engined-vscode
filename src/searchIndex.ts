@@ -7,15 +7,14 @@
  */
 
 import { Buffer } from 'node:buffer'
-import * as vscode from 'vscode'
 import { runInBackground } from './background.ts'
-import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks } from './config.ts'
 import { BYTES_PER_KIB } from './constants.ts'
 import { resolveDefaultModel } from './defaultModels.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
 import type { TextChunk } from './search.ts'
 import { chunkFile, mergeRerank, planIndexUpdate, searchableRows, topK } from './search.ts'
+import type { HostUri, SearchHost } from './searchHost.ts'
 
 const MAX_FILE_KIB = 256
 const BINARY_SNIFF_BYTES = 512
@@ -61,7 +60,8 @@ function looksBinary(bytes: Uint8Array): boolean {
 }
 
 export class SearchIndex {
-  readonly #storageUri: vscode.Uri
+  readonly #storageUri: HostUri
+  readonly #host: SearchHost
   readonly #rowsProvider: () => readonly EnginedModelRow[]
   readonly #log: (line: string) => void
   #index: StoredIndex = emptyIndex()
@@ -72,22 +72,24 @@ export class SearchIndex {
   #refreshAgain = false
 
   constructor(
-    storageUri: vscode.Uri,
+    storageUri: HostUri,
     rowsProvider: () => readonly EnginedModelRow[],
     log: (line: string) => void,
+    host: SearchHost,
   ) {
+    this.#host = host
     this.#storageUri = storageUri
     this.#rowsProvider = rowsProvider
     this.#log = log
   }
 
-  get #indexUri(): vscode.Uri {
-    return vscode.Uri.joinPath(this.#storageUri, 'search-index.json')
+  get #indexUri(): HostUri {
+    return this.#host.joinPath(this.#storageUri, 'search-index.json')
   }
 
   async #load(): Promise<void> {
     try {
-      const bytes = await vscode.workspace.fs.readFile(this.#indexUri)
+      const bytes = await this.#host.readFile(this.#indexUri)
       this.#index = JSON.parse(Buffer.from(bytes).toString('utf8')) as StoredIndex
     } catch {
       this.#index = emptyIndex()
@@ -110,8 +112,8 @@ export class SearchIndex {
 
   async #save(): Promise<void> {
     try {
-      await vscode.workspace.fs.createDirectory(this.#storageUri)
-      await vscode.workspace.fs.writeFile(this.#indexUri, Buffer.from(JSON.stringify(this.#index)))
+      await this.#host.createDirectory(this.#storageUri)
+      await this.#host.writeFile(this.#indexUri, Buffer.from(JSON.stringify(this.#index)))
     } catch (error) {
       this.#log(`search: failed to save index: ${describe(error)}`)
     }
@@ -119,27 +121,21 @@ export class SearchIndex {
 
   #embeddingRow(): EnginedModelRow | undefined {
     return resolveDefaultModel(
-      searchableRows(this.#rowsProvider(), getSearchAllowRemote()),
+      searchableRows(this.#rowsProvider(), this.#host.allowRemote()),
       'embedding',
-      getDefaultModel('embedding'),
+      this.#host.defaultModel('embedding'),
     ).row
   }
 
   /** The first row that reranks and, unless `engined.search.allowRemote` is set, keeps content local. */
   #rerankRow(): EnginedModelRow | undefined {
-    return searchableRows(this.#rowsProvider(), getSearchAllowRemote()).find(
+    return searchableRows(this.#rowsProvider(), this.#host.allowRemote()).find(
       (row) => row.state !== 'unavailable' && row.serves.includes('/openai/v1/rerank'),
     )
   }
 
   #excludeGlob(): string {
-    const files = vscode.workspace
-      .getConfiguration('files')
-      .get<Record<string, boolean>>('exclude', {})
-    const search = vscode.workspace
-      .getConfiguration('search')
-      .get<Record<string, boolean>>('exclude', {})
-    const globs = Object.entries({ ...files, ...search })
+    const globs = Object.entries(Object.assign({}, ...this.#host.excludeSettings()))
       .filter(([, enabled]) => enabled)
       .map(([glob]) => glob)
     return globs.length > 0 ? `{${globs.join(',')}}` : '**/.git/**'
@@ -170,37 +166,28 @@ export class SearchIndex {
     if (this.#index.route !== row.id) {
       this.#index = { ...emptyIndex(), route: row.id }
     }
-    const work = (progress?: vscode.Progress<{ message?: string }>) =>
-      this.#applyRefresh(row, progress)
+    const work = (report?: (message: string) => void) => this.#applyRefresh(row, report)
     if (showProgress) {
-      await vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: 'engined: indexing workspace for search',
-          cancellable: false,
-        },
-        (progress) => work(progress),
+      await this.#host.withProgress('engined: indexing workspace for search', (report) =>
+        work(report),
       )
     } else {
       await work()
     }
   }
 
-  async #applyRefresh(
-    row: EnginedModelRow,
-    progress?: vscode.Progress<{ message?: string }>,
-  ): Promise<void> {
-    const exclude = await this.#excludeGlob()
-    const uris = await vscode.workspace.findFiles('**/*', exclude)
+  async #applyRefresh(row: EnginedModelRow, report?: (message: string) => void): Promise<void> {
+    const exclude = this.#excludeGlob()
+    const uris = await this.#host.findFiles(exclude)
     const current: { path: string; mtime: number }[] = []
-    const infoByPath = new Map<string, { uri: vscode.Uri; mtime: number }>()
+    const infoByPath = new Map<string, { uri: HostUri; mtime: number }>()
     for (const uri of uris) {
       try {
-        const stat = await vscode.workspace.fs.stat(uri)
-        if (stat.type !== vscode.FileType.File || stat.size > MAX_FILE_BYTES) {
+        const stat = await this.#host.stat(uri)
+        if (!stat.isFile || stat.size > MAX_FILE_BYTES) {
           continue
         }
-        const path = vscode.workspace.asRelativePath(uri, false)
+        const path = this.#host.asRelativePath(uri)
         current.push({ path, mtime: stat.mtime })
         infoByPath.set(path, { uri, mtime: stat.mtime })
       } catch {
@@ -212,7 +199,7 @@ export class SearchIndex {
     for (const path of plan.toRemove) {
       this.#removeFile(path)
     }
-    const maxChunks = getSearchMaxChunks()
+    const maxChunks = this.#host.maxChunks()
     let hitCap = false
     for (const path of plan.toEmbed) {
       if (this.#index.entries.length >= maxChunks) {
@@ -223,7 +210,7 @@ export class SearchIndex {
       if (info === undefined) {
         continue
       }
-      progress?.report({ message: path })
+      report?.(path)
       const added = await this.#embedFile(
         row,
         { path, uri: info.uri, mtime: info.mtime },
@@ -249,13 +236,13 @@ export class SearchIndex {
   /** Embeds every chunk of `path` that fits under `maxChunks`. Returns `false` when the cap cut the file short. */
   async #embedFile(
     row: EnginedModelRow,
-    file: { path: string; uri: vscode.Uri; mtime: number },
+    file: { path: string; uri: HostUri; mtime: number },
     maxChunks: number,
   ): Promise<boolean> {
     const { path, uri, mtime } = file
     let content: string
     try {
-      const bytes = await vscode.workspace.fs.readFile(uri)
+      const bytes = await this.#host.readFile(uri)
       if (looksBinary(bytes)) {
         return true
       }
@@ -292,19 +279,19 @@ export class SearchIndex {
    * checkout) costs a single scan, and a path excluded by `files.exclude` /
    * `search.exclude` arms nothing. A no-op before the index has ever been built.
    */
-  onFileChanged(uri: vscode.Uri, kind: 'change' | 'create' | 'delete'): void {
+  onFileChanged(uri: HostUri, kind: 'change' | 'create' | 'delete'): void {
     if (!this.#loaded) {
       return
     }
     if (kind === 'delete') {
-      this.#removeFile(vscode.workspace.asRelativePath(uri, false))
+      this.#removeFile(this.#host.asRelativePath(uri))
       this.#scheduleSave()
       return
     }
     this.#background(this.#armRefresh(uri))
   }
 
-  async #armRefresh(uri: vscode.Uri): Promise<void> {
+  async #armRefresh(uri: HostUri): Promise<void> {
     try {
       if (!(await this.#isIndexable(uri))) {
         return
@@ -321,19 +308,9 @@ export class SearchIndex {
     }
   }
 
-  /** Whether the workspace's exclude globs let `uri` through; `findFiles` on the one exact path applies them. */
-  async #isIndexable(uri: vscode.Uri): Promise<boolean> {
-    const folder = vscode.workspace.getWorkspaceFolder(uri)
-    if (folder === undefined) {
-      return false
-    }
-    const relative = vscode.workspace.asRelativePath(uri, false).replace(/[\\[\]{}()*?!]/g, '[$&]')
-    const found = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(folder, relative),
-      await this.#excludeGlob(),
-      1,
-    )
-    return found.length > 0
+  /** Whether the workspace's exclude globs let `uri` through. */
+  async #isIndexable(uri: HostUri): Promise<boolean> {
+    return await this.#host.isWorkspaceFile(uri, this.#excludeGlob())
   }
 
   /** At most one refresh in flight; events arriving meanwhile fold into one follow-up run. */

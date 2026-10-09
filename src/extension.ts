@@ -72,6 +72,7 @@ import {
   estimateMessageTokenCount,
   plainMessageContent,
 } from './requestBuilder.ts'
+import { vscodeSearchHost } from './searchHost.ts'
 import { SearchIndex } from './searchIndex.ts'
 import type { CallRecord, ThemeKind, TodayUsage } from './status.ts'
 import {
@@ -1201,6 +1202,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.storageUri ?? context.globalStorageUri,
     () => poller.rows,
     log,
+    vscodeSearchHost,
   )
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
 
