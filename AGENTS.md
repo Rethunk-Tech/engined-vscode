@@ -30,7 +30,16 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/config.ts` | Reads/writes `engined.*` settings, including `engined.doors`. Imports `vscode`. |
 | `src/searchIndex.ts` | The workspace-scanning/storage half of `engined_search`: finds candidate files, keeps the chunk+vector index in `context.storageUri`, calls `search.ts` for the pure logic. Imports `vscode`. |
 | `src/engineExplorer.ts` | The Engines `TreeDataProvider`, its commands (warm/hold/release/stop/logs/copy-fix), a door-group parent level once more than one door is configured, and the live-events subscription that refreshes it. Imports `vscode`. |
-| `src/extension.ts` | The adapter: registers the chat provider, tools, status bar, and log; converts real `vscode` values to/from the plain shapes above. Everything decision-shaped belongs in the files above, not here. |
+| `src/routeHeaders.ts` | `x-engined-route/egress/chain/cost-usd` response headers -> a call's route and cost. No `vscode` import. |
+| `src/session.ts` | The `Session` object `activate` builds once: output channel, status bar, poller, caches and timers, passed explicitly to every module below (the shape `ToolHost` and `SearchHost` use for the tools and the search index). Type-only `vscode` import. |
+| `src/chatProvider.ts` | The `LanguageModelChatProvider`: VS Code messages <-> plain shapes, the streamed reply, token counts, and each call's status-bar record. Imports `vscode`. |
+| `src/completionProvider.ts` | The inline-completion provider and the recent-document tracking behind its neighbour context. Imports `vscode`. |
+| `src/statusBar.ts` | Status bar text and tooltip, today's-usage cache, the loading ticker, the one-time unreachable notice. Imports `vscode`. |
+| `src/pollDriver.ts` | The model-poll timer and the per-door engine-events streams that slow it to a fallback. |
+| `src/routes.ts` | `resolveRoleRow`: a tool's route through `resolveDefaultModel`, logging an unusable configured id once per change. |
+| `src/chatSettings.ts` | `engined.useForAllChatFeatures` / `restoreChatSettings`. Imports `vscode`. |
+| `src/commands.ts` | Quick-pick, warm/hold/release, effort, default-model and usage-report commands, and the Engines tree-item commands. Imports `vscode`. |
+| `src/extension.ts` | `activate`/`deactivate`: builds the `Session`, registers every provider, tool, view and command. |
 
 ## Invariants
 
