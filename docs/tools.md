@@ -1,10 +1,10 @@
 # Agent tools reference
 
-Detailed parameters for the four `engined_*` tools. See [HUMANS.md](../HUMANS.md#usage) for the overview.
+Detailed parameters for the five `engined_*` tools. See [HUMANS.md](../HUMANS.md#usage) for the overview.
 
 Every tool works from whatever chat model is currently answering -- engined's own models or any other vendor's (Copilot's included). The tool itself always runs against engined's local door; only the tool's result travels back to whichever model is running the conversation, so with a cloud model that result leaves the machine even though the tool ran locally.
 
-Each tool can be attached to a chat request by typing `#enginedImage`, `#enginedReadImage`, `#enginedTranscribe`, or `#enginedSpeak`.
+Each tool can be attached to a chat request by typing `#enginedImage`, `#enginedReadImage`, `#enginedTranscribe`, `#enginedSearch`, or `#enginedSpeak`.
 
 Every path a tool reads or writes must resolve inside an open workspace folder; a `..` escape or an absolute path outside every folder is refused (`src/pathGuard.ts`).
 
@@ -41,6 +41,15 @@ Route: `/openai/v1/chat/completions` against a vision row. `mode: "ocr"` needs a
 Route: `/openai/v1/audio/transcriptions`, or `/openai/v1/audio/translations` when `translate: true` and the resolved row also serves that path. Route selection: `engined.defaultModels.transcription`.
 
 `translate: true` appends a note to the result: speech translation is measured unreliable on this route (large-v3-turbo-q8_0 has rendered "El gato negro..." as "The black man...", per engined's own `AGENTS.md`) -- prefer transcribing and translating the text with a chat model instead.
+
+## `engined_search`
+
+| Input | Type | Notes |
+| --- | --- | --- |
+| `query` | string | required |
+| `maxResults` | number | maximum snippets returned; defaults to 6 |
+
+Semantic search over the open workspace: file chunks are embedded through `/openai/v1/embeddings` (`engined.defaultModels.embedding`) into an index kept in extension storage, and the nearest chunks are optionally reranked through `/openai/v1/rerank`. Both routes must keep content local unless `engined.search.allowRemote` is set. Returns `path:startLine-endLine` plus the snippet for each hit.
 
 ## `engined_speak`
 

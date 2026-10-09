@@ -6,7 +6,7 @@ Build, run, use, and configure this extension. Contributors: [CONTRIBUTING.md](C
 
 1. Start engined and confirm it answers: `systemctl --user start engined && curl http://127.0.0.1:29200/openai/v1/models`.
 2. Open Copilot Chat's model picker and choose an `engined` model.
-3. Attach a tool (`#enginedImage`, `#enginedReadImage`, `#enginedTranscribe`, `#enginedSpeak`) to a request, or just start typing for inline completions.
+3. Attach a tool (`#enginedImage`, `#enginedReadImage`, `#enginedTranscribe`, `#enginedSearch`, `#enginedSpeak`) to a request, or just start typing for inline completions.
 
 Building the extension from source: see Prerequisites and Build below. Uninstalling: use VS Code's Extensions view, or delete the `.vsix`-installed folder under your VS Code extensions directory.
 
