@@ -6,3 +6,14 @@ reconciled = "canon v0.1.0-poc"
 "ts-bun-typescript-00002" = "VS Code extensions run in the Node extension host"
 # The extension UI is VS Code's own, and it declares no JSX.
 "ts-biome-00006 style/noJsxLiterals" = "no JSX in this extension"
+# `vscode` is injected by the extension host, so no package.json dependency can declare it
+# (@types/vscode is the dev-time stand-in), and the whole API is reached through one namespace.
+"ts-biome-00006 correctness/noUndeclaredDependencies" = "the vscode module is provided by the extension host"
+"ts-biome-00006 performance/noNamespaceImport" = "the vscode API is consumed as a namespace"
+# The activation module still owns the chat provider, the inline-completion provider, the
+# status bar and the poller around shared module state; splitting them is a follow-up that
+# needs that state passed explicitly (the tools already moved out to workspaceTools.ts).
+"ts-biome-00007 style/noExcessiveLinesPerFile" = "extension.ts still holds the providers, status bar and poller around shared state"
+"ts-biome-00006 style/noExcessiveClassesPerFile" = "extension.ts holds both language-model providers"
+# provideLanguageModelChatResponse's five parameters are vscode.LanguageModelChatProvider's signature.
+"ts-biome-00006 complexity/useMaxParams" = "the provider method signature is fixed by the VS Code API"
