@@ -13,7 +13,7 @@ Building the extension from source: see Prerequisites and Build below. Uninstall
 ## Prerequisites
 
 - [Bun](https://bun.sh) 1.4.x
-- VS Code ≥ 1.138.0 (see `engines.vscode` in `package.json`)
+- VS Code ≥ 1.140.0 (see `engines.vscode` in `package.json`)
 - engined running locally, or reachable via Remote-SSH
 
 ## Build

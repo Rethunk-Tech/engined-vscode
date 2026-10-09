@@ -3,7 +3,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![VS Code ^1.138.0](https://img.shields.io/badge/VS%20Code-%5E1.138.0-blue.svg)](https://code.visualstudio.com/)
+[![VS Code ^1.140.0](https://img.shields.io/badge/VS%20Code-%5E1.140.0-blue.svg)](https://code.visualstudio.com/)
 
 </div>
 
