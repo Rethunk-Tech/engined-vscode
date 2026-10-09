@@ -134,8 +134,12 @@ export class SearchIndex {
     return globs.length > 0 ? `{${globs.join(',')}}` : '**/.git/**'
   }
 
-  async #embedTexts(row: EnginedModelRow, texts: string[]): Promise<(number[] | undefined)[]> {
-    return postEmbeddings(row.door.url, row.routeId, texts)
+  async #embedTexts(
+    row: EnginedModelRow,
+    texts: string[],
+    signal?: AbortSignal,
+  ): Promise<(number[] | undefined)[]> {
+    return postEmbeddings(row.door.url, row.routeId, texts, signal)
   }
 
   /** Loads the on-disk index (once) and catches it up to the workspace's current files. Cheap to call before every search: a no-op refresh touches no files. */
@@ -337,13 +341,13 @@ export class SearchIndex {
     }
   }
 
-  async search(query: string, maxResults: number): Promise<SearchHit[]> {
+  async search(query: string, maxResults: number, signal?: AbortSignal): Promise<SearchHit[]> {
     await this.ensureBuilt()
     const row = this.#embeddingRow()
     if (row === undefined || this.#index.entries.length === 0) {
       return []
     }
-    const [queryVector] = await this.#embedTexts(row, [query])
+    const [queryVector] = await this.#embedTexts(row, [query], signal)
     if (queryVector === undefined) {
       return []
     }
@@ -361,9 +365,13 @@ export class SearchIndex {
           rerankRow.routeId,
           query,
           ordered.map((e) => e.text),
+          signal,
         )
         ordered = mergeRerank(ordered, results, ordered.length)
       } catch (error) {
+        if (signal?.aborted) {
+          throw error
+        }
         this.#log(`search: rerank failed, using cosine order instead: ${describe(error)}`)
       }
     }

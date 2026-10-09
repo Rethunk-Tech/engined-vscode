@@ -417,8 +417,13 @@ export async function fetchAllUsage(
 }
 
 /** A multipart POST -- image edit, transcription. */
-export async function postForm(baseUrl: string, path: string, form: FormData): Promise<unknown> {
-  const res = await fetch(`${baseUrl}${path}`, { method: 'POST', body: form })
+export async function postForm(
+  baseUrl: string,
+  path: string,
+  form: FormData,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  const res = await fetch(`${baseUrl}${path}`, { method: 'POST', body: form, signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }

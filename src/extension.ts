@@ -1132,8 +1132,19 @@ function imagePath(sourcePath: string | undefined): string {
   return sourcePath !== undefined ? '/openai/v1/images/edits' : '/openai/v1/images/generations'
 }
 
+/** An `AbortSignal` that fires when the user cancels the tool call. */
+function cancellationSignal(token: vscode.CancellationToken): AbortSignal {
+  const controller = new AbortController()
+  if (token.isCancellationRequested) {
+    controller.abort()
+  } else {
+    token.onCancellationRequested(() => controller.abort())
+  }
+  return controller.signal
+}
+
 const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
-  async invoke(options) {
+  async invoke(options, token) {
     try {
       const source =
         options.input.sourcePath !== undefined
@@ -1147,8 +1158,15 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
       })
       const result =
         req.path === '/openai/v1/images/generations'
-          ? ((await postJson(row.door.url, req.path, req.body)) as { data: { b64_json: string }[] })
-          : ((await postForm(row.door.url, req.path, buildEditForm(req.form))) as {
+          ? ((await postJson(row.door.url, req.path, req.body, cancellationSignal(token))) as {
+              data: { b64_json: string }[]
+            })
+          : ((await postForm(
+              row.door.url,
+              req.path,
+              buildEditForm(req.form),
+              cancellationSignal(token),
+            )) as {
               data: { b64_json: string }[]
             })
       const png = result.data[0]?.b64_json
@@ -1203,7 +1221,7 @@ interface ReadImageInput {
 }
 
 const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
-  async invoke(options) {
+  async invoke(options, token) {
     try {
       const bytes = await readWorkspaceFile(options.input.path)
       const row = resolveRoleRow(options.input.mode === 'ocr' ? 'ocr' : 'vision')
@@ -1216,7 +1234,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
       const { body: stream } = await postChatCompletion(
         row.door.url,
         { ...req, stream: true, stream_options: { include_usage: true } },
-        new AbortController().signal,
+        cancellationSignal(token),
       )
       let text = ''
       await readChatStream(stream, { text: (delta) => (text += delta) })
@@ -1245,7 +1263,7 @@ interface TranscribeInput {
 }
 
 const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
-  async invoke(options) {
+  async invoke(options, token) {
     try {
       const bytes = await readWorkspaceFile(options.input.path)
       const row = resolveRoleRow('transcription', transcriptionPath(options.input.translate))
@@ -1256,7 +1274,7 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       const form = new FormData()
       form.set('model', req.form.model)
       form.set('file', req.form.file)
-      const result = (await postForm(row.door.url, req.path, form)) as
+      const result = (await postForm(row.door.url, req.path, form, cancellationSignal(token))) as
         | { text?: string }
         | ArrayBuffer
       const text =
@@ -1294,14 +1312,19 @@ interface SpeakInput {
 }
 
 const speakTool: vscode.LanguageModelTool<SpeakInput> = {
-  async invoke(options) {
+  async invoke(options, token) {
     try {
       const row = resolveRoleRow('speech')
       const req = buildSpeakRequest(row, {
         text: options.input.text,
         voice: options.input.voice,
       })
-      const audio = (await postJson(row.door.url, req.path, req.body)) as ArrayBuffer
+      const audio = (await postJson(
+        row.door.url,
+        req.path,
+        req.body,
+        cancellationSignal(token),
+      )) as ArrayBuffer
       await writeWorkspaceFile(options.input.outputPath, new Uint8Array(audio))
       return new vscode.LanguageModelToolResult([
         new vscode.LanguageModelTextPart(`Wrote ${options.input.outputPath}`),
@@ -1329,11 +1352,12 @@ interface SearchInput {
 const DEFAULT_SEARCH_MAX_RESULTS = 6
 
 const searchTool: vscode.LanguageModelTool<SearchInput> = {
-  async invoke(options) {
+  async invoke(options, token) {
     try {
       const hits = await searchIndex.search(
         options.input.query,
         options.input.maxResults ?? DEFAULT_SEARCH_MAX_RESULTS,
+        cancellationSignal(token),
       )
       if (hits.length === 0) {
         return new vscode.LanguageModelToolResult([
