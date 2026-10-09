@@ -1414,9 +1414,9 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.lm.registerTool('engined_speak', speakTool),
     vscode.lm.registerTool('engined_search', searchTool),
     watcher,
-    watcher.onDidChange((uri) => void searchIndex.onFileChanged(uri, 'change')),
-    watcher.onDidCreate((uri) => void searchIndex.onFileChanged(uri, 'create')),
-    watcher.onDidDelete((uri) => void searchIndex.onFileChanged(uri, 'delete')),
+    watcher.onDidChange((uri) => searchIndex.onFileChanged(uri, 'change')),
+    watcher.onDidCreate((uri) => searchIndex.onFileChanged(uri, 'create')),
+    watcher.onDidDelete((uri) => searchIndex.onFileChanged(uri, 'delete')),
     vscode.commands.registerCommand('engined.refreshModels', async () => {
       await poller.pollNow()
       chatProvider.fire()

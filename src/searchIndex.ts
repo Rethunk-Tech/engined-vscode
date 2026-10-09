@@ -20,6 +20,7 @@ const MAX_FILE_BYTES = 256 * 1024
 /** How many cosine-nearest chunks get a rerank pass, before trimming to the caller's `maxResults`. */
 const RERANK_CANDIDATES = 50
 const SAVE_DEBOUNCE_MS = 2000
+const REFRESH_DEBOUNCE_MS = 1000
 
 interface IndexEntry extends TextChunk {
   vector: number[]
@@ -61,6 +62,9 @@ export class SearchIndex {
   #index: StoredIndex = emptyIndex()
   #loaded = false
   #saveTimer: ReturnType<typeof setTimeout> | undefined
+  #refreshTimer: ReturnType<typeof setTimeout> | undefined
+  #refreshing = false
+  #refreshAgain = false
 
   constructor(
     storageUri: vscode.Uri,
@@ -264,8 +268,13 @@ export class SearchIndex {
     return toEmbed.length === chunks.length
   }
 
-  /** Incremental hook for a save/create/delete file-system event; safe to call before the index has ever been built (it is then a no-op). */
-  async onFileChanged(uri: vscode.Uri, kind: 'change' | 'create' | 'delete'): Promise<void> {
+  /**
+   * Incremental hook for a file-system event. Deletes apply at once; creates and
+   * changes only arm one debounced refresh, so a burst (build output, a git
+   * checkout) costs a single scan, and a path excluded by `files.exclude` /
+   * `search.exclude` arms nothing. A no-op before the index has ever been built.
+   */
+  onFileChanged(uri: vscode.Uri, kind: 'change' | 'create' | 'delete'): void {
     if (!this.#loaded) {
       return
     }
@@ -274,7 +283,58 @@ export class SearchIndex {
       this.#scheduleSave()
       return
     }
-    await this.#refresh(false)
+    void this.#armRefresh(uri)
+  }
+
+  async #armRefresh(uri: vscode.Uri): Promise<void> {
+    try {
+      if (!(await this.#isIndexable(uri))) {
+        return
+      }
+      if (this.#refreshTimer !== undefined) {
+        clearTimeout(this.#refreshTimer)
+      }
+      this.#refreshTimer = setTimeout(() => {
+        this.#refreshTimer = undefined
+        void this.#refreshSerialized()
+      }, REFRESH_DEBOUNCE_MS)
+    } catch (error) {
+      this.#log(`search: could not check ${uri.fsPath}: ${describe(error)}`)
+    }
+  }
+
+  /** Whether the workspace's exclude globs let `uri` through; `findFiles` on the one exact path applies them. */
+  async #isIndexable(uri: vscode.Uri): Promise<boolean> {
+    const folder = vscode.workspace.getWorkspaceFolder(uri)
+    if (folder === undefined) {
+      return false
+    }
+    const relative = vscode.workspace.asRelativePath(uri, false).replace(/[\\[\]{}()*?!]/g, '[$&]')
+    const found = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(folder, relative),
+      await this.#excludeGlob(),
+      1,
+    )
+    return found.length > 0
+  }
+
+  /** At most one refresh in flight; events arriving meanwhile fold into one follow-up run. */
+  async #refreshSerialized(): Promise<void> {
+    if (this.#refreshing) {
+      this.#refreshAgain = true
+      return
+    }
+    this.#refreshing = true
+    try {
+      do {
+        this.#refreshAgain = false
+        await this.#refresh(false)
+      } while (this.#refreshAgain)
+    } catch (error) {
+      this.#log(`search: background refresh failed: ${describe(error)}`)
+    } finally {
+      this.#refreshing = false
+    }
   }
 
   async search(query: string, maxResults: number): Promise<SearchHit[]> {
