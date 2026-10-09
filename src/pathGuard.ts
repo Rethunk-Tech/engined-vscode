@@ -18,7 +18,9 @@ export function resolveWorkspacePath(roots: readonly string[], requested: string
   if (roots.length === 0) {
     throw new PathEscapeError('no workspace folder is open')
   }
-  const candidate = isAbsolute(requested) ? requested : resolve(roots[0] as string, requested)
+  const candidate = isAbsolute(requested)
+    ? resolve(requested)
+    : resolve(roots[0] as string, requested)
   for (const root of roots) {
     const normalizedRoot = resolve(root)
     if (candidate === normalizedRoot || candidate.startsWith(normalizedRoot + sep)) {

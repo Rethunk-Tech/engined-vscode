@@ -28,6 +28,10 @@ describe('resolveWorkspacePath', () => {
     )
   })
 
+  test('rejects an absolute path whose .. segments climb out of the root', () => {
+    expect(() => resolveWorkspacePath([ROOT], `${ROOT}/../../etc/passwd`)).toThrow(PathEscapeError)
+  })
+
   test('throws when no workspace folder is open', () => {
     expect(() => resolveWorkspacePath([], 'a.png')).toThrow(PathEscapeError)
   })
