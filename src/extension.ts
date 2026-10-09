@@ -109,6 +109,8 @@ let poller: ModelPoller
 let searchIndex: SearchIndex
 let engineExplorer: EngineExplorer
 let statusBarItem: vscode.StatusBarItem
+/** A door that has not answered a model listing in this long counts as unreachable for that poll. */
+const POLL_TIMEOUT_MS = 5000
 let pollTimer: ReturnType<typeof setInterval> | undefined
 let doorReachable = true
 /** Shown once per session, on the first failed poll -- never repeated even if the door stays down. */
@@ -810,7 +812,11 @@ function restartPollTimer(): void {
   }
   const ms = effectivePollMs()
   if (ms > 0) {
-    pollTimer = setInterval(() => void poller.pollNow(), ms)
+    pollTimer = setInterval(() => {
+      if (!poller.busy) {
+        void poller.pollNow()
+      }
+    }, ms)
   }
   void poller.pollNow()
 }
@@ -1391,7 +1397,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const chatProvider = new EnginedChatProvider()
   poller = new ModelPoller(
     () =>
-      fetchAllDoors(getDoors()).then((poll) => {
+      fetchAllDoors(getDoors(), AbortSignal.timeout(POLL_TIMEOUT_MS)).then((poll) => {
         if (poll.doorStatus.length > 0 && poll.doorStatus.every((d) => !d.reachable)) {
           log('poll failed: no configured door is reachable')
           maybeShowUnreachableNotice()

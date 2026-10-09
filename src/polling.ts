@@ -24,6 +24,8 @@ export class ModelPoller {
   #doorStatus: readonly DoorReachability[] = []
   #lastSerialized = ''
   #consecutiveFailures = 0
+  #queue: Promise<void> = Promise.resolve()
+  #pending = 0
 
   constructor(
     fetch: () => Promise<ModelsPoll>,
@@ -53,8 +55,23 @@ export class ModelPoller {
     return this.#consecutiveFailures < CONSECUTIVE_FAILURES_TO_EMPTY
   }
 
-  /** Poll once. Every configured door unreachable (including a thrown fetch) counts as one failure; the 3rd straight failure empties the lists. Fires `onChange` only when the reported chat models or rows actually differ from last time. */
-  async pollNow(): Promise<void> {
+  /** True while a poll is running or queued -- a timer tick should skip rather than stack another. */
+  get busy(): boolean {
+    return this.#pending > 0
+  }
+
+  /** Polls run one at a time in call order, so an older poll's result can never overwrite a newer one. */
+  pollNow(): Promise<void> {
+    this.#pending += 1
+    const run = this.#queue.then(() => this.#pollOnce())
+    this.#queue = run.finally(() => {
+      this.#pending -= 1
+    })
+    return run
+  }
+
+  /** One poll. Every configured door unreachable (including a thrown fetch) counts as one failure; the 3rd straight failure empties the lists. Fires `onChange` only when the reported chat models or rows actually differ from last time. */
+  async #pollOnce(): Promise<void> {
     let poll: ModelsPoll
     let failed: boolean
     try {

@@ -186,4 +186,30 @@ describe('ModelPoller', () => {
     await poller.pollNow()
     expect(poller.reachable).toBe(false)
   })
+
+  test('polls run one at a time, so a slow older poll cannot overwrite a newer one', async () => {
+    const releases: (() => void)[] = []
+    const results = [poll([model('old')]), poll([model('new')])]
+    let started = 0
+    const seen: string[] = []
+    const poller = new ModelPoller(
+      () => {
+        const result = results[started++] as ModelsPoll
+        return new Promise((resolve) => releases.push(() => resolve(result)))
+      },
+      (models) => seen.push(models.map((m) => m.id).join()),
+    )
+    const first = poller.pollNow()
+    const second = poller.pollNow()
+    expect(poller.busy).toBe(true)
+    await Promise.resolve()
+    expect(started).toBe(1)
+    releases[0]?.()
+    await first
+    await Promise.resolve()
+    releases[1]?.()
+    await second
+    expect(seen).toEqual(['old', 'new'])
+    expect(poller.busy).toBe(false)
+  })
 })
