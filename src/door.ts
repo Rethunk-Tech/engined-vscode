@@ -116,7 +116,7 @@ export interface EnginedModelInfo {
 }
 
 const CHAT_PATH = '/openai/v1/chat/completions'
-export const TOKENIZE_PATH = '/engined/v1/tokenize'
+const TOKENIZE_PATH = '/engined/v1/tokenize'
 
 /** Whether the row advertises the vocab-only tokenize path (see engined's HTTP API reference, § Vocab-only tokenize). */
 export function servesTokenize(row: EnginedModelRow): boolean {

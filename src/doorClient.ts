@@ -78,7 +78,7 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   })
 }
 
-export interface ModelsPoll {
+interface ModelsPoll {
   /** The chat-answerable subset -- what the `LanguageModelChatProvider` reports. */
   chatModels: EnginedModelInfo[]
   /** Every answerable row, chat or not -- what a tool or the completions picker chooses from. */
@@ -86,7 +86,7 @@ export interface ModelsPoll {
 }
 
 /** `GET /openai/v1/models` against one door, mapped both ways and qualified against it. Never triggers a model load: listing is always safe to poll. */
-export async function fetchModels(
+async function fetchModels(
   door: Door,
   doorCount: number,
   signal?: AbortSignal,
@@ -389,11 +389,7 @@ export type DoorUsage =
   | { door: Door; status: 'unreachable' }
 
 /** `GET /engined/v1/usage?days=N` against one door. A 404 (this door predates the route) and any other failure are reported on the result, never thrown -- one door's gap must not blank out the usage report. */
-export async function fetchUsage(
-  door: Door,
-  days: number,
-  signal?: AbortSignal,
-): Promise<DoorUsage> {
+async function fetchUsage(door: Door, days: number, signal?: AbortSignal): Promise<DoorUsage> {
   try {
     const res = await fetch(`${door.url}/engined/v1/usage?days=${days}`, { signal })
     if (res.status === HTTP_NOT_FOUND) {

@@ -11,7 +11,7 @@ import { qualifyId } from './door.ts'
 import { doorErrorMessage } from './doorClient.ts'
 import { unreachable } from './unreachable.ts'
 
-export interface EngineRow {
+interface EngineRow {
   id: string
   kind: string
   state: string

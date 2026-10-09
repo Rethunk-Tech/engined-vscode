@@ -26,7 +26,7 @@ export interface ImageEditRequest {
 const IMAGE_SIZE = /^([0-9]+)x([0-9]+)$/
 
 /** WxH, each side 64–4096 and a multiple of 8 — the door's `/openai/v1/images` `size` rule. */
-export function assertImageSize(size: string | undefined): void {
+function assertImageSize(size: string | undefined): void {
   if (size === undefined) {
     return
   }

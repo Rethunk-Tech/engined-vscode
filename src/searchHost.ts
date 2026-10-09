@@ -14,7 +14,7 @@ export interface HostUri {
   readonly fsPath: string
 }
 
-export interface HostStat {
+interface HostStat {
   isFile: boolean
   size: number
   mtime: number

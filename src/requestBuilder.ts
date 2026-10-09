@@ -24,7 +24,7 @@ export interface PlainMessage {
   parts: PlainMessagePart[]
 }
 
-export interface PlainTool {
+interface PlainTool {
   name: string
   description: string
   inputSchema?: unknown

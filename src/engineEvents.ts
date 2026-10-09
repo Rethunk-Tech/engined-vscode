@@ -5,7 +5,7 @@
  * `fetch`/reader loop and reconnect timer.
  */
 
-export interface SseFrame {
+interface SseFrame {
   event: string
   /** The parsed JSON payload, or the raw string when it did not parse as JSON. */
   data: unknown

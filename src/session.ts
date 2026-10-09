@@ -21,7 +21,7 @@ export interface DoorSseState {
   reconnectTimer?: ReturnType<typeof setTimeout>
 }
 
-export interface InFlightChat {
+interface InFlightChat {
   modelId: string
   startedAt: number
   promptTokenEstimate: number

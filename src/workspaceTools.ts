@@ -36,7 +36,7 @@ function host(): ToolHost {
   return toolHost
 }
 
-export function workspaceRoots(): string[] {
+function workspaceRoots(): string[] {
   return (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath)
 }
 

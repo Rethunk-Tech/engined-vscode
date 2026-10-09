@@ -10,9 +10,9 @@ import { REASONING_LEVELS } from './door.ts'
 import type { SplitOptions } from './promptSplit.ts'
 import { DEFAULT_SPLIT } from './promptSplit.ts'
 
-export const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
-export const DEFAULT_POLL_SECONDS = 30
-export const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
+const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
+const DEFAULT_POLL_SECONDS = 30
+const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
 
 function config(): vscode.WorkspaceConfiguration {
   return vscode.workspace.getConfiguration('engined')
@@ -54,7 +54,7 @@ export function getNeighbourContextEnabled(): boolean {
   return config().get<boolean>('completions.neighbourContext', true)
 }
 
-export const DEFAULT_SEARCH_MAX_CHUNKS = 20_000
+const DEFAULT_SEARCH_MAX_CHUNKS = 20_000
 
 /** Whether `engined_search` may embed/rerank through a non-local route. Off by default -- workspace content otherwise never leaves the machine. */
 export function getSearchAllowRemote(): boolean {

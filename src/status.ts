@@ -129,7 +129,7 @@ export function hasExceededLoadingThreshold(
   return nowMs - startedAtMs >= thresholdMs
 }
 
-export interface DefaultModelLine {
+interface DefaultModelLine {
   /** e.g. "Image" */
   label: string
   /** The resolved row's `display_name ?? id`; `undefined` when nothing installed qualifies for the role. */
@@ -140,7 +140,7 @@ export interface DefaultModelLine {
   unusableConfigured?: string
 }
 
-export interface DoorLine {
+interface DoorLine {
   name: string
   url: string
   reachable: boolean
