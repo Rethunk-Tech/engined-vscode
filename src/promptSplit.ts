@@ -15,12 +15,13 @@ export interface SplitOptions {
 export const DEFAULT_SPLIT: SplitOptions = { chunkChars: 2000, splitAboveChars: 8000 }
 
 /** Higher is a better place to cut. */
-enum Tier {
-  InsideStructure = 1,
-  LineEnd = 2,
-  AfterClosingTag = 3,
-  BlankLine = 4,
-}
+const Tier = {
+  InsideStructure: 1,
+  LineEnd: 2,
+  AfterClosingTag: 3,
+  BlankLine: 4,
+} as const
+type Tier = (typeof Tier)[keyof typeof Tier]
 
 interface Candidate {
   /** The cut goes right before this index (just after a newline). */
@@ -79,7 +80,7 @@ function rateLineEnds(text: string): Candidate[] {
 /** A hard cut must not split a UTF-16 surrogate pair. */
 function safeHardCut(text: string, at: number): number {
   const code = text.charCodeAt(at - 1)
-  return code >= 0xd800 && code <= 0xdbff ? at - 1 : at
+  return code >= 0xd8_00 && code <= 0xdb_ff ? at - 1 : at
 }
 
 export function splitAtBoundaries(text: string, options: SplitOptions = DEFAULT_SPLIT): string[] {
@@ -100,7 +101,7 @@ export function splitAtBoundaries(text: string, options: SplitOptions = DEFAULT_
         best = c
       }
     }
-    const end = best !== undefined ? best.at : safeHardCut(text, high)
+    const end = best === undefined ? safeHardCut(text, high) : best.at
     out.push(text.slice(start, end))
     start = end
   }

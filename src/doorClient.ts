@@ -32,11 +32,11 @@ function messageFromRawBody(raw: string): string {
 }
 
 export class DoorHttpError extends Error {
-  constructor(
-    readonly status: number,
-    rawBody: string,
-  ) {
+  readonly status: number
+
+  constructor(status: number, rawBody: string) {
     super(messageFromRawBody(rawBody))
+    this.status = status
   }
 }
 

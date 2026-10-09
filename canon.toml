@@ -1,0 +1,8 @@
+reconciled = "canon v0.1.0-poc"
+
+[deviations]
+# The extension host is a Node process: the code imports node:path, node:crypto and Buffer,
+# so `node` stays beside `vscode` and `bun` (the test runner).
+"ts-bun-typescript-00002" = "VS Code extensions run in the Node extension host"
+# The extension UI is VS Code's own, and it declares no JSX.
+"ts-biome-00006 style/noJsxLiterals" = "no JSX in this extension"
