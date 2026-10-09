@@ -127,11 +127,29 @@ export function buildSpeakRequest(
   }
 }
 
-/** The confirmation message `prepareInvocation` shows: the route and, when its `egress` is not local, that content leaves the machine. */
-export function confirmationMessage(row: EnginedModelRow, action: string): string {
+/** The workspace file a tool will read or write, as `prepareInvocation` shows it. */
+export interface ConfirmationTarget {
+  /** Workspace-relative path. */
+  path: string
+  /** True when the tool writes to `path` and a file is already there. */
+  overwrites?: boolean
+}
+
+/**
+ * The confirmation message `prepareInvocation` shows: the route, the workspace path the
+ * tool touches, whether it overwrites an existing file, and, when its `egress` is not
+ * local, that content leaves the machine.
+ */
+export function confirmationMessage(
+  row: EnginedModelRow,
+  action: string,
+  target?: ConfirmationTarget,
+): string {
   const egressNote =
     row.egress !== undefined && row.egress !== 'none'
       ? ` This content leaves this machine (egress: ${row.egress}).`
       : ''
-  return `${action} via ${row.id}.${egressNote}`
+  const pathNote = target === undefined ? '' : ` Path: ${target.path}.`
+  const overwriteNote = target?.overwrites === true ? ' This overwrites an existing file.' : ''
+  return `${action} via ${row.id}.${pathNote}${overwriteNote}${egressNote}`
 }

@@ -91,6 +91,7 @@ import {
   buildReadImageRequest,
   buildSpeakRequest,
   buildTranscribeRequest,
+  type ConfirmationTarget,
   confirmationMessage,
   ToolRouteError,
 } from './toolRequests.ts'
@@ -1107,6 +1108,27 @@ async function writeWorkspaceFile(path: string, data: Uint8Array): Promise<vscod
   return uri
 }
 
+/** `path` as the confirmation dialog names it: workspace-relative, and whether a write would replace a file. */
+async function confirmationTarget(path: string, writes: boolean): Promise<ConfirmationTarget> {
+  let uri: vscode.Uri
+  try {
+    uri = vscode.Uri.file(resolveWorkspacePath(workspaceRoots(), path))
+  } catch {
+    // The invoke call refuses an escaping path; the dialog just shows what was asked for.
+    return { path }
+  }
+  const shown = vscode.workspace.asRelativePath(uri, false)
+  if (!writes) {
+    return { path: shown }
+  }
+  try {
+    await vscode.workspace.fs.stat(uri)
+    return { path: shown, overwrites: true }
+  } catch {
+    return { path: shown, overwrites: false }
+  }
+}
+
 function mimeTypeFor(path: string): string {
   const ext = path.toLowerCase().split('.').pop() ?? ''
   return ext === 'jpg' || ext === 'jpeg'
@@ -1195,12 +1217,20 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
       return toolError(error)
     }
   },
-  prepareInvocation(options) {
+  async prepareInvocation(options) {
     const row = resolveRoleRow('image', imagePath(options.input.sourcePath))
+    const source =
+      options.input.sourcePath === undefined
+        ? undefined
+        : (await confirmationTarget(options.input.sourcePath, false)).path
     return {
       confirmationMessages: {
         title: 'Generate image',
-        message: confirmationMessage(row, 'Generate image'),
+        message: confirmationMessage(
+          row,
+          source === undefined ? 'Generate image' : `Generate image from ${source}`,
+          await confirmationTarget(options.input.outputPath, true),
+        ),
       },
     }
   },
@@ -1249,7 +1279,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
       return toolError(error)
     }
   },
-  prepareInvocation(options) {
+  async prepareInvocation(options) {
     const row = resolveRoleRow(options.input.mode === 'ocr' ? 'ocr' : 'vision')
     return {
       confirmationMessages: {
@@ -1257,6 +1287,7 @@ const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
         message: confirmationMessage(
           row,
           `${options.input.mode === 'ocr' ? 'OCR' : 'Describe'} image`,
+          await confirmationTarget(options.input.path, false),
         ),
       },
     }
@@ -1296,12 +1327,16 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       return toolError(error)
     }
   },
-  prepareInvocation(options) {
+  async prepareInvocation(options) {
     const row = resolveRoleRow('transcription', transcriptionPath(options.input.translate))
     return {
       confirmationMessages: {
         title: 'Transcribe audio',
-        message: confirmationMessage(row, 'Transcribe audio'),
+        message: confirmationMessage(
+          row,
+          'Transcribe audio',
+          await confirmationTarget(options.input.path, false),
+        ),
       },
     }
   },
@@ -1339,12 +1374,16 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
       return toolError(error)
     }
   },
-  prepareInvocation() {
+  async prepareInvocation(options) {
     const row = resolveRoleRow('speech')
     return {
       confirmationMessages: {
         title: 'Speak text',
-        message: confirmationMessage(row, 'Speak text'),
+        message: confirmationMessage(
+          row,
+          'Speak text',
+          await confirmationTarget(options.input.outputPath, true),
+        ),
       },
     }
   },

@@ -136,6 +136,15 @@ describe('confirmationMessage', () => {
     expect(confirmationMessage(piper, 'Speak text')).toBe('Speak text via @/piper/local.')
   })
 
+  test('names the target path and warns when it overwrites a file', () => {
+    expect(confirmationMessage(piper, 'Speak text', { path: 'out/hi.wav' })).toBe(
+      'Speak text via @/piper/local. Path: out/hi.wav.',
+    )
+    expect(confirmationMessage(piper, 'Speak text', { path: 'out/hi.wav', overwrites: true })).toBe(
+      'Speak text via @/piper/local. Path: out/hi.wav. This overwrites an existing file.',
+    )
+  })
+
   test('warns when egress is not local', () => {
     const remoteRow: EnginedModelRow = {
       id: '@/claude/sonnet-5',
