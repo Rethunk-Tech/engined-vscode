@@ -7,6 +7,10 @@
 
 import type { EnginedModelRow } from './door.ts'
 
+const IMAGE_SIDE_MIN = 64
+const IMAGE_SIDE_MAX = 4096
+const IMAGE_SIDE_STEP = 8
+
 export class ToolRouteError extends Error {}
 
 export interface ImageGenerationRequest {
@@ -19,13 +23,16 @@ export interface ImageEditRequest {
   form: { model: string; prompt: string; image: Blob; response_format: 'b64_json' }
 }
 
+const IMAGE_SIZE = /^([0-9]+)x([0-9]+)$/
+
 /** WxH, each side 64–4096 and a multiple of 8 — the door's `/openai/v1/images` `size` rule. */
 export function assertImageSize(size: string | undefined): void {
   if (size === undefined) {
     return
   }
-  const match = /^([0-9]+)x([0-9]+)$/.exec(size)
-  const sideOk = (n: number): boolean => n >= 64 && n <= 4096 && n % 8 === 0
+  const match = IMAGE_SIZE.exec(size)
+  const sideOk = (n: number): boolean =>
+    n >= IMAGE_SIDE_MIN && n <= IMAGE_SIDE_MAX && n % IMAGE_SIDE_STEP === 0
   if (match === null || !sideOk(Number(match[1])) || !sideOk(Number(match[2]))) {
     throw new ToolRouteError('size must be WxH with each side 64-4096 and a multiple of 8')
   }

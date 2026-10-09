@@ -21,7 +21,9 @@ function loadDocDefaults(): Map<string, string> {
     const m = /^\|\s*`(engined\.[\w.]+)`\s*\|\s*`([^`]*)`\s*\|/.exec(line)
     const key = m?.[1]
     const value = m?.[2]
-    if (key !== undefined && value !== undefined) rows.set(key, value)
+    if (key !== undefined && value !== undefined) {
+      rows.set(key, value)
+    }
   }
   return rows
 }

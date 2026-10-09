@@ -1,3 +1,5 @@
+const DATA_PREFIX = 'data:'
+
 /**
  * The SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader
  * in Rethunk-Tech/engined: tool-call deltas arrive indexed and have to be
@@ -43,9 +45,9 @@ export interface ChatUsage {
 }
 
 export interface StreamSink {
-  text(delta: string): void
+  text: (delta: string) => void
   /** The final chunk's `usage` (from `stream_options.include_usage`), when the stream carried one. */
-  usage?(usage: ChatUsage): void
+  usage?: (usage: ChatUsage) => void
 }
 
 interface ToolCallSlot {
@@ -56,10 +58,10 @@ interface ToolCallSlot {
 
 /** One SSE line's JSON payload, or `undefined` for anything that is not a data frame carrying JSON. */
 function parseDataLine(line: string): ChatChunk | undefined {
-  if (!line.startsWith('data:')) {
+  if (!line.startsWith(DATA_PREFIX)) {
     return undefined
   }
-  const payload = line.slice(5).trim()
+  const payload = line.slice(DATA_PREFIX.length).trim()
   if (payload.length === 0 || payload === '[DONE]') {
     return undefined
   }

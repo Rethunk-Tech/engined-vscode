@@ -5,6 +5,7 @@
  * the network.
  */
 
+import { HTTP_NOT_FOUND, HTTP_TOO_MANY_REQUESTS, MS_PER_SECOND } from './constants.ts'
 import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { mapAnswerableRows, mapModels } from './door.ts'
 
@@ -14,7 +15,7 @@ export function doorErrorMessage(error: unknown): string | undefined {
     return error
   }
   if (error !== null && typeof error === 'object' && 'message' in error) {
-    const message = (error as { message: unknown }).message
+    const { message } = error as { message: unknown }
     if (typeof message === 'string') {
       return message
     }
@@ -31,6 +32,14 @@ function messageFromRawBody(raw: string): string {
   }
 }
 
+function parseJsonOrUndefined(raw: string): unknown {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+}
+
 export class DoorHttpError extends Error {
   readonly status: number
 
@@ -41,8 +50,8 @@ export class DoorHttpError extends Error {
 }
 
 /** Message Copilot's chat view shows when the door answers 429 for an agentic-launch cap. */
-export function agenticBusyMessage(retryAfterSeconds: number): string {
-  return `engined is busy (agentic launches at capacity), retry in ${retryAfterSeconds} s`
+export function agenticBusyMessage(seconds: number): string {
+  return `engined is busy (agentic launches at capacity), retry in ${seconds} s`
 }
 
 function retryAfterSeconds(headers: Headers): number | undefined {
@@ -157,10 +166,8 @@ export async function fetchEngineResources(
 ): Promise<EngineResources | { error: string }> {
   const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/resources`, { signal })
   const raw = await res.text()
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
+  const parsed = parseJsonOrUndefined(raw)
+  if (parsed === undefined) {
     throw new DoorHttpError(res.status, raw)
   }
   if (parsed !== null && typeof parsed === 'object' && 'error' in parsed) {
@@ -275,15 +282,15 @@ export async function postChatCompletion(
       signal,
     })
   let res = await send()
-  if (res.status === 429) {
+  if (res.status === HTTP_TOO_MANY_REQUESTS) {
     const wait = retryAfterSeconds(res.headers)
     await res.arrayBuffer()
     if (wait !== undefined && wait <= 10) {
-      await delay(wait * 1000, signal)
+      await delay(wait * MS_PER_SECOND, signal)
       res = await send()
     }
-    if (res.status === 429) {
-      throw busyError(429, retryAfterSeconds(res.headers) ?? wait ?? 0)
+    if (res.status === HTTP_TOO_MANY_REQUESTS) {
+      throw busyError(HTTP_TOO_MANY_REQUESTS, retryAfterSeconds(res.headers) ?? wait ?? 0)
     }
   }
   if (!res.ok || res.body === null) {
@@ -354,17 +361,12 @@ export interface RerankResult {
 /** `POST /openai/v1/rerank`: a query against a document list, scored and ordered by the reranker's own reply. */
 export async function postRerank(
   baseUrl: string,
-  model: string,
-  query: string,
-  documents: readonly string[],
+  request: { model: string; query: string; documents: readonly string[] },
   signal?: AbortSignal,
 ): Promise<RerankResult[]> {
-  const data = (await postJson(
-    baseUrl,
-    '/openai/v1/rerank',
-    { model, query, documents },
-    signal,
-  )) as { results?: RerankResult[] }
+  const data = (await postJson(baseUrl, '/openai/v1/rerank', request, signal)) as {
+    results?: RerankResult[]
+  }
   return data.results ?? []
 }
 
@@ -394,7 +396,7 @@ export async function fetchUsage(
 ): Promise<DoorUsage> {
   try {
     const res = await fetch(`${door.url}/engined/v1/usage?days=${days}`, { signal })
-    if (res.status === 404) {
+    if (res.status === HTTP_NOT_FOUND) {
       return { door, status: 'unsupported' }
     }
     if (!res.ok) {
@@ -408,7 +410,7 @@ export async function fetchUsage(
 }
 
 /** Every configured door's usage, in `doors`' own order. */
-export async function fetchAllUsage(
+export function fetchAllUsage(
   doors: readonly Door[],
   days: number,
   signal?: AbortSignal,

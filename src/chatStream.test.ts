@@ -19,8 +19,7 @@ function streamFromText(text: string): ReadableStream<Uint8Array> {
 
 describe('readChatStream', () => {
   test('reconstructs the stitched tool call and its parsed arguments', async () => {
-    let text = ''
-    const calls = await readChatStream(streamFromText(sse), { text: (delta) => (text += delta) })
+    const calls = await readChatStream(streamFromText(sse), { text: () => undefined })
     expect(calls).toHaveLength(1)
     expect(calls[0]?.name).toBe('get_weather')
     expect(calls[0]?.arguments).toEqual({ city: 'Vancouver' })
@@ -29,7 +28,7 @@ describe('readChatStream', () => {
 
   test('ignores malformed data lines and ends cleanly', async () => {
     const stream = streamFromText('data: not json\n\ndata: [DONE]\n\n')
-    const calls = await readChatStream(stream, { text: () => {} })
+    const calls = await readChatStream(stream, { text: () => undefined })
     expect(calls).toEqual([])
   })
 
@@ -40,7 +39,12 @@ describe('readChatStream', () => {
         'data: [DONE]\n\n',
     )
     let usage: { promptTokens?: number; completionTokens?: number } | undefined
-    await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
+    await readChatStream(stream, {
+      text: () => undefined,
+      usage: (u) => {
+        usage = u
+      },
+    })
     expect(usage).toEqual({ promptTokens: 12, completionTokens: 5 })
   })
 
@@ -52,7 +56,12 @@ describe('readChatStream', () => {
         'data: [DONE]\n\n',
     )
     let usage: { promptTokens?: number; completionTokens?: number; costUsd?: number } | undefined
-    await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
+    await readChatStream(stream, {
+      text: () => undefined,
+      usage: (u) => {
+        usage = u
+      },
+    })
     expect(usage).toEqual({ promptTokens: 12, completionTokens: 5, costUsd: 0.0123 })
   })
 
@@ -62,7 +71,12 @@ describe('readChatStream', () => {
         'data: [DONE]\n\n',
     )
     let usage: { cachedTokens?: number } | undefined
-    await readChatStream(stream, { text: () => {}, usage: (u) => (usage = u) })
+    await readChatStream(stream, {
+      text: () => undefined,
+      usage: (u) => {
+        usage = u
+      },
+    })
     expect(usage?.cachedTokens).toBe(8)
   })
 })

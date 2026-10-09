@@ -5,9 +5,11 @@
  * `TreeDataProvider` built on this.
  */
 
+import { BYTES_PER_KIB } from './constants.ts'
 import type { Door } from './door.ts'
 import { qualifyId } from './door.ts'
 import { doorErrorMessage } from './doorClient.ts'
+import { unreachable } from './unreachable.ts'
 
 export interface EngineRow {
   id: string
@@ -69,6 +71,8 @@ function noteFor(category: EngineCategory, fix: string | undefined): string | un
       return 'idle, starts on demand'
     case 'running':
       return undefined
+    default:
+      return unreachable(category)
   }
 }
 
@@ -99,11 +103,14 @@ export interface EngineNode {
  */
 export function toEngineNodes(
   response: EnginesListResponse | undefined,
-  heldIds: ReadonlySet<string>,
-  door: Door,
-  doorCount: number,
-  isRemote: (rawId: string) => boolean = () => false,
+  context: {
+    heldIds: ReadonlySet<string>
+    door: Door
+    doorCount: number
+    isRemote?: (rawId: string) => boolean
+  },
 ): EngineNode[] {
+  const { heldIds, door, doorCount, isRemote = () => false } = context
   const engines = response?.engines ?? []
   return engines.map((engine) => {
     const held = heldIds.has(qualifyId(door.name, engine.id, doorCount))
@@ -128,9 +135,9 @@ export function toEngineNodes(
   })
 }
 
-const KIB = 1024
-const MIB = KIB * 1024
-const GIB = MIB * 1024
+const KIB = BYTES_PER_KIB
+const MIB = KIB * BYTES_PER_KIB
+const GIB = MIB * BYTES_PER_KIB
 
 /** 1024-based, one decimal from GiB up -- `30026362880` -> `28.0 GiB`, `350208` -> `342 KiB`. */
 function formatBytes(bytes: number): string {

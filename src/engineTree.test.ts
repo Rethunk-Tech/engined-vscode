@@ -20,20 +20,20 @@ const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
 
 describe('toEngineNodes', () => {
   test('maps every recorded engine, one node per id, unqualified with one door', () => {
-    const nodes = toEngineNodes(engines, new Set(), DOOR, 1)
+    const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
     expect(nodes.length).toBe(engines.engines.length)
     expect(nodes.map((n) => n.id)).toEqual(engines.engines.map((e) => e.id))
   })
 
   test('more than one door qualifies every id and carries the door through', () => {
-    const nodes = toEngineNodes(engines, new Set(), DOOR, 2)
+    const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 2 })
     const llama = nodes.find((n) => n.rawId === 'llama')
     expect(llama?.id).toBe('local/llama')
     expect(llama?.door).toEqual(DOOR)
   })
 
   test('an unavailable engine gets the engine-unavailable contextValue, its fix as tooltip and description, and no resources', () => {
-    const nodes = toEngineNodes(engines, new Set(), DOOR, 1)
+    const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
     const openai = nodes.find((n) => n.id === 'openai')
     expect(openai?.contextValue).toBe('engine-unavailable')
     expect(openai?.fix).toBeDefined()
@@ -43,7 +43,7 @@ describe('toEngineNodes', () => {
   })
 
   test('an agentic-cli engine never has resources and says so in its description', () => {
-    const nodes = toEngineNodes(engines, new Set(), DOOR, 1)
+    const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
     const claude = nodes.find((n) => n.id === 'claude')
     expect(claude?.contextValue).toBe('engine')
     expect(claude?.hasResources).toBe(false)
@@ -54,14 +54,19 @@ describe('toEngineNodes', () => {
     const remoteRow: EnginesListResponse = {
       engines: [{ id: 'openrouter', kind: 'openai-http', state: 'installed' }],
     }
-    const nodes = toEngineNodes(remoteRow, new Set(), DOOR, 1, (id) => id === 'openrouter')
-    const node = nodes[0]
+    const nodes = toEngineNodes(remoteRow, {
+      heldIds: new Set(),
+      door: DOOR,
+      doorCount: 1,
+      isRemote: (id) => id === 'openrouter',
+    })
+    const [node] = nodes
     expect(node?.hasResources).toBe(false)
     expect(node?.description).toContain('remote API')
   })
 
   test('an installed local container engine (not running) is idle, not fetched', () => {
-    const nodes = toEngineNodes(engines, new Set(), DOOR, 1)
+    const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
     const llama = nodes.find((n) => n.id === 'llama')
     expect(llama?.contextValue).toBe('engine')
     expect(llama?.hasResources).toBe(false)
@@ -72,13 +77,13 @@ describe('toEngineNodes', () => {
     const runningRow: EnginesListResponse = {
       engines: [{ id: 'llama', kind: 'openai-http', state: 'running' }],
     }
-    const nodes = toEngineNodes(runningRow, new Set(), DOOR, 1)
+    const nodes = toEngineNodes(runningRow, { heldIds: new Set(), door: DOOR, doorCount: 1 })
     expect(nodes[0]?.hasResources).toBe(true)
     expect(nodes[0]?.description).not.toContain('idle')
   })
 
   test('a held id (qualified) is reflected in the description', () => {
-    const nodes = toEngineNodes(engines, new Set(['llama']), DOOR, 1)
+    const nodes = toEngineNodes(engines, { heldIds: new Set(['llama']), door: DOOR, doorCount: 1 })
     const llama = nodes.find((n) => n.id === 'llama')
     expect(llama?.description).toContain('held')
     const comfy = nodes.find((n) => n.id === 'comfy')
@@ -86,7 +91,7 @@ describe('toEngineNodes', () => {
   })
 
   test('missing response maps to no nodes', () => {
-    expect(toEngineNodes(undefined, new Set(), DOOR, 1)).toEqual([])
+    expect(toEngineNodes(undefined, { heldIds: new Set(), door: DOOR, doorCount: 1 })).toEqual([])
   })
 })
 

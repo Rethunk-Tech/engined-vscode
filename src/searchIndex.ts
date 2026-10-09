@@ -8,15 +8,20 @@
 
 import { Buffer } from 'node:buffer'
 import * as vscode from 'vscode'
+import { runInBackground } from './background.ts'
 import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks } from './config.ts'
+import { BYTES_PER_KIB } from './constants.ts'
 import { resolveDefaultModel } from './defaultModels.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
 import type { TextChunk } from './search.ts'
 import { chunkFile, mergeRerank, planIndexUpdate, searchableRows, topK } from './search.ts'
 
+const MAX_FILE_KIB = 256
+const BINARY_SNIFF_BYTES = 512
+
 /** Above this, a file is skipped rather than embedded -- the brief's own cap. */
-const MAX_FILE_BYTES = 256 * 1024
+const MAX_FILE_BYTES = MAX_FILE_KIB * BYTES_PER_KIB
 /** How many cosine-nearest chunks get a rerank pass, before trimming to the caller's `maxResults`. */
 const RERANK_CANDIDATES = 50
 const SAVE_DEBOUNCE_MS = 2000
@@ -47,7 +52,7 @@ function emptyIndex(): StoredIndex {
 
 /** The first 512 bytes containing a NUL byte is treated as binary, the same heuristic `git` uses. */
 function looksBinary(bytes: Uint8Array): boolean {
-  for (const byte of bytes.subarray(0, 512)) {
+  for (const byte of bytes.subarray(0, BINARY_SNIFF_BYTES)) {
     if (byte === 0) {
       return true
     }
@@ -56,9 +61,9 @@ function looksBinary(bytes: Uint8Array): boolean {
 }
 
 export class SearchIndex {
-  #storageUri: vscode.Uri
-  #rowsProvider: () => readonly EnginedModelRow[]
-  #log: (line: string) => void
+  readonly #storageUri: vscode.Uri
+  readonly #rowsProvider: () => readonly EnginedModelRow[]
+  readonly #log: (line: string) => void
   #index: StoredIndex = emptyIndex()
   #loaded = false
   #saveTimer: ReturnType<typeof setTimeout> | undefined
@@ -94,7 +99,13 @@ export class SearchIndex {
     if (this.#saveTimer !== undefined) {
       clearTimeout(this.#saveTimer)
     }
-    this.#saveTimer = setTimeout(() => void this.#save(), SAVE_DEBOUNCE_MS)
+    this.#saveTimer = setTimeout(() => this.#background(this.#save()), SAVE_DEBOUNCE_MS)
+  }
+
+  #background(work: Promise<void>): void {
+    runInBackground(work, (error) =>
+      this.#log(`search: background task failed: ${describe(error)}`),
+    )
   }
 
   async #save(): Promise<void> {
@@ -121,7 +132,7 @@ export class SearchIndex {
     )
   }
 
-  async #excludeGlob(): Promise<string> {
+  #excludeGlob(): string {
     const files = vscode.workspace
       .getConfiguration('files')
       .get<Record<string, boolean>>('exclude', {})
@@ -134,7 +145,7 @@ export class SearchIndex {
     return globs.length > 0 ? `{${globs.join(',')}}` : '**/.git/**'
   }
 
-  async #embedTexts(
+  #embedTexts(
     row: EnginedModelRow,
     texts: string[],
     signal?: AbortSignal,
@@ -213,7 +224,11 @@ export class SearchIndex {
         continue
       }
       progress?.report({ message: path })
-      const added = await this.#embedFile(row, path, info.uri, info.mtime, maxChunks)
+      const added = await this.#embedFile(
+        row,
+        { path, uri: info.uri, mtime: info.mtime },
+        maxChunks,
+      )
       if (!added) {
         hitCap = true
       }
@@ -234,11 +249,10 @@ export class SearchIndex {
   /** Embeds every chunk of `path` that fits under `maxChunks`. Returns `false` when the cap cut the file short. */
   async #embedFile(
     row: EnginedModelRow,
-    path: string,
-    uri: vscode.Uri,
-    mtime: number,
+    file: { path: string; uri: vscode.Uri; mtime: number },
     maxChunks: number,
   ): Promise<boolean> {
+    const { path, uri, mtime } = file
     let content: string
     try {
       const bytes = await vscode.workspace.fs.readFile(uri)
@@ -287,7 +301,7 @@ export class SearchIndex {
       this.#scheduleSave()
       return
     }
-    void this.#armRefresh(uri)
+    this.#background(this.#armRefresh(uri))
   }
 
   async #armRefresh(uri: vscode.Uri): Promise<void> {
@@ -300,7 +314,7 @@ export class SearchIndex {
       }
       this.#refreshTimer = setTimeout(() => {
         this.#refreshTimer = undefined
-        void this.#refreshSerialized()
+        this.#background(this.#refreshSerialized())
       }, REFRESH_DEBOUNCE_MS)
     } catch (error) {
       this.#log(`search: could not check ${uri.fsPath}: ${describe(error)}`)
@@ -362,9 +376,7 @@ export class SearchIndex {
       try {
         const results = await postRerank(
           rerankRow.door.url,
-          rerankRow.routeId,
-          query,
-          ordered.map((e) => e.text),
+          { model: rerankRow.routeId, query, documents: ordered.map((e) => e.text) },
           signal,
         )
         ordered = mergeRerank(ordered, results, ordered.length)

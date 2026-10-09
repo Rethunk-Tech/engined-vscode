@@ -8,12 +8,10 @@ describe('resolveTokenCount', () => {
     const tokens = await resolveTokenCount(
       cache,
       async () => {
-        calls++
+        calls += 1
         return 999
       },
-      '@/claude/sonnet-5',
-      'abcdef',
-      false,
+      { model: '@/claude/sonnet-5', content: 'abcdef', served: false },
     )
     expect(tokens).toBe(2)
     expect(calls).toBe(0)
@@ -23,11 +21,19 @@ describe('resolveTokenCount', () => {
     const cache = new TokenCountCache()
     let calls = 0
     const fetchTokenize = async () => {
-      calls++
+      calls += 1
       return 42
     }
-    const first = await resolveTokenCount(cache, fetchTokenize, '@/llama/ornith', 'hello', true)
-    const second = await resolveTokenCount(cache, fetchTokenize, '@/llama/ornith', 'hello', true)
+    const first = await resolveTokenCount(cache, fetchTokenize, {
+      model: '@/llama/ornith',
+      content: 'hello',
+      served: true,
+    })
+    const second = await resolveTokenCount(cache, fetchTokenize, {
+      model: '@/llama/ornith',
+      content: 'hello',
+      served: true,
+    })
     expect(first).toBe(42)
     expect(second).toBe(42)
     expect(calls).toBe(1)
@@ -40,9 +46,7 @@ describe('resolveTokenCount', () => {
       async () => {
         throw new Error('aborted')
       },
-      '@/llama/ornith',
-      'abcdef',
-      true,
+      { model: '@/llama/ornith', content: 'abcdef', served: true },
     )
     expect(tokens).toBe(2)
   })
@@ -51,11 +55,19 @@ describe('resolveTokenCount', () => {
     const cache = new TokenCountCache()
     let calls = 0
     const fetchTokenize = async () => {
-      calls++
+      calls += 1
       return 10
     }
-    await resolveTokenCount(cache, fetchTokenize, '@/llama/a', 'hello', true)
-    await resolveTokenCount(cache, fetchTokenize, '@/llama/b', 'hello', true)
+    await resolveTokenCount(cache, fetchTokenize, {
+      model: '@/llama/a',
+      content: 'hello',
+      served: true,
+    })
+    await resolveTokenCount(cache, fetchTokenize, {
+      model: '@/llama/b',
+      content: 'hello',
+      served: true,
+    })
     expect(calls).toBe(2)
   })
 })

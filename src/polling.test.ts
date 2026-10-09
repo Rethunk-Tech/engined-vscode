@@ -40,7 +40,9 @@ describe('ModelPoller', () => {
     let fires = 0
     const poller = new ModelPoller(
       () => Promise.resolve(poll([model('a')])),
-      () => (fires += 1),
+      () => {
+        fires += 1
+      },
     )
     await poller.pollNow()
     await poller.pollNow()
@@ -49,10 +51,16 @@ describe('ModelPoller', () => {
 
   test('a changed list fires onChange again', async () => {
     let call = 0
+    const nextCall = (): number => {
+      call += 1
+      return call - 1
+    }
     let fires = 0
     const poller = new ModelPoller(
-      () => Promise.resolve(call++ === 0 ? poll([model('a')]) : poll([model('a'), model('b')])),
-      () => (fires += 1),
+      () => Promise.resolve(nextCall() === 0 ? poll([model('a')]) : poll([model('a'), model('b')])),
+      () => {
+        fires += 1
+      },
     )
     await poller.pollNow()
     await poller.pollNow()
@@ -62,22 +70,30 @@ describe('ModelPoller', () => {
 
   test('a changed rows list fires onChange even when chatModels is unchanged', async () => {
     let call = 0
+    const nextCall = (): number => {
+      call += 1
+      return call - 1
+    }
     let fires = 0
     const poller = new ModelPoller(
       () =>
         Promise.resolve(
-          call++ === 0
+          nextCall() === 0
             ? poll([model('a')], [row('comfy')])
             : poll([model('a')], [row('comfy'), row('tts')]),
         ),
-      () => (fires += 1),
+      () => {
+        fires += 1
+      },
     )
     await poller.pollNow()
     await poller.pollNow()
     expect(fires).toBe(2)
     expect(poller.rows).toHaveLength(2)
   })
+})
 
+describe('ModelPoller failures', () => {
   test('3 consecutive failures empties the lists and fires once', async () => {
     let fires = 0
     let lastModels: readonly EnginedModelInfo[] = []
@@ -107,7 +123,9 @@ describe('ModelPoller', () => {
         succeed
           ? Promise.resolve(poll([model('a')], [row('comfy')]))
           : Promise.reject(new Error('down')),
-      () => (fires += 1),
+      () => {
+        fires += 1
+      },
     )
     await poller.pollNow()
     expect(poller.models).toHaveLength(1)
@@ -127,7 +145,7 @@ describe('ModelPoller', () => {
     let succeed = true
     const poller = new ModelPoller(
       () => (succeed ? Promise.resolve(poll([model('a')])) : Promise.reject(new Error('down'))),
-      () => {},
+      () => undefined,
     )
     await poller.pollNow()
     expect(poller.reachable).toBe(true)
@@ -155,7 +173,7 @@ describe('ModelPoller', () => {
             { door: gpuBox, reachable: false },
           ],
         }),
-      () => {},
+      () => undefined,
     )
     await poller.pollNow()
     expect(poller.reachable).toBe(true)
@@ -177,7 +195,7 @@ describe('ModelPoller', () => {
             { door: gpuBox, reachable: false },
           ],
         }),
-      () => {},
+      () => undefined,
     )
     await poller.pollNow()
     expect(poller.reachable).toBe(true)
@@ -191,10 +209,14 @@ describe('ModelPoller', () => {
     const releases: (() => void)[] = []
     const results = [poll([model('old')]), poll([model('new')])]
     let started = 0
+    const nextStarted = (): number => {
+      started += 1
+      return started - 1
+    }
     const seen: string[] = []
     const poller = new ModelPoller(
       () => {
-        const result = results[started++] as ModelsPoll
+        const result = results[nextStarted()] as ModelsPoll
         return new Promise((resolve) => releases.push(() => resolve(result)))
       },
       (models) => seen.push(models.map((m) => m.id).join()),

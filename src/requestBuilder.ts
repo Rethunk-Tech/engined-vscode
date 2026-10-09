@@ -5,10 +5,13 @@
  * first, which is also what lets this file's logic run under `bun test`.
  */
 
+import { compareCodeUnits } from './compareCodeUnits.ts'
 import type { EnginedModelInfo, ReasoningLevel } from './door.ts'
 import { reasoningLevelsFor, snapReasoningEffort } from './door.ts'
 import type { SplitOptions } from './promptSplit.ts'
 import { DEFAULT_SPLIT, splitAtBoundaries } from './promptSplit.ts'
+
+const CHARS_PER_TOKEN_ESTIMATE = 3
 
 export type PlainMessagePart =
   | { type: 'text'; text: string }
@@ -147,7 +150,7 @@ function sortKeysDeep(value: unknown): unknown {
   }
   if (value !== null && typeof value === 'object') {
     const sorted: Record<string, unknown> = {}
-    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+    for (const key of Object.keys(value as Record<string, unknown>).sort(compareCodeUnits)) {
       sorted[key] = sortKeysDeep((value as Record<string, unknown>)[key])
     }
     return sorted
@@ -179,7 +182,7 @@ export function buildChatRequestBody(
     // template puts the tool list near the top of the system prompt, so an order that drifts
     // between otherwise-identical chats breaks the engine's prompt-prefix cache mid-way through.
     body.tools = [...options.tools]
-      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+      .sort((a, b) => compareCodeUnits(a.name, b.name))
       .map((t) => ({
         type: 'function',
         function: {
@@ -201,7 +204,7 @@ export function buildChatRequestBody(
 
 /** `Math.ceil(chars / 3)`: deliberately an over-count, never used to load a model -- engined's own tokenizer runs the model in router mode, which this extension must not trigger just to count. */
 export function estimateTokenCount(text: string): number {
-  return Math.ceil(text.length / 3)
+  return Math.ceil(text.length / CHARS_PER_TOKEN_ESTIMATE)
 }
 
 /** A plain message's literal-text content: its text and tool-call-argument JSON, concatenated -- what a real tokenize call or the chars/3 estimate both count against. */

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { compareCodeUnits } from './compareCodeUnits.ts'
 import {
   chunkFile,
   cosineSimilarity,
@@ -103,7 +104,7 @@ describe('planIndexUpdate', () => {
       { path: 'gone.ts', mtime: 1 },
     ]
     const plan = planIndexUpdate(current, indexed)
-    expect(plan.toEmbed.sort()).toEqual(['changed.ts', 'new.ts'])
+    expect(plan.toEmbed.sort(compareCodeUnits)).toEqual(['changed.ts', 'new.ts'])
     expect(plan.toRemove).toEqual(['gone.ts'])
   })
 })

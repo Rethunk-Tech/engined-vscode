@@ -6,6 +6,8 @@
 
 import { createHash } from 'node:crypto'
 
+const HASH_LENGTH = 8
+
 export interface FingerprintInput {
   /** Each outgoing message serialized exactly as it is sent. */
   messages: readonly string[]
@@ -22,7 +24,7 @@ export interface Fingerprint {
 }
 
 function shortHash(text: string): string {
-  return createHash('sha256').update(text).digest('hex').slice(0, 8)
+  return createHash('sha256').update(text).digest('hex').slice(0, HASH_LENGTH)
 }
 
 function firstDiff(a: string, b: string): number | undefined {

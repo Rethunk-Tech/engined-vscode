@@ -84,6 +84,21 @@ export interface DefaultModelResolution {
   unusableReason?: string
 }
 
+function unusableReasonFor(
+  existing: EnginedModelRow | undefined,
+  configuredId: string,
+  role: ModelRole,
+  path: string,
+): string {
+  if (existing === undefined) {
+    return `"${configuredId}" is not an installed engined route`
+  }
+  if (existing.state === 'unavailable') {
+    return `"${configuredId}" is unavailable`
+  }
+  return `"${configuredId}" does not qualify for ${role} (needs ${path})`
+}
+
 /**
  * The configured id if it still qualifies for `role`, else the first
  * qualifying row (the automatic pick), with a reason string when the
@@ -104,11 +119,8 @@ export function resolveDefaultModel(
     return { row: configured }
   }
   const existing = rows.find((row) => matchesConfigured(row, configuredId))
-  const reason =
-    existing === undefined
-      ? `"${configuredId}" is not an installed engined route`
-      : existing.state === 'unavailable'
-        ? `"${configuredId}" is unavailable`
-        : `"${configuredId}" does not qualify for ${role} (needs ${path})`
-  return { row: qualifying[0], unusableReason: reason }
+  return {
+    row: qualifying[0],
+    unusableReason: unusableReasonFor(existing, configuredId, role, path),
+  }
 }

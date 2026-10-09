@@ -26,6 +26,8 @@ const MAX_FILES = 3
 const TOTAL_CHAR_CAP = 4500
 
 const GLOB_SPECIAL = /[.+^${}()|[\]\\]/g
+const LEADING_ANY_DIRS = /^\.\*\//
+const TRAILING_ANY_DIRS = /\/\.\*$/
 
 /** A minimal glob -> RegExp, segment by segment: a whole `**` segment matches any number of path segments (including none); `*`/`?` stay within one segment. Enough for `files.exclude`/`search.exclude` patterns. */
 function globToRegExp(pattern: string): RegExp {
@@ -37,9 +39,9 @@ function globToRegExp(pattern: string): RegExp {
         : segment.replace(GLOB_SPECIAL, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]'),
     )
     .join('/')
-    .replace(/^\.\*\//, '(?:.*/)?')
+    .replace(LEADING_ANY_DIRS, '(?:.*/)?')
     .replace(/\/\.\*\//g, '/(?:.*/)?')
-    .replace(/\/\.\*$/, '(?:/.*)?')
+    .replace(TRAILING_ANY_DIRS, '(?:/.*)?')
   return new RegExp(`^${joined}$`)
 }
 

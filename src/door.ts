@@ -38,7 +38,7 @@ export function splitQualifiedId(
 /** The named door, or the first configured one when `doorName` is `undefined` or unknown -- a plain (unqualified) id under multiple doors picks the first door that has it, same as `defaultModels.ts`'s "either form" rule. */
 export function doorByName(doors: readonly Door[], doorName: string | undefined): Door {
   const named = doorName === undefined ? undefined : doors.find((d) => d.name === doorName)
-  const fallback = doors[0]
+  const [fallback] = doors
   if (fallback === undefined) {
     throw new Error('doorByName: no doors configured')
   }

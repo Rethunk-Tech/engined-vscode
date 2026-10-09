@@ -5,5 +5,7 @@ const bundle = process.argv[2] ?? './dist/extension.cjs'
 try {
   require(require('node:path').resolve(bundle))
 } catch (e) {
-  if (e.code !== 'MODULE_NOT_FOUND' || !e.message.includes("'vscode'")) throw e
+  if (e.code !== 'MODULE_NOT_FOUND' || !e.message.includes("'vscode'")) {
+    throw e
+  }
 }

@@ -6,15 +6,19 @@
 
 import { estimateTokenCount } from './requestBuilder.ts'
 
+const DJB2_MULTIPLIER = 33
+
 const MAX_CACHE_ENTRIES = 200
+
+const UINT32_RANGE = 4_294_967_296
 
 /** ponytail: a 32-bit djb2 hash + length as the cache key, not the full content string -- a collision returns a stale count for one call, which is cheaper than keying a 200-entry LRU on multi-KB prompt text. */
 function hashContent(content: string): string {
   let hash = 5381
-  for (let i = 0; i < content.length; i++) {
-    hash = (hash * 33) ^ content.charCodeAt(i)
+  for (let i = 0; i < content.length; i += 1) {
+    hash = (hash * DJB2_MULTIPLIER + content.charCodeAt(i)) % UINT32_RANGE
   }
-  return `${hash >>> 0}:${content.length}`
+  return `${hash}:${content.length}`
 }
 
 /** Bounded LRU keyed by (model, content-hash) -- Copilot calls `provideTokenCount` per message, often repeatedly with the same text. */
@@ -55,10 +59,9 @@ export type TokenizeFetcher = (model: string, content: string) => Promise<number
 export async function resolveTokenCount(
   cache: TokenCountCache,
   fetchTokenize: TokenizeFetcher,
-  model: string,
-  content: string,
-  served: boolean,
+  request: { model: string; content: string; served: boolean },
 ): Promise<number> {
+  const { model, content, served } = request
   if (!served) {
     return estimateTokenCount(content)
   }

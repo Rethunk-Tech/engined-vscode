@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { compareCodeUnits } from './compareCodeUnits.ts'
 import {
   DEFAULT_MODEL_ROLES,
   qualifyingRows,
@@ -116,7 +117,7 @@ describe('DEFAULT_MODEL_ROLES', () => {
   test('covers every ModelRole exactly once', () => {
     const roles: string[] = DEFAULT_MODEL_ROLES.map((r) => r.role)
     expect(new Set(roles).size).toBe(roles.length)
-    expect(roles.sort()).toEqual(Object.keys(ROLE_PATH).sort())
+    expect(roles.sort(compareCodeUnits)).toEqual(Object.keys(ROLE_PATH).sort(compareCodeUnits))
   })
 
   test('matches the engined.defaultModels.* keys package.json declares, one role each', () => {
@@ -125,9 +126,9 @@ describe('DEFAULT_MODEL_ROLES', () => {
     const settingRoles = Object.keys(properties)
       .map((key) => /^engined\.defaultModels\.(\w+)$/.exec(key)?.[1])
       .filter((role): role is string => role !== undefined)
-      .sort()
+      .sort(compareCodeUnits)
     const roles: string[] = DEFAULT_MODEL_ROLES.map((r) => r.role)
-    expect(roles.sort()).toEqual(settingRoles)
+    expect(roles.sort(compareCodeUnits)).toEqual(settingRoles)
   })
 
   test('every role has a non-empty chooser and popup label', () => {

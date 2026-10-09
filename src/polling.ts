@@ -17,8 +17,8 @@ export interface ModelsPoll {
 }
 
 export class ModelPoller {
-  #fetch: () => Promise<ModelsPoll>
-  #onChange: (chatModels: EnginedModelInfo[]) => void
+  readonly #fetch: () => Promise<ModelsPoll>
+  readonly #onChange: (chatModels: EnginedModelInfo[]) => void
   #chatModels: EnginedModelInfo[] = []
   #rows: EnginedModelRow[] = []
   #doorStatus: readonly DoorReachability[] = []

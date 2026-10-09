@@ -152,11 +152,17 @@ describe('reasoning effort', () => {
   test('sonnet-5 declares reasoning; snapping picks the nearest listed level', () => {
     const mapped = mapModels(models, DOOR, 1)
     const sonnet = mapped.find((m) => m.id === '@/claude/sonnet-5')
-    const levels = reasoningLevelsFor(sonnet!.row)
+    if (sonnet === undefined) {
+      throw new Error('sonnet-5 row missing')
+    }
+    const levels = reasoningLevelsFor(sonnet.row)
+    if (levels === undefined) {
+      throw new Error('sonnet-5 declares no reasoning levels')
+    }
     expect(levels).toEqual(['none', 'low', 'high'])
-    expect(snapReasoningEffort('medium', levels!)).toBe('low')
-    expect(snapReasoningEffort('xhigh', levels!)).toBe('high')
-    expect(snapReasoningEffort('none', levels!)).toBe('none')
+    expect(snapReasoningEffort('medium', levels)).toBe('low')
+    expect(snapReasoningEffort('xhigh', levels)).toBe('high')
+    expect(snapReasoningEffort('none', levels)).toBe('none')
   })
 })
 

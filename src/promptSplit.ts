@@ -1,3 +1,6 @@
+const HIGH_SURROGATE_MIN = 0xd8_00
+const HIGH_SURROGATE_MAX = 0xdb_ff
+
 /**
  * Splits long prompt text into pieces at structural boundaries, so a hybrid (recurrent +
  * attention) model can resume a cached prompt at more points. Such a model resumes only at a
@@ -29,6 +32,28 @@ interface Candidate {
   tier: Tier
 }
 
+function tierFor(trimmed: string, insideStructure: boolean): Tier {
+  if (insideStructure) {
+    return Tier.InsideStructure
+  }
+  if (trimmed === '') {
+    return Tier.BlankLine
+  }
+  return trimmed.startsWith('</') && trimmed.endsWith('>') ? Tier.AfterClosingTag : Tier.LineEnd
+}
+
+/** The JSON bracket depth and string state after the character at `i`. */
+function advanceJson(text: string, i: number, state: { depth: number; inString: boolean }): void {
+  const c = text[i]
+  if (c === '"' && text[i - 1] !== '\\') {
+    state.inString = !state.inString
+  } else if (!state.inString && (c === '{' || c === '[')) {
+    state.depth += 1
+  } else if (!state.inString && (c === '}' || c === ']')) {
+    state.depth = Math.max(0, state.depth - 1)
+  }
+}
+
 /**
  * Every line end, rated. Inside a ``` fence or an open JSON bracket a cut would split a unit
  * the model reads as one, so those rate lowest; JSON strings can't span lines, so string state
@@ -37,41 +62,19 @@ interface Candidate {
 function rateLineEnds(text: string): Candidate[] {
   const out: Candidate[] = []
   let inFence = false
-  let depth = 0
-  let inString = false
+  const json = { depth: 0, inString: false }
   let lineStart = 0
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]
-    if (c === '\n') {
-      const line = text.slice(lineStart, i)
-      const trimmed = line.trim()
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] === '\n') {
+      const trimmed = text.slice(lineStart, i).trim()
       if (trimmed.startsWith('```')) {
         inFence = !inFence
       }
-      let tier: Tier
-      if (inFence || depth > 0) {
-        tier = Tier.InsideStructure
-      } else if (trimmed === '') {
-        tier = Tier.BlankLine
-      } else if (trimmed.startsWith('</') && trimmed.endsWith('>')) {
-        tier = Tier.AfterClosingTag
-      } else {
-        tier = Tier.LineEnd
-      }
-      out.push({ at: i + 1, tier })
-      inString = false
+      out.push({ at: i + 1, tier: tierFor(trimmed, inFence || json.depth > 0) })
+      json.inString = false
       lineStart = i + 1
-      continue
-    }
-    if (inFence) {
-      continue
-    }
-    if (c === '"' && text[i - 1] !== '\\') {
-      inString = !inString
-    } else if (!inString && (c === '{' || c === '[')) {
-      depth++
-    } else if (!inString && (c === '}' || c === ']')) {
-      depth = Math.max(0, depth - 1)
+    } else if (!inFence) {
+      advanceJson(text, i, json)
     }
   }
   return out
@@ -80,7 +83,7 @@ function rateLineEnds(text: string): Candidate[] {
 /** A hard cut must not split a UTF-16 surrogate pair. */
 function safeHardCut(text: string, at: number): number {
   const code = text.charCodeAt(at - 1)
-  return code >= 0xd8_00 && code <= 0xdb_ff ? at - 1 : at
+  return code >= HIGH_SURROGATE_MIN && code <= HIGH_SURROGATE_MAX ? at - 1 : at
 }
 
 export function splitAtBoundaries(text: string, options: SplitOptions = DEFAULT_SPLIT): string[] {
@@ -96,10 +99,11 @@ export function splitAtBoundaries(text: string, options: SplitOptions = DEFAULT_
     const low = start + Math.floor(chunkChars / 2)
     const high = start + chunkChars
     let best: Candidate | undefined
-    for (let c = candidates[next]; c !== undefined && c.at <= high; c = candidates[++next]) {
+    for (let c = candidates[next]; c !== undefined && c.at <= high; c = candidates[next]) {
       if (c.at > low && (best === undefined || c.tier >= best.tier)) {
         best = c
       }
+      next += 1
     }
     const end = best === undefined ? safeHardCut(text, high) : best.at
     out.push(text.slice(start, end))

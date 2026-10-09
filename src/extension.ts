@@ -6,6 +6,7 @@
  */
 
 import * as vscode from 'vscode'
+import { runInBackground } from './background.ts'
 import type { SavedSetting, SettingWrite } from './chatSettingsPlan.ts'
 import { buildChatSettingsPlan, buildRestorePlan, describePlan } from './chatSettingsPlan.ts'
 import { buildCopilotUsage, readChatStream } from './chatStream.ts'
@@ -29,6 +30,7 @@ import {
   setDefaultModel,
   setReasoningEffort,
 } from './config.ts'
+import { MS_PER_SECOND } from './constants.ts'
 import type { DefaultModelResolution, ModelRole } from './defaultModels.ts'
 import {
   DEFAULT_MODEL_ROLES,
@@ -36,6 +38,7 @@ import {
   ROLE_PATH,
   resolveDefaultModel,
 } from './defaultModels.ts'
+import { describeError } from './describeError.ts'
 import type { Door, EnginedModelInfo, EnginedModelRow, ReasoningLevel } from './door.ts'
 import {
   doorByName,
@@ -45,14 +48,11 @@ import {
   splitQualifiedId,
 } from './door.ts'
 import {
-  DoorHttpError,
   fetchAllDoors,
   fetchAllUsage,
   holdEngine,
   openEngineEventsStream,
   postChatCompletion,
-  postForm,
-  postJson,
   postJsonWithHeaders,
   postTokenize,
   startModel,
@@ -63,7 +63,6 @@ import type { EngineTreeItem } from './engineExplorer.ts'
 import { copyFixCommand, EngineExplorer } from './engineExplorer.ts'
 import type { NeighbourCandidate } from './neighbourContext.ts'
 import { selectSnippets } from './neighbourContext.ts'
-import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 import { ModelPoller } from './polling.ts'
 import type { FingerprintInput } from './promptFingerprint.ts'
 import { describeFingerprint, fingerprint } from './promptFingerprint.ts'
@@ -73,7 +72,6 @@ import {
   estimateMessageTokenCount,
   plainMessageContent,
 } from './requestBuilder.ts'
-import { truncateSnippet } from './search.ts'
 import { SearchIndex } from './searchIndex.ts'
 import type { CallRecord, ThemeKind, TodayUsage } from './status.ts'
 import {
@@ -86,16 +84,12 @@ import {
   TOOLTIP_COMMANDS,
 } from './status.ts'
 import { resolveTokenCount, TokenCountCache } from './tokenCount.ts'
-import {
-  buildImageRequest,
-  buildReadImageRequest,
-  buildSpeakRequest,
-  buildTranscribeRequest,
-  type ConfirmationTarget,
-  confirmationMessage,
-  ToolRouteError,
-} from './toolRequests.ts'
+import { ToolRouteError } from './toolRequests.ts'
 import { buildUsageReport, totalsFor } from './usageReport.ts'
+import { registerTools } from './workspaceTools.ts'
+
+/** Right-aligned status bar items sort by priority; 100 sits among the language-status items. */
+const STATUS_BAR_PRIORITY = 100
 
 const LOADING_TICK_MS = 300
 const RECENT_DOCUMENTS_CAP = 10
@@ -162,8 +156,9 @@ function log(line: string): void {
   output.appendLine(`[${new Date().toISOString()}] ${line}`)
 }
 
-function workspaceRoots(): string[] {
-  return (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath)
+/** Starts `work` without awaiting it; a failure lands in the output channel instead of an unhandled rejection. */
+function background(work: PromiseLike<unknown>): void {
+  runInBackground(work, (error) => log(`background task failed: ${describeError(error)}`))
 }
 
 // --- vscode <-> plain message conversion --------------------------------
@@ -267,25 +262,24 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     renderStatusBar()
     if (servesTokenize(model.row)) {
       const content = plainMessages.map(plainMessageContent).join('')
-      void resolveTokenCount(
-        tokenCountCache,
-        () => postTokenize(model.row.door.url, model.row.routeId, content, controller.signal),
-        model.id,
-        content,
-        true,
-      ).then((tokens) => {
-        if (inFlightChat === flight) {
-          flight.promptTokenEstimate = tokens
-          renderStatusBar()
-        }
-      })
+      background(
+        resolveTokenCount(
+          tokenCountCache,
+          () => postTokenize(model.row.door.url, model.row.routeId, content, controller.signal),
+          { model: model.id, content, served: true },
+        ).then((tokens) => {
+          if (inFlightChat === flight) {
+            flight.promptTokenEstimate = tokens
+            renderStatusBar()
+          }
+        }),
+      )
     }
     let stream: ReadableStream<Uint8Array>
     let headers: Headers
     try {
       const res = await postChatCompletion(model.row.door.url, body, controller.signal)
-      stream = res.body
-      headers = res.headers
+      ;({ body: stream, headers } = res)
     } catch (error) {
       log(`chat completion failed for ${model.id}: ${describeError(error)}`)
       stopLoadingTimer()
@@ -309,7 +303,9 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
           }
           progress.report(new vscode.LanguageModelTextPart(delta))
         },
-        usage: (u) => (usage = u),
+        usage: (u) => {
+          usage = u
+        },
       })
     } finally {
       stopLoadingTimer()
@@ -353,7 +349,7 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     }
   }
 
-  async provideTokenCount(
+  provideTokenCount(
     model: EnginedModelInfo,
     text: string | vscode.LanguageModelChatRequestMessage,
     token: vscode.CancellationToken,
@@ -364,18 +360,9 @@ class EnginedChatProvider implements vscode.LanguageModelChatProvider<EnginedMod
     return resolveTokenCount(
       tokenCountCache,
       (_m, c) => postTokenize(model.row.door.url, model.row.routeId, c, controller.signal),
-      model.id,
-      content,
-      servesTokenize(model.row),
+      { model: model.id, content, served: servesTokenize(model.row) },
     )
   }
-}
-
-function describeError(error: unknown): string {
-  if (error instanceof DoorHttpError) {
-    return error.status === 429 ? error.message : `HTTP ${error.status}: ${error.message}`
-  }
-  return error instanceof Error ? error.message : String(error)
 }
 
 function asError(error: unknown): Error {
@@ -487,8 +474,7 @@ class EnginedInlineCompletionProvider implements vscode.InlineCompletionItemProv
         body,
         controller.signal,
       )
-      reply = res.data
-      headers = res.headers
+      ;({ data: reply, headers } = res)
     } catch (error) {
       if (!token.isCancellationRequested) {
         log(`completion failed for ${model.id}: ${describeError(error)}`)
@@ -605,13 +591,13 @@ function maybeShowUnreachableNotice(): void {
   const urls = getDoors()
     .map((d) => d.url)
     .join(', ')
-  void vscode.window
+  vscode.window
     .showInformationMessage(`engined isn't reachable at ${urls}`, 'How to start it', 'Settings')
     .then((choice) => {
       if (choice === 'How to start it') {
-        void revealReadmeTroubleshooting()
+        background(revealReadmeTroubleshooting())
       } else if (choice === 'Settings') {
-        void vscode.commands.executeCommand('workbench.action.openSettings', 'engined.doors')
+        background(vscode.commands.executeCommand('workbench.action.openSettings', 'engined.doors'))
       }
     })
 }
@@ -730,7 +716,7 @@ async function writeUserSettings(writes: readonly SettingWrite[]): Promise<void>
 
 async function useForAllChatFeatures(): Promise<void> {
   if (savedChatSettings() !== undefined) {
-    void vscode.window.showInformationMessage(
+    vscode.window.showInformationMessage(
       'Chat features already route to engined. Run "engined: Restore Previous Chat Settings" first to switch models.',
     )
     return
@@ -803,7 +789,9 @@ function effectivePollMs(): number {
   if (seconds <= 0) {
     return 0
   }
-  return (anySseConnected() ? Math.max(seconds, CONNECTED_POLL_FLOOR_SECONDS) : seconds) * 1000
+  return (
+    (anySseConnected() ? Math.max(seconds, CONNECTED_POLL_FLOOR_SECONDS) : seconds) * MS_PER_SECOND
+  )
 }
 
 function restartPollTimer(): void {
@@ -815,11 +803,11 @@ function restartPollTimer(): void {
   if (ms > 0) {
     pollTimer = setInterval(() => {
       if (!poller.busy) {
-        void poller.pollNow()
+        background(poller.pollNow())
       }
     }, ms)
   }
-  void poller.pollNow()
+  background(poller.pollNow())
 }
 
 /** Re-polls at most every `SSE_REFRESH_DEBOUNCE_MS` -- a burst of events (several engines changing at once) triggers one refetch, not one per frame. */
@@ -829,8 +817,8 @@ function scheduleSseRefresh(): void {
   }
   sseRefreshTimer = setTimeout(() => {
     sseRefreshTimer = undefined
-    void poller.pollNow()
-    void engineExplorer.refresh()
+    background(poller.pollNow())
+    background(engineExplorer.refresh())
   }, SSE_REFRESH_DEBOUNCE_MS)
 }
 
@@ -839,12 +827,12 @@ function scheduleSseReconnect(door: Door): void {
   if (state.reconnectTimer !== undefined) {
     return
   }
-  const delay = backoffMs(state.attempt)
+  const reconnectDelayMs = backoffMs(state.attempt)
   state.attempt += 1
   state.reconnectTimer = setTimeout(() => {
     state.reconnectTimer = undefined
-    void connectEngineEvents(door)
-  }, delay)
+    background(connectEngineEvents(door))
+  }, reconnectDelayMs)
 }
 
 /** Opens `GET /engined/v1/engines/events` against one door and stays connected until it errors or the extension deactivates, reconnecting with backoff either way. */
@@ -936,7 +924,7 @@ async function warmModel(): Promise<void> {
   } catch (error) {
     const message = `warm ${pick.row.id} failed: ${describeError(error)}`
     log(message)
-    void vscode.window.showErrorMessage(`engined: ${message}`)
+    vscode.window.showErrorMessage(`engined: ${message}`)
   }
   await poller.pollNow()
 }
@@ -959,7 +947,7 @@ async function holdModel(): Promise<void> {
     heldEngineIds.add(engine.id)
     renderStatusBar()
   } catch (error) {
-    void vscode.window.showErrorMessage(`engined: hold "${id}" failed: ${describeError(error)}`)
+    vscode.window.showErrorMessage(`engined: hold "${id}" failed: ${describeError(error)}`)
   }
   await poller.pollNow()
 }
@@ -967,7 +955,7 @@ async function holdModel(): Promise<void> {
 /** `engined: Release Hold`: only offers engines this session itself held. */
 async function releaseHold(): Promise<void> {
   if (heldEngineIds.size === 0) {
-    void vscode.window.showInformationMessage('engined: no engines are held')
+    vscode.window.showInformationMessage('engined: no engines are held')
     return
   }
   const id = await vscode.window.showQuickPick([...heldEngineIds].sort(), {
@@ -984,9 +972,7 @@ async function releaseHold(): Promise<void> {
     heldEngineIds.delete(id)
     renderStatusBar()
   } catch (error) {
-    void vscode.window.showErrorMessage(
-      `engined: release hold "${id}" failed: ${describeError(error)}`,
-    )
+    vscode.window.showErrorMessage(`engined: release hold "${id}" failed: ${describeError(error)}`)
   }
   await poller.pollNow()
 }
@@ -1075,7 +1061,9 @@ async function chooseDefaultModels(): Promise<void> {
   loggedUnusableReasons.delete(rolePick.role)
 }
 
-const USAGE_REPORT_DAY_CHOICES = [1, 7, 30] as const
+const DAY_CHOICE_WEEK = 7
+const DAY_CHOICE_MONTH = 30
+const USAGE_REPORT_DAY_CHOICES = [1, DAY_CHOICE_WEEK, DAY_CHOICE_MONTH] as const
 
 /** `engined: Usage Report`: pick a day range, fetch `/engined/v1/usage` from every configured door, and show the result as a read-only Markdown preview. */
 async function showUsageReport(): Promise<void> {
@@ -1095,341 +1083,95 @@ async function showUsageReport(): Promise<void> {
   await vscode.commands.executeCommand('markdown.showPreview', doc.uri)
 }
 
-// --- tools ------------------------------------------------------------------
-
-async function readWorkspaceFile(path: string): Promise<Uint8Array> {
-  const resolved = resolveWorkspacePath(workspaceRoots(), path)
-  return vscode.workspace.fs.readFile(vscode.Uri.file(resolved))
-}
-
-async function writeWorkspaceFile(path: string, data: Uint8Array): Promise<vscode.Uri> {
-  const uri = vscode.Uri.file(resolveWorkspacePath(workspaceRoots(), path))
-  await vscode.workspace.fs.writeFile(uri, data)
-  return uri
-}
-
-/** `path` as the confirmation dialog names it: workspace-relative, and whether a write would replace a file. */
-async function confirmationTarget(path: string, writes: boolean): Promise<ConfirmationTarget> {
-  let uri: vscode.Uri
-  try {
-    uri = vscode.Uri.file(resolveWorkspacePath(workspaceRoots(), path))
-  } catch {
-    // The invoke call refuses an escaping path; the dialog just shows what was asked for.
-    return { path }
-  }
-  const shown = vscode.workspace.asRelativePath(uri, false)
-  if (!writes) {
-    return { path: shown }
-  }
-  try {
-    await vscode.workspace.fs.stat(uri)
-    return { path: shown, overwrites: true }
-  } catch {
-    return { path: shown, overwrites: false }
-  }
-}
-
-function mimeTypeFor(path: string): string {
-  const ext = path.toLowerCase().split('.').pop() ?? ''
-  return ext === 'jpg' || ext === 'jpeg'
-    ? 'image/jpeg'
-    : ext === 'webp'
-      ? 'image/webp'
-      : 'image/png'
-}
-
-function toolError(error: unknown): vscode.LanguageModelToolResult {
-  const message =
-    error instanceof PathEscapeError || error instanceof ToolRouteError
-      ? error.message
-      : describeError(error)
-  log(`tool error: ${message}`)
-  return new vscode.LanguageModelToolResult([
-    new vscode.LanguageModelTextPart(`engined: ${message}`),
-  ])
-}
-
-interface GenerateImageInput {
-  prompt: string
-  outputPath: string
-  size?: string
-  sourcePath?: string
-}
-
-function imagePath(sourcePath: string | undefined): string {
-  return sourcePath === undefined ? '/openai/v1/images/generations' : '/openai/v1/images/edits'
-}
-
-/** An `AbortSignal` that fires when the user cancels the tool call. */
-function cancellationSignal(token: vscode.CancellationToken): AbortSignal {
-  const controller = new AbortController()
-  if (token.isCancellationRequested) {
-    controller.abort()
-  } else {
-    token.onCancellationRequested(() => controller.abort())
-  }
-  return controller.signal
-}
-
-const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
-  async invoke(options, token) {
-    try {
-      const source =
-        options.input.sourcePath === undefined
-          ? undefined
-          : new Blob([await readWorkspaceFile(options.input.sourcePath)])
-      const row = resolveRoleRow('image', imagePath(options.input.sourcePath))
-      const req = buildImageRequest(row, {
-        prompt: options.input.prompt,
-        size: options.input.size,
-        source,
-      })
-      const result =
-        req.path === '/openai/v1/images/generations'
-          ? ((await postJson(row.door.url, req.path, req.body, cancellationSignal(token))) as {
-              data: { b64_json: string }[]
-            })
-          : ((await postForm(
-              row.door.url,
-              req.path,
-              buildEditForm(req.form),
-              cancellationSignal(token),
-            )) as {
-              data: { b64_json: string }[]
-            })
-      const png = result.data[0]?.b64_json
-      if (png === undefined) {
-        throw new Error('engined returned no image data')
-      }
-      const uri = await writeWorkspaceFile(options.input.outputPath, Buffer.from(png, 'base64'))
-      // The image is shown to the user, not returned to the model: a tool can't tell which
-      // model called it, and Copilot's backend fails the next turn fetching an image part.
-      await vscode.commands.executeCommand('vscode.open', uri, {
-        preview: true,
-        viewColumn: vscode.ViewColumn.Beside,
-      })
-      return new vscode.LanguageModelToolResult([
-        new vscode.LanguageModelTextPart(
-          `Wrote ${options.input.outputPath}; it is open beside the chat for the user to see.`,
-        ),
-      ])
-    } catch (error) {
-      return toolError(error)
-    }
-  },
-  async prepareInvocation(options) {
-    const row = resolveRoleRow('image', imagePath(options.input.sourcePath))
-    const source =
-      options.input.sourcePath === undefined
-        ? undefined
-        : (await confirmationTarget(options.input.sourcePath, false)).path
-    return {
-      confirmationMessages: {
-        title: 'Generate image',
-        message: confirmationMessage(
-          row,
-          source === undefined ? 'Generate image' : `Generate image from ${source}`,
-          await confirmationTarget(options.input.outputPath, true),
-        ),
-      },
-    }
-  },
-}
-
-function buildEditForm(form: {
-  model: string
-  prompt: string
-  image: Blob
-  response_format: 'b64_json'
-}): FormData {
-  const data = new FormData()
-  data.set('model', form.model)
-  data.set('prompt', form.prompt)
-  data.set('image', form.image)
-  data.set('response_format', form.response_format)
-  return data
-}
-
-interface ReadImageInput {
-  path: string
-  mode: 'ocr' | 'describe'
-  question?: string
-}
-
-const readImageTool: vscode.LanguageModelTool<ReadImageInput> = {
-  async invoke(options, token) {
-    try {
-      const bytes = await readWorkspaceFile(options.input.path)
-      const row = resolveRoleRow(options.input.mode === 'ocr' ? 'ocr' : 'vision')
-      const req = buildReadImageRequest(row, {
-        mode: options.input.mode,
-        question: options.input.question,
-        mimeType: mimeTypeFor(options.input.path),
-        base64: Buffer.from(bytes).toString('base64'),
-      })
-      const { body: stream } = await postChatCompletion(
-        row.door.url,
-        { ...req, stream: true, stream_options: { include_usage: true } },
-        cancellationSignal(token),
-      )
-      let text = ''
-      await readChatStream(stream, { text: (delta) => (text += delta) })
-      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
-    } catch (error) {
-      return toolError(error)
-    }
-  },
-  async prepareInvocation(options) {
-    const row = resolveRoleRow(options.input.mode === 'ocr' ? 'ocr' : 'vision')
-    return {
-      confirmationMessages: {
-        title: 'Read image',
-        message: confirmationMessage(
-          row,
-          `${options.input.mode === 'ocr' ? 'OCR' : 'Describe'} image`,
-          await confirmationTarget(options.input.path, false),
-        ),
-      },
-    }
-  },
-}
-
-interface TranscribeInput {
-  path: string
-  translate?: boolean
-}
-
-const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
-  async invoke(options, token) {
-    try {
-      const bytes = await readWorkspaceFile(options.input.path)
-      const row = resolveRoleRow('transcription', transcriptionPath(options.input.translate))
-      const req = buildTranscribeRequest(row, {
-        audio: new Blob([bytes]),
-        translate: options.input.translate,
-      })
-      const form = new FormData()
-      form.set('model', req.form.model)
-      form.set('file', req.form.file)
-      const result = (await postForm(row.door.url, req.path, form, cancellationSignal(token))) as
-        | { text?: string }
-        | ArrayBuffer
-      const text =
-        typeof result === 'object' && result !== null && 'text' in result
-          ? (result.text ?? '')
-          : String(result)
-      const note =
-        options.input.translate === true
-          ? '\n\nNote: speech translation on this route is measured unreliable (it can return fluent but wrong English); prefer transcribing and translating the text.'
-          : ''
-      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text + note)])
-    } catch (error) {
-      return toolError(error)
-    }
-  },
-  async prepareInvocation(options) {
-    const row = resolveRoleRow('transcription', transcriptionPath(options.input.translate))
-    return {
-      confirmationMessages: {
-        title: 'Transcribe audio',
-        message: confirmationMessage(
-          row,
-          'Transcribe audio',
-          await confirmationTarget(options.input.path, false),
-        ),
-      },
-    }
-  },
-}
-
-function transcriptionPath(translate: boolean | undefined): string {
-  return translate === true ? '/openai/v1/audio/translations' : '/openai/v1/audio/transcriptions'
-}
-
-interface SpeakInput {
-  text: string
-  outputPath: string
-  voice?: string
-}
-
-const speakTool: vscode.LanguageModelTool<SpeakInput> = {
-  async invoke(options, token) {
-    try {
-      const row = resolveRoleRow('speech')
-      const req = buildSpeakRequest(row, {
-        text: options.input.text,
-        voice: options.input.voice,
-      })
-      const audio = (await postJson(
-        row.door.url,
-        req.path,
-        req.body,
-        cancellationSignal(token),
-      )) as ArrayBuffer
-      await writeWorkspaceFile(options.input.outputPath, new Uint8Array(audio))
-      return new vscode.LanguageModelToolResult([
-        new vscode.LanguageModelTextPart(`Wrote ${options.input.outputPath}`),
-      ])
-    } catch (error) {
-      return toolError(error)
-    }
-  },
-  async prepareInvocation(options) {
-    const row = resolveRoleRow('speech')
-    return {
-      confirmationMessages: {
-        title: 'Speak text',
-        message: confirmationMessage(
-          row,
-          'Speak text',
-          await confirmationTarget(options.input.outputPath, true),
-        ),
-      },
-    }
-  },
-}
-
-interface SearchInput {
-  query: string
-  maxResults?: number
-}
-
-const DEFAULT_SEARCH_MAX_RESULTS = 6
-
-const searchTool: vscode.LanguageModelTool<SearchInput> = {
-  async invoke(options, token) {
-    try {
-      const hits = await searchIndex.search(
-        options.input.query,
-        options.input.maxResults ?? DEFAULT_SEARCH_MAX_RESULTS,
-        cancellationSignal(token),
-      )
-      if (hits.length === 0) {
-        return new vscode.LanguageModelToolResult([
-          new vscode.LanguageModelTextPart('No matching results.'),
-        ])
-      }
-      const text = hits
-        .map((h) => `${h.path}:${h.startLine}-${h.endLine}\n${truncateSnippet(h.text)}`)
-        .join('\n\n---\n\n')
-      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
-    } catch (error) {
-      return toolError(error)
-    }
-  },
-}
-
 // --- activation ---------------------------------------------------------
+
+/** The tree-item commands: each gets the clicked `EngineTreeItem` and ignores anything that is not an engine row. */
+function registerEngineTreeCommands(): vscode.Disposable[] {
+  return [
+    vscode.commands.registerCommand('engined.showEngineLogs', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return engineExplorer.showLogs(item.node)
+      }
+      return
+    }),
+    vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return engineExplorer.stop(item.node)
+      }
+      return
+    }),
+    vscode.commands.registerCommand('engined.warmEngine', async (item: EngineTreeItem) => {
+      if (item.kind !== 'engine') {
+        return
+      }
+      const row = poller.rows.find(
+        (r) => r.engine === item.node.rawId && r.door.name === item.node.door.name,
+      )
+      if (row === undefined) {
+        vscode.window.showErrorMessage(`engined: no known model route for engine "${item.node.id}"`)
+        return
+      }
+      try {
+        await startModel(row.door.url, row.routeId)
+      } catch (error) {
+        vscode.window.showErrorMessage(`engined: warm "${row.id}" failed: ${describeError(error)}`)
+      }
+      await poller.pollNow()
+      await engineExplorer.refresh()
+    }),
+    vscode.commands.registerCommand('engined.holdEngine', async (item: EngineTreeItem) => {
+      if (item.kind !== 'engine') {
+        return
+      }
+      try {
+        await holdEngine(item.node.door.url, item.node.rawId)
+        heldEngineIds.add(item.node.id)
+        renderStatusBar()
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `engined: hold "${item.node.id}" failed: ${describeError(error)}`,
+        )
+      }
+      await engineExplorer.refresh()
+    }),
+    vscode.commands.registerCommand('engined.releaseHoldEngine', async (item: EngineTreeItem) => {
+      if (item.kind !== 'engine') {
+        return
+      }
+      try {
+        await unholdEngine(item.node.door.url, item.node.rawId)
+        heldEngineIds.delete(item.node.id)
+        renderStatusBar()
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `engined: release hold "${item.node.id}" failed: ${describeError(error)}`,
+        )
+      }
+      await engineExplorer.refresh()
+    }),
+    vscode.commands.registerCommand('engined.copyFixCommand', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return copyFixCommand(item.node.fix)
+      }
+      return
+    }),
+  ]
+}
 
 export function activate(context: vscode.ExtensionContext): void {
   extensionContext = context
-  void vscode.commands.executeCommand(
-    'setContext',
-    CHAT_SETTINGS_ROUTED_CONTEXT,
-    savedChatSettings() !== undefined,
+  background(
+    vscode.commands.executeCommand(
+      'setContext',
+      CHAT_SETTINGS_ROUTED_CONTEXT,
+      savedChatSettings() !== undefined,
+    ),
   )
   output = vscode.window.createOutputChannel('engined')
-  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+  statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    STATUS_BAR_PRIORITY,
+  )
   statusBarItem.command = 'engined.showQuickPick'
   statusBarItem.show()
 
@@ -1463,7 +1205,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
 
   engineExplorer = new EngineExplorer(heldEngineIds, log, getDoors, () => poller.rows)
-  void engineExplorer.refresh()
+  background(engineExplorer.refresh())
 
   context.subscriptions.push(
     output,
@@ -1477,11 +1219,11 @@ export function activate(context: vscode.ExtensionContext): void {
       new EnginedInlineCompletionProvider(),
     ),
     vscode.window.onDidChangeActiveTextEditor(trackActiveEditor),
-    vscode.lm.registerTool('engined_generateImage', generateImageTool),
-    vscode.lm.registerTool('engined_readImage', readImageTool),
-    vscode.lm.registerTool('engined_transcribe', transcribeTool),
-    vscode.lm.registerTool('engined_speak', speakTool),
-    vscode.lm.registerTool('engined_search', searchTool),
+    ...registerTools({
+      log,
+      resolveRoleRow,
+      searchIndex: () => searchIndex,
+    }),
     watcher,
     watcher.onDidChange((uri) => searchIndex.onFileChanged(uri, 'change')),
     watcher.onDidCreate((uri) => searchIndex.onFileChanged(uri, 'create')),
@@ -1500,77 +1242,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.holdModel', () => holdModel()),
     vscode.commands.registerCommand('engined.releaseHold', () => releaseHold()),
     vscode.commands.registerCommand('engined.refreshEngines', () => engineExplorer.refresh()),
-    vscode.commands.registerCommand('engined.showEngineLogs', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return engineExplorer.showLogs(item.node)
-      }
-      return
-    }),
-    vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return engineExplorer.stop(item.node)
-      }
-      return
-    }),
-    vscode.commands.registerCommand('engined.warmEngine', async (item: EngineTreeItem) => {
-      if (item.kind !== 'engine') {
-        return
-      }
-      const row = poller.rows.find(
-        (r) => r.engine === item.node.rawId && r.door.name === item.node.door.name,
-      )
-      if (row === undefined) {
-        void vscode.window.showErrorMessage(
-          `engined: no known model route for engine "${item.node.id}"`,
-        )
-        return
-      }
-      try {
-        await startModel(row.door.url, row.routeId)
-      } catch (error) {
-        void vscode.window.showErrorMessage(
-          `engined: warm "${row.id}" failed: ${describeError(error)}`,
-        )
-      }
-      await poller.pollNow()
-      await engineExplorer.refresh()
-    }),
-    vscode.commands.registerCommand('engined.holdEngine', async (item: EngineTreeItem) => {
-      if (item.kind !== 'engine') {
-        return
-      }
-      try {
-        await holdEngine(item.node.door.url, item.node.rawId)
-        heldEngineIds.add(item.node.id)
-        renderStatusBar()
-      } catch (error) {
-        void vscode.window.showErrorMessage(
-          `engined: hold "${item.node.id}" failed: ${describeError(error)}`,
-        )
-      }
-      await engineExplorer.refresh()
-    }),
-    vscode.commands.registerCommand('engined.releaseHoldEngine', async (item: EngineTreeItem) => {
-      if (item.kind !== 'engine') {
-        return
-      }
-      try {
-        await unholdEngine(item.node.door.url, item.node.rawId)
-        heldEngineIds.delete(item.node.id)
-        renderStatusBar()
-      } catch (error) {
-        void vscode.window.showErrorMessage(
-          `engined: release hold "${item.node.id}" failed: ${describeError(error)}`,
-        )
-      }
-      await engineExplorer.refresh()
-    }),
-    vscode.commands.registerCommand('engined.copyFixCommand', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return copyFixCommand(item.node.fix)
-      }
-      return
-    }),
+    ...registerEngineTreeCommands(),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('engined.pollSeconds')) {
         restartPollTimer()
@@ -1578,7 +1250,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (e.affectsConfiguration('engined.doors')) {
         stopEngineEvents()
         restartPollTimer()
-        void connectAllEngineEvents()
+        background(connectAllEngineEvents())
       }
       if (e.affectsConfiguration('engined.defaultModels')) {
         renderStatusBar()
@@ -1591,7 +1263,7 @@ export function activate(context: vscode.ExtensionContext): void {
       stopEngineEvents()
     }),
   )
-  void connectAllEngineEvents()
+  background(connectAllEngineEvents())
 }
 
 export function deactivate(): void {

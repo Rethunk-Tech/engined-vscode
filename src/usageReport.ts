@@ -8,6 +8,9 @@
 import type { DoorUsage, UsageRow } from './doorClient.ts'
 import { abbreviateTokenCount, formatSeconds, isLocalEgress } from './status.ts'
 
+const COST_DECIMALS = 4
+const PERCENT = 100
+
 /** `a + b`, where an absent running total or addend means "nothing known yet", not zero -- mirrors engined's own `usage.ts` `addKnown`. */
 function addKnown(total: number | undefined, addend: number | undefined): number | undefined {
   return addend === undefined ? total : (total ?? 0) + addend
@@ -62,7 +65,7 @@ export function totalsFor(rows: readonly UsageRow[]): UsageTotals {
 }
 
 function formatCostUsd(usd: number): string {
-  return `$${usd.toFixed(4)}`
+  return `$${usd.toFixed(COST_DECIMALS)}`
 }
 
 function formatEgressSplit(t: UsageTotals): string {
@@ -70,8 +73,8 @@ function formatEgressSplit(t: UsageTotals): string {
   if (known === 0) {
     return 'egress unknown'
   }
-  const localPct = Math.round((t.localRequests / known) * 100)
-  return `local ${localPct}% / remote ${100 - localPct}%`
+  const localPct = Math.round((t.localRequests / known) * PERCENT)
+  return `local ${localPct}% / remote ${PERCENT - localPct}%`
 }
 
 /** `Requests: 123 (110 ok, 13 failed) · Tokens: 45.6k in / 12.3k out · Cost: $1.2345 · local 80% / remote 20%`. */
@@ -146,9 +149,9 @@ function perDayTable(entries: readonly Entry[], multiDoor: boolean): string {
     : ['Date', 'Requests', 'OK', 'Failed', 'Tokens in', 'Tokens out', 'Cost', 'Duration']
   const rows = [...groups.entries()]
     .sort(([a], [b]) => b.localeCompare(a))
-    .map(([key, rows]) => {
+    .map(([key, groupRows]) => {
       const [date, door] = key.split('\u0000')
-      const t = totalsFor(rows)
+      const t = totalsFor(groupRows)
       const [inTok, outTok] = tokensCell(t)
       const cells = [String(date), ...(multiDoor ? [String(door)] : [])]
       return [
@@ -173,9 +176,9 @@ function perRouteTable(entries: readonly Entry[], multiDoor: boolean): string {
     ? ['Route', 'Door', 'Requests', 'OK', 'Failed', 'Tokens in', 'Tokens out', 'Cost']
     : ['Route', 'Requests', 'OK', 'Failed', 'Tokens in', 'Tokens out', 'Cost']
   const rows = [...groups.entries()]
-    .map(([key, rows]) => {
+    .map(([key, groupRows]) => {
       const [route, door] = key.split('\u0000')
-      const t = totalsFor(rows)
+      const t = totalsFor(groupRows)
       const [inTok, outTok] = tokensCell(t)
       const cells = [String(route), ...(multiDoor ? [String(door)] : [])]
       return {

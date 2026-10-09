@@ -152,13 +152,13 @@ function everySpanStyle(html: string): string[] {
   return [...html.matchAll(/<span style="([^"]*)"/g)].map((m) => m[1] ?? '')
 }
 
-describe('buildTooltip', () => {
-  const baseInput = {
-    doors: [{ name: 'local', url: 'http://x', reachable: true }],
-    modelCount: 5,
-    defaults: [],
-  }
+const baseInput = {
+  doors: [{ name: 'local', url: 'http://x', reachable: true }],
+  modelCount: 5,
+  defaults: [],
+}
 
+describe('buildTooltip', () => {
   test('every emitted span style survives the real VS Code sanitizer regex', () => {
     const tooltip = buildTooltip({
       ...baseInput,
@@ -197,7 +197,7 @@ describe('buildTooltip', () => {
 
   test('header is a table-free chip line naming reachability and model count', () => {
     const tooltip = buildTooltip(baseInput)
-    const header = tooltip.split('\n\n<hr>\n\n')[0]
+    const [header] = tooltip.split('\n\n<hr>\n\n')
     expect(header).toContain('<b>engined</b>')
     expect(header).toContain('$(pass-filled) reachable')
     expect(header).toContain('5 model(s)')
@@ -225,7 +225,9 @@ describe('buildTooltip', () => {
     expect(tooltip).toContain('http://127.0.0.1:29200')
     expect(tooltip).toContain('http://10.0.0.5:29200')
   })
+})
 
+describe('buildTooltip calls table', () => {
   test('calls render as columns in one table, header names only the calls that exist', () => {
     const chatOnly = buildTooltip({
       ...baseInput,
@@ -357,7 +359,9 @@ describe('buildTooltip', () => {
     expect(neither).not.toContain('<b>Today</b>')
     expect(neither).not.toContain('<b>Defaults</b>')
   })
+})
 
+describe('buildTooltip layout', () => {
   test('the calls table label column reads "Last", not a blank header cell', () => {
     const tooltip = buildTooltip({
       ...baseInput,

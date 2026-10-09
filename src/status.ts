@@ -1,3 +1,7 @@
+import { MS_PER_SECOND, THOUSAND } from './constants.ts'
+
+const COST_DECIMALS = 4
+
 /**
  * Pure formatting/aggregation for the status bar: the last chat call, the
  * last completion, the loading state, and the rich HTML tooltip. No
@@ -20,20 +24,20 @@ export function isLocalEgress(egress: string | undefined): boolean {
 /** The last path segment of a model id, e.g. `sonnet-5` from `@/claude/sonnet-5`. */
 export function shortModelName(id: string): string {
   const parts = id.split('/')
-  return parts[parts.length - 1] || id
+  return parts.at(-1) || id
 }
 
 /** `29123` -> `29.1k`; under 1000 stays a plain integer. */
 export function abbreviateTokenCount(n: number): string {
-  if (n < 1000) {
+  if (n < THOUSAND) {
     return String(Math.round(n))
   }
-  return `${(n / 1000).toFixed(1)}k`
+  return `${(n / THOUSAND).toFixed(1)}k`
 }
 
 /** `2300` -> `2.3s`; ten seconds and over drops the decimal. */
 export function formatSeconds(ms: number): string {
-  const seconds = ms / 1000
+  const seconds = ms / MS_PER_SECOND
   return seconds >= 10 ? `${Math.round(seconds)}s` : `${seconds.toFixed(1)}s`
 }
 
@@ -77,7 +81,7 @@ export interface CallRecord {
 
 /** `$0.0123`, four decimal places -- these are per-call agentic-CLI costs, always sub-dollar. */
 function formatCostUsd(costUsd: number): string {
-  return `$${costUsd.toFixed(4)}`
+  return `$${costUsd.toFixed(COST_DECIMALS)}`
 }
 
 /** `$(server) sonnet-5 · local · 1.2k→340 · 2.3s`; `$(cloud)` when egress is not local; cost appended only when the hop reported one. Kept as the plain status-bar text and the unreachable-door fallback tooltip; the popup tooltip uses `callTable` instead. */
@@ -97,7 +101,7 @@ export function formatLoadingText(modelId: string): string {
 
 /** `~31k-token prompt` -- the estimate is already a deliberate over-count (`requestBuilder.ts`), so a finer unit would be false precision. */
 export function formatProcessingText(promptTokenEstimate: number): string {
-  return `$(loading~spin) processing ~${Math.round(promptTokenEstimate / 1000)}k-token prompt…`
+  return `$(loading~spin) processing ~${Math.round(promptTokenEstimate / THOUSAND)}k-token prompt…`
 }
 
 /**
@@ -271,8 +275,15 @@ function multiDoorHeaderChip(doors: readonly DoorLine[]): string {
   const reachableCount = doors.filter((d) => d.reachable).length
   const allUp = reachableCount === doors.length
   const allDown = reachableCount === 0
-  const color = allDown ? COLOR_ERROR : allUp ? COLOR_OK : COLOR_WARN
-  const glyph = allDown ? '$(error)' : allUp ? '$(pass-filled)' : '$(warning)'
+  let color = COLOR_WARN
+  let glyph = '$(warning)'
+  if (allDown) {
+    color = COLOR_ERROR
+    glyph = '$(error)'
+  } else if (allUp) {
+    color = COLOR_OK
+    glyph = '$(pass-filled)'
+  }
   return chip(`${glyph} ${reachableCount}/${doors.length} doors reachable`, color)
 }
 
@@ -369,8 +380,8 @@ function callsTable(columns: readonly CallColumn[], theme: ThemeKind): string {
 // --- today/defaults (one flat table, four columns) -------------------------
 
 /** [label, value] pairs -- Requests/Tokens/Cost, only the facts actually known. */
-function todayRowPairs(usage: TodayUsage): Array<[string, string]> {
-  const pairs: Array<[string, string]> = [['Requests', String(usage.requests)]]
+function todayRowPairs(usage: TodayUsage): [string, string][] {
+  const pairs: [string, string][] = [['Requests', String(usage.requests)]]
   if (usage.promptTokens !== undefined || usage.completionTokens !== undefined) {
     const inTokens =
       usage.promptTokens === undefined ? '?' : abbreviateTokenCount(usage.promptTokens)
