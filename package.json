@@ -475,6 +475,30 @@
         {
           "command": "engined.restoreChatSettings",
           "when": "engined.chatSettingsRouted"
+        },
+        {
+          "command": "engined.showEngineLogs",
+          "when": "false"
+        },
+        {
+          "command": "engined.stopEngine",
+          "when": "false"
+        },
+        {
+          "command": "engined.warmEngine",
+          "when": "false"
+        },
+        {
+          "command": "engined.holdEngine",
+          "when": "false"
+        },
+        {
+          "command": "engined.releaseHoldEngine",
+          "when": "false"
+        },
+        {
+          "command": "engined.copyFixCommand",
+          "when": "false"
         }
       ]
     }
