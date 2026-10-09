@@ -26,6 +26,8 @@ interface IndexEntry extends TextChunk {
 }
 
 interface StoredIndex {
+  /** The embedding route (`EnginedModelRow.id`) every vector here came from; a different route's query vectors are not comparable. */
+  route?: string
   files: Record<string, number>
   entries: IndexEntry[]
 }
@@ -145,6 +147,9 @@ export class SearchIndex {
     if (row === undefined) {
       this.#log('search: no installed engined route serves /openai/v1/embeddings')
       return
+    }
+    if (this.#index.route !== row.id) {
+      this.#index = { ...emptyIndex(), route: row.id }
     }
     const work = (progress?: vscode.Progress<{ message?: string }>) =>
       this.#applyRefresh(row, progress)
