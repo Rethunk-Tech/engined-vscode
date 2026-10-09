@@ -1,8 +1,7 @@
 /**
  * Splits long prompt text into pieces at structural boundaries, so a hybrid (recurrent +
  * attention) model can resume a cached prompt at more points. Such a model resumes only at a
- * message boundary: measured on ornith, a 31k-token prompt changed at 85% reused 0 tokens as one
- * message and 26,014 when split into 64. Cut points depend only on the text before them, so a
+ * message boundary, so one huge message reuses nothing after a late change. Cut points depend only on the text before them, so a
  * shared prefix always splits identically, and the pieces concatenate back to the original.
  */
 

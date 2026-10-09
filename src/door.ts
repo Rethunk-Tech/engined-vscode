@@ -124,10 +124,9 @@ export function servesTokenize(row: EnginedModelRow): boolean {
 }
 
 /**
- * ponytail: context_out has no analogous "minimum across chain hops" field
- * reported for undeclared llama routes the way context_in now does (see
- * engined 8e583c4); 8192 is a guess, and under-reporting only trims a
- * response early rather than overflowing anything.
+ * ponytail: the door reports no output limit for undeclared llama routes (unlike
+ * context_in); 8192 is a guess, and under-reporting only trims a response early
+ * rather than overflowing anything.
  */
 const FALLBACK_MAX_OUTPUT_TOKENS = 8192
 const FALLBACK_MAX_INPUT_TOKENS = 32768

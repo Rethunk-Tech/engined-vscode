@@ -39,8 +39,7 @@ export interface DefaultModelRoleInfo {
 /**
  * Every `ModelRole` exactly once, in `engined.defaultModels.*`'s own order
  * (`package.json`'s `contributes.configuration`) -- the one list behind
- * both the chooser command and the popup, so the two can no longer drift
- * apart the way `DEFAULT_MODEL_ROLES`/`DEFAULT_MODEL_TOOLTIP_ROLES` did.
+ * both the chooser command and the popup, so the two cannot drift apart.
  */
 export const DEFAULT_MODEL_ROLES: readonly DefaultModelRoleInfo[] = [
   { role: 'image', chooserLabel: 'Image generation/edit', popupLabel: 'Image' },
