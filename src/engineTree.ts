@@ -26,6 +26,8 @@ interface EngineRow {
   fix?: string
   /** ISO-8601. Present on the wire only while a hold is still in the future; a past or unparseable value is not a hold. */
   held_until?: string
+  /** ISO-8601. Present on a running engine with zero leases; absent otherwise. A past or equal value is not shown. */
+  idle_until?: string
   /** Present only for roles that are running or queued. Absent on an idle engine and on a kind that has no leases. */
   roles?: EngineRole[]
   /** Requests holding this engine open. Audio engines report this without `roles`. */
@@ -108,13 +110,13 @@ export interface EngineNode {
   heldUntil?: string
 }
 
-/** `held_until` when it parses as a time still ahead of `now`. Absent, past, or unparseable means not held by the list. */
-function futureHeldUntil(heldUntil: string | undefined, now: number): string | undefined {
-  if (heldUntil === undefined) {
+/** An ISO-8601 instant still strictly ahead of `now`. Absent, past, equal, or unparseable is dropped. */
+function futureInstant(value: string | undefined, now: number): string | undefined {
+  if (value === undefined) {
     return undefined
   }
-  const ms = Date.parse(heldUntil)
-  return Number.isFinite(ms) && ms > now ? heldUntil : undefined
+  const ms = Date.parse(value)
+  return Number.isFinite(ms) && ms > now ? value : undefined
 }
 
 function heldLabel(heldUntil: string | undefined, heldBySession: boolean): string | undefined {
@@ -122,6 +124,10 @@ function heldLabel(heldUntil: string | undefined, heldBySession: boolean): strin
     return `held until ${heldUntil}`
   }
   return heldBySession ? 'held' : undefined
+}
+
+function idleLabel(idleUntil: string | undefined): string | undefined {
+  return idleUntil === undefined ? undefined : `idle until ${idleUntil}`
 }
 
 function waitingTotal(roles: readonly EngineRole[] | undefined): number {
@@ -183,8 +189,9 @@ export function releaseHoldIds(
  * and the list has not reported that field yet. When any `roles` entry has
  * `waiting` greater than zero, the description appends the sum as `N waiting`,
  * and the tooltip lists each busy role. A positive `active_leases` is the
- * tooltip when the engine reports no busy role. `isRemote` answers, for one
- * engine's raw
+ * tooltip when the engine reports no busy role. A future `idle_until` appends
+ * `idle until <time>` the same way a hold appends its deadline; a past, equal,
+ * or missing value adds nothing. `isRemote` answers, for one engine's raw
  * id, whether any row it backs reports a non-local egress -- `EngineStatus`
  * itself carries no egress, so that has to come from the model rows this
  * extension already polled.
@@ -204,7 +211,7 @@ export function toEngineNodes(
   const engines = response?.engines ?? []
   return engines.map((engine) => {
     const id = qualifyId(door.name, engine.id, doorCount)
-    const heldUntil = futureHeldUntil(engine.held_until, now)
+    const heldUntil = futureInstant(engine.held_until, now)
     const category = categorize(engine, isRemote(engine.id))
     const note = noteFor(category, engine.fix)
     const waiting = waitingTotal(engine.roles)
@@ -213,6 +220,7 @@ export function toEngineNodes(
       engine.state,
       note,
       heldLabel(heldUntil, heldIds.has(id)),
+      idleLabel(futureInstant(engine.idle_until, now)),
       waiting > 0 ? `${waiting} waiting` : undefined,
     ]
       .filter((part): part is string => part !== undefined)

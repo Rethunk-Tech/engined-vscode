@@ -206,6 +206,47 @@ describe('toEngineNodes', () => {
   })
 })
 
+describe('idle deadline', () => {
+  test('a future idle_until appends the deadline; a past, equal, missing, or unparseable one adds nothing', () => {
+    const now = Date.parse('2026-10-11T18:00:00.000Z')
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'openai-http',
+          state: 'running',
+          active_leases: 0,
+          idle_until: '2026-10-11T19:00:00.000Z',
+        },
+        {
+          id: 'comfy',
+          kind: 'openai-http',
+          state: 'running',
+          idle_until: '2026-10-11T17:00:00.000Z',
+        },
+        {
+          id: 'whisper',
+          kind: 'openai-http',
+          state: 'running',
+          idle_until: '2026-10-11T18:00:00.000Z',
+        },
+        { id: 'piper', kind: 'tts', state: 'running' },
+        { id: 'kokoro', kind: 'tts', state: 'running', idle_until: 'not-a-time' },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1, now })
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama?.description).toBe('openai-http · running · idle until 2026-10-11T19:00:00.000Z')
+    expect(llama?.hasResources).toBe(true)
+    expect(llama?.heldUntil).toBeUndefined()
+    for (const id of ['comfy', 'whisper', 'piper', 'kokoro']) {
+      const node = nodes.find((n) => n.id === id)
+      expect(node?.description).not.toContain('until')
+      expect(node?.hasResources).toBe(true)
+    }
+  })
+})
+
 describe('stateIcon', () => {
   test('a distinct icon per known state, falling back for anything else', () => {
     expect(stateIcon('running')).toBe('pass-filled')
