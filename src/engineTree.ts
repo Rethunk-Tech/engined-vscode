@@ -11,6 +11,13 @@ import { qualifyId } from './door.ts'
 import { doorErrorMessage } from './doorClient.ts'
 import { unreachable } from './unreachable.ts'
 
+/** One role that currently holds a lease or has callers queued behind it. A `model` field, when the door sends one, is ignored. */
+interface EngineRole {
+  role: string
+  active: number
+  waiting: number
+}
+
 interface EngineRow {
   id: string
   kind: string
@@ -19,6 +26,10 @@ interface EngineRow {
   fix?: string
   /** ISO-8601. Present on the wire only while a hold is still in the future; a past or unparseable value is not a hold. */
   held_until?: string
+  /** Present only for roles that are running or queued. Absent on an idle engine and on a kind that has no leases. */
+  roles?: EngineRole[]
+  /** Requests holding this engine open. Audio engines report this without `roles`. */
+  active_leases?: number
 }
 
 export interface EnginesListResponse {
@@ -113,6 +124,47 @@ function heldLabel(heldUntil: string | undefined, heldBySession: boolean): strin
   return heldBySession ? 'held' : undefined
 }
 
+function waitingTotal(roles: readonly EngineRole[] | undefined): number {
+  if (roles === undefined) {
+    return 0
+  }
+  let total = 0
+  for (const role of roles) {
+    if (role.waiting > 0) {
+      total += role.waiting
+    }
+  }
+  return total
+}
+
+/** Roles with a lease or a queue. Idle zeroes are omitted the same way the door omits them. */
+function busyRoleLines(roles: readonly EngineRole[] | undefined): string[] {
+  if (roles === undefined) {
+    return []
+  }
+  const lines: string[] = []
+  for (const role of roles) {
+    if (role.active > 0 || role.waiting > 0) {
+      lines.push(`${role.role} ${role.active} active, ${role.waiting} waiting`)
+    }
+  }
+  return lines
+}
+
+function engineTooltip(engine: EngineRow, description: string): string {
+  if (engine.state === 'unavailable' && engine.fix !== undefined) {
+    return engine.fix
+  }
+  const roles = busyRoleLines(engine.roles)
+  if (roles.length > 0) {
+    return roles.join('\n')
+  }
+  if (engine.active_leases !== undefined && engine.active_leases > 0) {
+    return `${description}\n${engine.active_leases} active`
+  }
+  return description
+}
+
 /**
  * Qualified ids Release Hold should offer: holds this session placed, plus
  * every engines-list row whose `held_until` is still ahead. The session set
@@ -128,10 +180,14 @@ export function releaseHoldIds(
 /**
  * `GET /engined/v1/engines`'s rows -> what the tree shows. A row is held when
  * `held_until` is still in the future, or when this session placed the hold
- * and the list has not reported that field yet. `isRemote` answers, for one
- * engine's raw id, whether any row it backs reports a non-local egress --
- * `EngineStatus` itself carries no egress, so that has to come from the
- * model rows this extension already polled.
+ * and the list has not reported that field yet. When any `roles` entry has
+ * `waiting` greater than zero, the description appends the sum as `N waiting`,
+ * and the tooltip lists each busy role. A positive `active_leases` is the
+ * tooltip when the engine reports no busy role. `isRemote` answers, for one
+ * engine's raw
+ * id, whether any row it backs reports a non-local egress -- `EngineStatus`
+ * itself carries no egress, so that has to come from the model rows this
+ * extension already polled.
  */
 export function toEngineNodes(
   response: EnginesListResponse | undefined,
@@ -151,7 +207,14 @@ export function toEngineNodes(
     const heldUntil = futureHeldUntil(engine.held_until, now)
     const category = categorize(engine, isRemote(engine.id))
     const note = noteFor(category, engine.fix)
-    const description = [engine.kind, engine.state, note, heldLabel(heldUntil, heldIds.has(id))]
+    const waiting = waitingTotal(engine.roles)
+    const description = [
+      engine.kind,
+      engine.state,
+      note,
+      heldLabel(heldUntil, heldIds.has(id)),
+      waiting > 0 ? `${waiting} waiting` : undefined,
+    ]
       .filter((part): part is string => part !== undefined)
       .join(' · ')
     return {
@@ -160,8 +223,7 @@ export function toEngineNodes(
       door,
       label: engine.id,
       description,
-      tooltip:
-        engine.state === 'unavailable' && engine.fix !== undefined ? engine.fix : description,
+      tooltip: engineTooltip(engine, description),
       contextValue: engine.state === 'unavailable' ? 'engine-unavailable' : 'engine',
       icon: stateIcon(engine.state),
       fix: engine.fix,

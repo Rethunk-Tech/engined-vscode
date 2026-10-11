@@ -83,6 +83,70 @@ describe('toEngineNodes', () => {
     expect(nodes[0]?.description).not.toContain('idle')
   })
 
+  test('queued callers append the waiting total and the tooltip names each busy role', () => {
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'llama',
+          state: 'running',
+          active_leases: 1,
+          roles: [
+            { role: 'chat', active: 1, waiting: 3 },
+            { role: 'embedding', active: 0, waiting: 0 },
+            { role: 'vision', active: 1, waiting: 1 },
+          ],
+        },
+      ],
+    }
+    const [node] = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    expect(node?.description).toBe('llama · running · 4 waiting')
+    expect(node?.tooltip).toBe('chat 1 active, 3 waiting\nvision 1 active, 1 waiting')
+    expect(node?.hasResources).toBe(true)
+    expect(node?.heldUntil).toBeUndefined()
+  })
+
+  test('three callers queued on one role read as that waiting total', () => {
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'llama',
+          state: 'running',
+          roles: [{ role: 'chat', active: 1, waiting: 3 }],
+        },
+      ],
+    }
+    const [node] = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    expect(node?.description).toBe('llama · running · 3 waiting')
+    expect(node?.tooltip).toBe('chat 1 active, 3 waiting')
+  })
+
+  test('a busy role with nobody queued does not append a waiting total, and leases without roles show on the tooltip', () => {
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'openai-http',
+          state: 'running',
+          roles: [{ role: 'chat', active: 1, waiting: 0 }],
+        },
+        { id: 'kokoro', kind: 'tts', state: 'running', active_leases: 2 },
+        { id: 'piper', kind: 'tts', state: 'running', active_leases: 0 },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama?.description).toBe('openai-http · running')
+    expect(llama?.tooltip).toBe('chat 1 active, 0 waiting')
+    const kokoro = nodes.find((n) => n.id === 'kokoro')
+    expect(kokoro?.description).toBe('tts · running')
+    expect(kokoro?.tooltip).toBe('tts · running\n2 active')
+    expect(kokoro?.hasResources).toBe(true)
+    const piper = nodes.find((n) => n.id === 'piper')
+    expect(piper?.tooltip).toBe(piper?.description)
+  })
+
   test('a held id (qualified) is reflected in the description', () => {
     const nodes = toEngineNodes(engines, { heldIds: new Set(['llama']), door: DOOR, doorCount: 1 })
     const llama = nodes.find((n) => n.id === 'llama')
