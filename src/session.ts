@@ -43,7 +43,7 @@ export interface Session {
   readonly tokenCountCache: TokenCountCache
   /** Every setting a saved defaultModel reason was logged for, so a repeated request logs it once per change rather than once per call. */
   readonly loggedUnusableReasons: Map<ModelRole, string>
-  /** Engine ids this session has itself put on hold -- `GET /engined/v1/engines` reports no held-until field, so a hold placed elsewhere is invisible here. */
+  /** Engine ids this session has itself put on hold, so a hold placed a moment ago shows before the next engines poll reports `held_until`. */
   readonly heldEngineIds: Set<string>
   readonly sseStates: Map<string, DoorSseState>
   /** Most-recently-active documents this session, most recent first; excludes whichever is currently active. */

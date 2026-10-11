@@ -17,6 +17,8 @@ interface EngineRow {
   state: string
   disabled?: boolean
   fix?: string
+  /** ISO-8601. Present on the wire only while a hold is still in the future; a past or unparseable value is not a hold. */
+  held_until?: string
 }
 
 export interface EnginesListResponse {
@@ -91,15 +93,45 @@ export interface EngineNode {
   fix: string | undefined
   /** Only a running, local container-kind engine has anything a `resources` fetch could answer. */
   hasResources: boolean
+  /** The row's `held_until`, kept only while that timestamp is still ahead of `now`. */
+  heldUntil?: string
+}
+
+/** `held_until` when it parses as a time still ahead of `now`. Absent, past, or unparseable means not held by the list. */
+function futureHeldUntil(heldUntil: string | undefined, now: number): string | undefined {
+  if (heldUntil === undefined) {
+    return undefined
+  }
+  const ms = Date.parse(heldUntil)
+  return Number.isFinite(ms) && ms > now ? heldUntil : undefined
+}
+
+function heldLabel(heldUntil: string | undefined, heldBySession: boolean): string | undefined {
+  if (heldUntil !== undefined) {
+    return `held until ${heldUntil}`
+  }
+  return heldBySession ? 'held' : undefined
 }
 
 /**
- * `GET /engined/v1/engines`'s rows -> what the tree shows, `held` sourced
- * from the session's own hold-tracking (see `AGENTS.md`'s Engines-view
- * invariant). `isRemote` answers, for one engine's raw id, whether any row
- * it backs reports a non-local egress -- `EngineStatus` itself carries no
- * egress, so that has to come from the model rows this extension already
- * polled.
+ * Qualified ids Release Hold should offer: holds this session placed, plus
+ * every engines-list row whose `held_until` is still ahead. The session set
+ * covers a hold placed a moment ago, before the next list poll reports it.
+ */
+export function releaseHoldIds(
+  sessionHeld: ReadonlySet<string>,
+  listedHeld: readonly string[],
+): string[] {
+  return [...new Set([...sessionHeld, ...listedHeld])].sort()
+}
+
+/**
+ * `GET /engined/v1/engines`'s rows -> what the tree shows. A row is held when
+ * `held_until` is still in the future, or when this session placed the hold
+ * and the list has not reported that field yet. `isRemote` answers, for one
+ * engine's raw id, whether any row it backs reports a non-local egress --
+ * `EngineStatus` itself carries no egress, so that has to come from the
+ * model rows this extension already polled.
  */
 export function toEngineNodes(
   response: EnginesListResponse | undefined,
@@ -108,19 +140,22 @@ export function toEngineNodes(
     door: Door
     doorCount: number
     isRemote?: (rawId: string) => boolean
+    /** Defaults to `Date.now()`. Tests pass a fixed instant. */
+    now?: number
   },
 ): EngineNode[] {
-  const { heldIds, door, doorCount, isRemote = () => false } = context
+  const { heldIds, door, doorCount, isRemote = () => false, now = Date.now() } = context
   const engines = response?.engines ?? []
   return engines.map((engine) => {
-    const held = heldIds.has(qualifyId(door.name, engine.id, doorCount))
+    const id = qualifyId(door.name, engine.id, doorCount)
+    const heldUntil = futureHeldUntil(engine.held_until, now)
     const category = categorize(engine, isRemote(engine.id))
     const note = noteFor(category, engine.fix)
-    const description = [engine.kind, engine.state, note, held ? 'held' : undefined]
+    const description = [engine.kind, engine.state, note, heldLabel(heldUntil, heldIds.has(id))]
       .filter((part): part is string => part !== undefined)
       .join(' · ')
     return {
-      id: qualifyId(door.name, engine.id, doorCount),
+      id,
       rawId: engine.id,
       door,
       label: engine.id,
@@ -131,6 +166,7 @@ export function toEngineNodes(
       icon: stateIcon(engine.state),
       fix: engine.fix,
       hasResources: category === 'running',
+      ...(heldUntil === undefined ? {} : { heldUntil }),
     }
   })
 }

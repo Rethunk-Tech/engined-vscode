@@ -9,6 +9,7 @@ import { doorByName, qualifiedEngineIds, REASONING_LEVELS, splitQualifiedId } fr
 import { fetchAllUsage, holdEngine, startModel, unholdEngine } from './doorClient.ts'
 import type { EngineTreeItem } from './engineExplorer.ts'
 import { copyFixCommand } from './engineExplorer.ts'
+import { releaseHoldIds } from './engineTree.ts'
 import type { Session } from './session.ts'
 import { renderStatusBar } from './statusBar.ts'
 import { buildUsageReport } from './usageReport.ts'
@@ -63,13 +64,14 @@ export async function holdModel(s: Session): Promise<void> {
   await s.poller.pollNow()
 }
 
-/** `engined: Release Hold`: only offers engines this session itself held. */
+/** `engined: Release Hold`: this session's holds, plus every engines-list row still reporting a future `held_until`. */
 export async function releaseHold(s: Session): Promise<void> {
-  if (s.heldEngineIds.size === 0) {
+  const ids = releaseHoldIds(s.heldEngineIds, s.engineExplorer.listedHoldIds())
+  if (ids.length === 0) {
     vscode.window.showInformationMessage('engined: no engines are held')
     return
   }
-  const id = await vscode.window.showQuickPick([...s.heldEngineIds].sort(), {
+  const id = await vscode.window.showQuickPick(ids, {
     title: 'engined: Release hold',
   })
   if (id === undefined) {
@@ -82,6 +84,7 @@ export async function releaseHold(s: Session): Promise<void> {
     await unholdEngine(door.url, rawId)
     s.heldEngineIds.delete(id)
     renderStatusBar(s)
+    await s.engineExplorer.refresh()
   } catch (error) {
     vscode.window.showErrorMessage(`engined: release hold "${id}" failed: ${describeError(error)}`)
   }

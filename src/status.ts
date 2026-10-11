@@ -166,7 +166,7 @@ export interface TooltipInput {
   lastBackground?: CallRecord
   lastCompletion?: CallRecord
   defaults: readonly DefaultModelLine[]
-  /** Engines this session has itself put on hold -- see `AGENTS.md`'s Engines-view invariant for why nothing else can be known here. */
+  /** Engines this session has itself put on hold. The Engines view and Release Hold also read `held_until` off the engines list. */
   heldEngines?: readonly string[]
   /** `engined.useForAllChatFeatures` is in effect and `engined.restoreChatSettings` can undo it. */
   chatSettingsRouted?: boolean

@@ -1,9 +1,9 @@
 /**
  * The Engines `TreeDataProvider`, its item commands, and a dedicated
  * "engined: <engine> logs" output channel per engine. `engineTree.ts` holds
- * the pure JSON -> row mapping this file renders; hold-tracking is owned by
- * `extension.ts` (see `AGENTS.md`'s Engines-view invariant) and handed in as
- * a plain `Set`.
+ * the pure JSON -> row mapping this file renders. A hold this session placed
+ * is handed in as a plain `Set`; a hold another session placed arrives as
+ * `held_until` on the engines list.
  */
 
 import * as vscode from 'vscode'
@@ -43,6 +43,11 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     this.#log = log
     this.#getDoors = getDoors
     this.#getRows = getRows
+  }
+
+  /** Qualified ids whose latest engines-list row still has a future `held_until`. */
+  listedHoldIds(): readonly string[] {
+    return this.#nodes.flatMap((node) => (node.heldUntil === undefined ? [] : [node.id]))
   }
 
   dispose(): void {

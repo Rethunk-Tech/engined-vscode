@@ -52,7 +52,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 - The "engined" output channel never logs request or response content — only poll failures, HTTP status + door error text, and state changes.
 - `reasoning_effort` is sent only when a row's `capabilities.reasoning` is non-empty, snapped to a level that row actually lists.
 - `engined_search` only embeds/reranks through a route whose `egress` is `none`, unless `engined.search.allowRemote` is set.
-- The Engines view's "held" flag tracks holds this session itself placed via `engined.holdEngine` -- `GET /engined/v1/engines` reports no held-until field, so a hold placed by another process is invisible until a start attempt hits its 409.
+- The Engines view marks a row held when `GET /engined/v1/engines` reports `held_until` (ISO-8601) still in the future, and appends that time; an absent field means the list is not holding it. A hold this session just placed stays in `heldEngineIds` so it shows before the next poll returns the field. Release Hold offers the union of that set and every row whose `held_until` is still ahead.
 - `engined.doors` replaces `engined.url` outright (greenfield -- no alias). A row's `id` is `qualifyId`'d against its door and is what VS Code/settings see; `routeId` is the door's own unqualified id and is the only thing ever sent in a request body. Every request goes to the door that owns the row/engine it names, never a single configured URL.
 - `GET /engined/v1/engines/:id/resources` is fetched only for an engine the Engines view categorizes as a running, local, container-kind engine -- an `agentic-cli` engine, an unavailable one, and one backing only remote-egress rows never get a `resources` call, and their raw JSON never reaches the tree.
 

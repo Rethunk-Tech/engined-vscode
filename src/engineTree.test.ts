@@ -6,6 +6,7 @@ import type { Door } from './door.ts'
 import {
   type EnginesListResponse,
   formatResourceLine,
+  releaseHoldIds,
   stateIcon,
   toEngineNodes,
   truncateLogLines,
@@ -86,8 +87,54 @@ describe('toEngineNodes', () => {
     const nodes = toEngineNodes(engines, { heldIds: new Set(['llama']), door: DOOR, doorCount: 1 })
     const llama = nodes.find((n) => n.id === 'llama')
     expect(llama?.description).toContain('held')
+    expect(llama?.description).not.toContain('until')
     const comfy = nodes.find((n) => n.id === 'comfy')
     expect(comfy?.description).not.toContain('held')
+  })
+
+  test('a future held_until marks the row and appends the time; a past, equal, or unparseable one does not', () => {
+    const now = Date.parse('2026-10-11T18:00:00.000Z')
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'openai-http',
+          state: 'installed',
+          held_until: '2026-10-11T19:00:00.000Z',
+        },
+        {
+          id: 'comfy',
+          kind: 'openai-http',
+          state: 'installed',
+          held_until: '2026-10-11T17:00:00.000Z',
+        },
+        {
+          id: 'whisper',
+          kind: 'openai-http',
+          state: 'installed',
+          held_until: '2026-10-11T18:00:00.000Z',
+        },
+        { id: 'claude', kind: 'agentic-cli', state: 'installed', held_until: 'not-a-time' },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1, now })
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama?.heldUntil).toBe('2026-10-11T19:00:00.000Z')
+    expect(llama?.description).toContain('held until 2026-10-11T19:00:00.000Z')
+    for (const id of ['comfy', 'whisper', 'claude']) {
+      const node = nodes.find((n) => n.id === id)
+      expect(node?.heldUntil).toBeUndefined()
+      expect(node?.description).not.toContain('held')
+    }
+  })
+
+  test('release candidates are the session set plus rows still held by the list', () => {
+    expect(releaseHoldIds(new Set(['llama', 'comfy']), ['comfy', 'whisper'])).toEqual([
+      'comfy',
+      'llama',
+      'whisper',
+    ])
+    expect(releaseHoldIds(new Set(), [])).toEqual([])
   })
 
   test('missing response maps to no nodes', () => {
