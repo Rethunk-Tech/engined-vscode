@@ -247,6 +247,31 @@ describe('idle deadline', () => {
   })
 })
 
+describe('superseded config', () => {
+  test('a superseded path appends config stale and the stop path; a row without the field does not', () => {
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'openai-http',
+          state: 'running',
+          superseded: '/engined/v1/engines/llama/stop',
+        },
+        { id: 'comfy', kind: 'openai-http', state: 'running' },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama?.description).toBe(
+      'openai-http · running · config stale /engined/v1/engines/llama/stop',
+    )
+    expect(llama?.tooltip).toContain('/engined/v1/engines/llama/stop')
+    const comfy = nodes.find((n) => n.id === 'comfy')
+    expect(comfy?.description).toBe('openai-http · running')
+    expect(comfy?.description).not.toContain('config stale')
+  })
+})
+
 describe('stateIcon', () => {
   test('a distinct icon per known state, falling back for anything else', () => {
     expect(stateIcon('running')).toBe('pass-filled')

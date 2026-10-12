@@ -28,6 +28,12 @@ interface EngineRow {
   held_until?: string
   /** ISO-8601. Present on a running engine with zero leases; absent otherwise. A past or equal value is not shown. */
   idle_until?: string
+  /**
+   * Stop path for a running engine whose config generation `reload` has
+   * replaced. Absent when the engine is not running, or when its shape still
+   * matches. The value is the call that resolves it, e.g. `/engined/v1/engines/foo/stop`.
+   */
+  superseded?: string
   /** Present only for roles that are running or queued. Absent on an idle engine and on a kind that has no leases. */
   roles?: EngineRole[]
   /** Requests holding this engine open. Audio engines report this without `roles`. */
@@ -130,6 +136,10 @@ function idleLabel(idleUntil: string | undefined): string | undefined {
   return idleUntil === undefined ? undefined : `idle until ${idleUntil}`
 }
 
+function supersededLabel(superseded: string | undefined): string | undefined {
+  return superseded === undefined ? undefined : `config stale ${superseded}`
+}
+
 function waitingTotal(roles: readonly EngineRole[] | undefined): number {
   if (roles === undefined) {
     return 0
@@ -191,10 +201,11 @@ export function releaseHoldIds(
  * and the tooltip lists each busy role. A positive `active_leases` is the
  * tooltip when the engine reports no busy role. A future `idle_until` appends
  * `idle until <time>` the same way a hold appends its deadline; a past, equal,
- * or missing value adds nothing. `isRemote` answers, for one engine's raw
- * id, whether any row it backs reports a non-local egress -- `EngineStatus`
- * itself carries no egress, so that has to come from the model rows this
- * extension already polled.
+ * or missing value adds nothing. A present `superseded` appends
+ * `config stale <stop path>`; an absent field adds nothing. `isRemote`
+ * answers, for one engine's raw id, whether any row it backs reports a
+ * non-local egress -- `EngineStatus` itself carries no egress, so that has
+ * to come from the model rows this extension already polled.
  */
 export function toEngineNodes(
   response: EnginesListResponse | undefined,
@@ -221,6 +232,7 @@ export function toEngineNodes(
       note,
       heldLabel(heldUntil, heldIds.has(id)),
       idleLabel(futureInstant(engine.idle_until, now)),
+      supersededLabel(engine.superseded),
       waiting > 0 ? `${waiting} waiting` : undefined,
     ]
       .filter((part): part is string => part !== undefined)
