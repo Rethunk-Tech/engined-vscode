@@ -434,6 +434,78 @@ describe('config reload error', () => {
   })
 })
 
+describe('model discovery', () => {
+  test('discovery last_error and fetched_at land on the agent row tooltip; a list without discovery is unchanged', () => {
+    const rows: EnginesListResponse['engines'] = [
+      {
+        id: 'cursor',
+        kind: 'agentic-cli',
+        state: 'installed',
+        capabilities: [
+          { model: 'auto' },
+          { model: 'composer' },
+          { model: 'sonnet' },
+          { model: 'opus' },
+          { model: 'haiku' },
+        ],
+      },
+      { id: 'claude', kind: 'agentic-cli', state: 'installed' },
+      {
+        id: 'llama',
+        kind: 'llama',
+        state: 'running',
+        roles: [{ role: 'chat', active: 1, waiting: 0, model: 'foo.gguf' }],
+        capabilities: [{ model: 'ornith' }],
+      },
+    ]
+    const ctx = { heldIds: new Set<string>(), door: DOOR, doorCount: 1 }
+    const plain = toEngineNodes({ engines: rows }, ctx)
+    expect(toEngineNodes({ engines: rows, discovery: undefined }, ctx)).toEqual(plain)
+    const cursorPlain = plain.find((n) => n.id === 'cursor')
+    expect(cursorPlain?.tooltip).toBe(
+      'agentic-cli · installed · agent CLI, no container\n5 models, including auto',
+    )
+    expect(cursorPlain?.description).toBe('agentic-cli · installed · agent CLI, no container')
+
+    const listed: EnginesListResponse = {
+      engines: rows,
+      discovery: {
+        cursor: {
+          fetched_at: '2026-10-11T18:00:00.000Z',
+          last_error: 'refresh failed: 401',
+          models: 12,
+          findings: [],
+        },
+        claude: {
+          fetched_at: '2026-10-11T17:00:00.000Z',
+          models: 4,
+          findings: [{ kind: 'duplicate', route: 'claude/opus', fix: 'delete the route' }],
+        },
+        llama: {
+          fetched_at: '2026-10-11T18:00:00.000Z',
+          last_error: 'should not show',
+          models: 1,
+          findings: [],
+        },
+      },
+    }
+    const nodes = toEngineNodes(listed, ctx)
+    const cursor = nodes.find((n) => n.id === 'cursor')
+    expect(cursor?.description).toBe(cursorPlain?.description)
+    expect(cursor?.tooltip).toBe(
+      'agentic-cli · installed · agent CLI, no container\n5 models, including auto\nrefresh failed: 401\nfetched 2026-10-11T18:00:00.000Z',
+    )
+    const claude = nodes.find((n) => n.id === 'claude')
+    expect(claude?.tooltip).toBe(
+      'agentic-cli · installed · agent CLI, no container\nfetched 2026-10-11T17:00:00.000Z',
+    )
+    expect(claude?.tooltip).not.toContain('delete the route')
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama).toEqual(plain.find((n) => n.id === 'llama'))
+    expect(llama?.tooltip).toBe('chat 1 active, 0 waiting · foo.gguf\nmodels: ornith')
+  })
+})
+
 describe('stateIcon', () => {
   test('a distinct icon per known state, falling back for anything else', () => {
     expect(stateIcon('running')).toBe('pass-filled')

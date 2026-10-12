@@ -61,6 +61,24 @@ interface EngineRow {
   capabilities?: EngineCapability[]
 }
 
+interface DiscoveryFinding {
+  kind: 'duplicate' | 'retired'
+  route: string
+  fix: string
+}
+
+/**
+ * One provider's model-discovery status on `GET /engined/v1/engines`, keyed
+ * by engine id. `models` counts what the provider listed; the tooltip's
+ * model-id line stays the engine's `capabilities` summary.
+ */
+interface DiscoveryStatus {
+  fetched_at?: string
+  last_error?: string
+  models: number
+  findings: DiscoveryFinding[]
+}
+
 export interface EnginesListResponse {
   engines: EngineRow[]
   /**
@@ -69,6 +87,8 @@ export interface EnginesListResponse {
    * Shown on the door group; absent when the last reload parsed.
    */
   config_error?: string
+  /** Per `claude`/`cursor` engine. Absent when discovery is off. */
+  discovery?: Record<string, DiscoveryStatus>
 }
 
 /** Text for the door-group parent. Empty when the list carries no `config_error`. */
@@ -310,10 +330,43 @@ function baseTooltip(engine: EngineRow, description: string): string {
   return description
 }
 
-function engineTooltip(engine: EngineRow, description: string): string {
+/**
+ * `last_error` and `fetched_at` from this agentic-cli engine's discovery
+ * entry. Any other kind, or an entry missing the field, adds nothing.
+ */
+function discoveryLines(
+  engine: EngineRow,
+  discovery: Readonly<Record<string, DiscoveryStatus>> | undefined,
+): string[] {
+  if (engine.kind !== 'agentic-cli' || discovery === undefined) {
+    return []
+  }
+  const status = discovery[engine.id]
+  if (status === undefined) {
+    return []
+  }
+  const { last_error: error, fetched_at: fetched } = status
+  const lines: string[] = []
+  if (error !== undefined && error.length > 0) {
+    lines.push(error)
+  }
+  if (fetched !== undefined && fetched.length > 0) {
+    lines.push(`fetched ${fetched}`)
+  }
+  return lines
+}
+
+function engineTooltip(
+  engine: EngineRow,
+  description: string,
+  discovery: Readonly<Record<string, DiscoveryStatus>> | undefined,
+): string {
   const text = baseTooltip(engine, description)
-  const summary = capabilitySummary(engine.capabilities)
-  return summary === undefined ? text : `${text}\n${summary}`
+  const extra = [
+    capabilitySummary(engine.capabilities),
+    ...discoveryLines(engine, discovery),
+  ].filter((line): line is string => line !== undefined)
+  return extra.length === 0 ? text : `${text}\n${extra.join('\n')}`
 }
 
 /**
@@ -340,7 +393,10 @@ export function releaseHoldIds(
  * `unavailable` engine is appended; an absent field, or the same field on any
  * other state, adds nothing. When `capabilities` names declared models, the
  * tooltip appends a compact summary of those ids; an absent field adds
- * nothing, and that summary is not the live role model. A positive `active_leases` is the
+ * nothing, and that summary is not the live role model. An agentic-cli row
+ * appends its `discovery` entry's `last_error` and `fetched_at` on the tooltip
+ * when those fields are present; an absent `discovery` adds nothing, and
+ * `discovery.models` is not a second model-id line. A positive `active_leases` is the
  * tooltip when the engine reports no busy role. A future `idle_until` appends
  * `idle until <time>` the same way a hold appends its deadline; a past, equal,
  * or missing value adds nothing. A present `superseded` appends
@@ -362,6 +418,7 @@ export function toEngineNodes(
 ): EngineNode[] {
   const { heldIds, door, doorCount, isRemote = () => false, now = Date.now() } = context
   const engines = response?.engines ?? []
+  const discovery = response?.discovery
   return engines.map((engine) => {
     const id = qualifyId(door.name, engine.id, doorCount)
     const heldUntil = futureInstant(engine.held_until, now)
@@ -387,7 +444,7 @@ export function toEngineNodes(
       door,
       label: engine.id,
       description,
-      tooltip: engineTooltip(engine, description),
+      tooltip: engineTooltip(engine, description, discovery),
       contextValue: engine.state === 'unavailable' ? 'engine-unavailable' : 'engine',
       icon: stateIcon(engine.state),
       fix: engine.fix,
