@@ -9,8 +9,8 @@
 import * as vscode from 'vscode'
 import type { Door, EnginedModelRow } from './door.ts'
 import { fetchEngineLogs, fetchEngineResources, fetchEngines, stopEngine } from './doorClient.ts'
-import type { EngineNode, EnginesListResponse } from './engineTree.ts'
-import { formatResourceLine, toEngineNodes, truncateLogLines } from './engineTree.ts'
+import type { DoorGroupNote, EngineNode, EnginesListResponse } from './engineTree.ts'
+import { doorGroupNote, formatResourceLine, toEngineNodes, truncateLogLines } from './engineTree.ts'
 
 const LOG_TAIL = 500
 
@@ -27,6 +27,7 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   readonly #emitter = new vscode.EventEmitter<void>()
   readonly onDidChangeTreeData = this.#emitter.event
   #nodes: EngineNode[] = []
+  #doorNotes = new Map<string, DoorGroupNote>()
   readonly #heldIds: ReadonlySet<string>
   readonly #log: (line: string) => void
   readonly #logChannels = new Map<string, vscode.OutputChannel>()
@@ -69,19 +70,28 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
       doors.map(async (door) => {
         try {
           const response = (await fetchEngines(door.url)) as EnginesListResponse
-          return toEngineNodes(response, {
-            heldIds: this.#heldIds,
-            door,
-            doorCount: doors.length,
-            isRemote,
-          })
+          return {
+            name: door.name,
+            note: doorGroupNote(response),
+            nodes: toEngineNodes(response, {
+              heldIds: this.#heldIds,
+              door,
+              doorCount: doors.length,
+              isRemote,
+            }),
+          }
         } catch (error) {
           this.#log(`engines view: refresh failed for door "${door.name}": ${describe(error)}`)
-          return []
+          return { name: door.name, note: {}, nodes: [] }
         }
       }),
     )
-    this.#nodes = results.flat()
+    this.#nodes = results.flatMap((result) => result.nodes)
+    this.#doorNotes = new Map(
+      results.flatMap((result) =>
+        result.note.description === undefined ? [] : [[result.name, result.note] as const],
+      ),
+    )
     this.#emitter.fire()
   }
 
@@ -93,6 +103,13 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
       const item = new vscode.TreeItem(element.door.name, vscode.TreeItemCollapsibleState.Expanded)
       item.iconPath = new vscode.ThemeIcon('server')
       item.contextValue = 'doorGroup'
+      const note = this.#doorNotes.get(element.door.name)
+      if (note?.description !== undefined) {
+        item.description = note.description
+      }
+      if (note?.tooltip !== undefined) {
+        item.tooltip = note.tooltip
+      }
       return item
     }
     const { node } = element

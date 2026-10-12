@@ -63,6 +63,31 @@ interface EngineRow {
 
 export interface EnginesListResponse {
   engines: EngineRow[]
+  /**
+   * Parse error from the most recent failed config reload. The previous
+   * config keeps serving, so this is the only signal the edit did not take.
+   * Shown on the door group; absent when the last reload parsed.
+   */
+  config_error?: string
+}
+
+/** Text for the door-group parent. Empty when the list carries no `config_error`. */
+export interface DoorGroupNote {
+  description?: string
+  tooltip?: string
+}
+
+/**
+ * A failed config reload keeps the previous config serving. `config_error`
+ * is that failure, shown on the door group. An absent or empty field adds
+ * nothing.
+ */
+export function doorGroupNote(response: EnginesListResponse | undefined): DoorGroupNote {
+  const error = response?.config_error
+  if (error === undefined || error.length === 0) {
+    return {}
+  }
+  return { description: error, tooltip: error }
 }
 
 /** A codicon id (no `$()` wrapper -- that's the markdown/package.json spelling; `vscode.ThemeIcon` takes the bare id) per engine state. */

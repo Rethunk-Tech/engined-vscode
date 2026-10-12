@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Door } from './door.ts'
 import {
+  doorGroupNote,
   type EnginesListResponse,
   formatResourceLine,
   releaseHoldIds,
@@ -395,6 +396,41 @@ describe('superseded config', () => {
     const comfy = nodes.find((n) => n.id === 'comfy')
     expect(comfy?.description).toBe('openai-http · running')
     expect(comfy?.description).not.toContain('config stale')
+  })
+})
+
+describe('config reload error', () => {
+  test('config_error is the door group text; an absent or empty field is omitted', () => {
+    const now = Date.parse('2026-10-11T18:00:00.000Z')
+    const rows: EnginesListResponse['engines'] = [
+      {
+        id: 'llama',
+        kind: 'llama',
+        state: 'running',
+        held_until: '2026-10-11T19:00:00.000Z',
+        idle_until: '2026-10-11T19:00:00.000Z',
+        last_error: 'container is not running',
+        roles: [{ role: 'chat', active: 1, waiting: 0, model: 'foo.gguf' }],
+        capabilities: [{ model: 'ornith' }],
+      },
+    ]
+    const ctx = { heldIds: new Set<string>(), door: DOOR, doorCount: 1, now }
+    const plain = toEngineNodes({ engines: rows }, ctx)
+    const listed: EnginesListResponse = { engines: rows, config_error: 'toml: expected newline' }
+    expect(toEngineNodes(listed, ctx)).toEqual(plain)
+    const [node] = plain
+    expect(node?.description).toBe(
+      'llama · running · held until 2026-10-11T19:00:00.000Z · idle until 2026-10-11T19:00:00.000Z',
+    )
+    expect(node?.description).not.toContain('container is not running')
+    expect(node?.tooltip).toBe('chat 1 active, 0 waiting · foo.gguf\nmodels: ornith')
+    expect(doorGroupNote(listed)).toEqual({
+      description: 'toml: expected newline',
+      tooltip: 'toml: expected newline',
+    })
+    expect(doorGroupNote({ engines: rows })).toEqual({})
+    expect(doorGroupNote({ engines: rows, config_error: '' })).toEqual({})
+    expect(doorGroupNote(undefined)).toEqual({})
   })
 })
 
