@@ -282,6 +282,57 @@ describe('idle deadline', () => {
   })
 })
 
+describe('last error', () => {
+  test('a failed engine shows last_error; a running engine without the field does not', () => {
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'openai-http',
+          state: 'failed',
+          last_error: 'container is not running',
+        },
+        { id: 'comfy', kind: 'openai-http', state: 'running' },
+        {
+          id: 'openai',
+          kind: 'openai-http',
+          state: 'unavailable',
+          fix: 'set disable = false',
+          last_error: 'container is not running',
+        },
+        { id: 'whisper', kind: 'openai-http', state: 'failed', last_error: '' },
+        {
+          id: 'kokoro',
+          kind: 'tts',
+          state: 'running',
+          last_error: 'container is not running',
+        },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama?.description).toBe('openai-http · failed · container is not running')
+    expect(llama?.tooltip).toContain('container is not running')
+    expect(llama?.description).not.toContain('held')
+    expect(llama?.description).not.toContain('idle')
+    expect(llama?.description).not.toContain('config stale')
+    expect(llama?.hasResources).toBe(false)
+    const comfy = nodes.find((n) => n.id === 'comfy')
+    expect(comfy?.description).toBe('openai-http · running')
+    expect(comfy?.tooltip).not.toContain('container is not running')
+    const openai = nodes.find((n) => n.id === 'openai')
+    expect(openai?.description).toContain('container is not running')
+    expect(openai?.tooltip).toContain('container is not running')
+    expect(openai?.tooltip).toContain('set disable = false')
+    const whisper = nodes.find((n) => n.id === 'whisper')
+    expect(whisper?.description).toBe('openai-http · failed')
+    expect(whisper?.description).not.toContain('container is not running')
+    const kokoro = nodes.find((n) => n.id === 'kokoro')
+    expect(kokoro?.description).toBe('tts · running')
+    expect(kokoro?.tooltip).not.toContain('container is not running')
+  })
+})
+
 describe('superseded config', () => {
   test('a superseded path appends config stale and the stop path; a row without the field does not', () => {
     const response: EnginesListResponse = {

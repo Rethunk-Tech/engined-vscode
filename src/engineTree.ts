@@ -43,6 +43,11 @@ interface EngineRow {
   roles?: EngineRole[]
   /** Requests holding this engine open. Audio engines report this without `roles`. */
   active_leases?: number
+  /**
+   * Last start or stop failure. Shown only while `state` is `failed` or
+   * `unavailable`. Absent, or present on any other state, adds nothing.
+   */
+  last_error?: string
 }
 
 export interface EnginesListResponse {
@@ -145,6 +150,26 @@ function supersededLabel(superseded: string | undefined): string | undefined {
   return superseded === undefined ? undefined : `config stale ${superseded}`
 }
 
+/** A failed or unavailable engine's `last_error`. Any other state, or an absent field, adds nothing. */
+function lastErrorLabel(engine: EngineRow): string | undefined {
+  if (engine.state !== 'failed' && engine.state !== 'unavailable') {
+    return undefined
+  }
+  const error = engine.last_error
+  return error === undefined || error.length === 0 ? undefined : error
+}
+
+/**
+ * The category note, except a `failed` engine that would otherwise read as
+ * idle: it is not waiting to start on demand, and `last_error` is the note.
+ */
+function rowNote(engine: EngineRow, category: EngineCategory): string | undefined {
+  if (engine.state === 'failed' && category === 'idle') {
+    return undefined
+  }
+  return noteFor(category, engine.fix)
+}
+
 function waitingTotal(roles: readonly EngineRole[] | undefined): number {
   if (roles === undefined) {
     return 0
@@ -201,7 +226,8 @@ function busyRoleLines(roles: readonly EngineRole[] | undefined): string[] {
 
 function engineTooltip(engine: EngineRow, description: string): string {
   if (engine.state === 'unavailable' && engine.fix !== undefined) {
-    return engine.fix
+    const error = lastErrorLabel(engine)
+    return error === undefined ? engine.fix : `${engine.fix}\n${error}`
   }
   const roles = busyRoleLines(engine.roles)
   if (roles.length > 0) {
@@ -233,7 +259,9 @@ export function releaseHoldIds(
  * and the tooltip lists each busy role. A role's `model`, when the door sends
  * one, is appended on that tooltip line; when the role is queued and nothing
  * is active yet, the same id is also appended on the description (the queue
- * head). An absent `model` adds nothing. A positive `active_leases` is the
+ * head). An absent `model` adds nothing. A `last_error` on a `failed` or
+ * `unavailable` engine is appended; an absent field, or the same field on any
+ * other state, adds nothing. A positive `active_leases` is the
  * tooltip when the engine reports no busy role. A future `idle_until` appends
  * `idle until <time>` the same way a hold appends its deadline; a past, equal,
  * or missing value adds nothing. A present `superseded` appends
@@ -259,7 +287,7 @@ export function toEngineNodes(
     const id = qualifyId(door.name, engine.id, doorCount)
     const heldUntil = futureInstant(engine.held_until, now)
     const category = categorize(engine, isRemote(engine.id))
-    const note = noteFor(category, engine.fix)
+    const note = rowNote(engine, category)
     const waiting = waitingTotal(engine.roles)
     const description = [
       engine.kind,
@@ -270,6 +298,7 @@ export function toEngineNodes(
       supersededLabel(engine.superseded),
       waiting > 0 ? `${waiting} waiting` : undefined,
       ...queueHeadModels(engine.roles),
+      lastErrorLabel(engine),
     ]
       .filter((part): part is string => part !== undefined)
       .join(' · ')
