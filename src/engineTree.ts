@@ -11,11 +11,16 @@ import { qualifyId } from './door.ts'
 import { doorErrorMessage } from './doorClient.ts'
 import { unreachable } from './unreachable.ts'
 
-/** One role that currently holds a lease or has callers queued behind it. A `model` field, when the door sends one, is ignored. */
+/**
+ * One role that currently holds a lease or has callers queued behind it.
+ * `model`, when the door sends it, is the resident GGUF id, or the head of
+ * the queue when `active` is still zero.
+ */
 interface EngineRole {
   role: string
   active: number
   waiting: number
+  model?: string
 }
 
 interface EngineRow {
@@ -153,6 +158,31 @@ function waitingTotal(roles: readonly EngineRole[] | undefined): number {
   return total
 }
 
+/** A door-sent model id. Absent or empty adds nothing to the row. */
+function roleModel(role: EngineRole): string | undefined {
+  const model = role.model
+  return model === undefined || model.length === 0 ? undefined : model
+}
+
+/**
+ * GGUF ids the door names for roles that are queued and not yet resident.
+ * That is the queue head: nothing is active, so the id is the only model
+ * the row can point at.
+ */
+function queueHeadModels(roles: readonly EngineRole[] | undefined): string[] {
+  if (roles === undefined) {
+    return []
+  }
+  const models: string[] = []
+  for (const role of roles) {
+    const model = roleModel(role)
+    if (role.active === 0 && role.waiting > 0 && model !== undefined) {
+      models.push(model)
+    }
+  }
+  return models
+}
+
 /** Roles with a lease or a queue. Idle zeroes are omitted the same way the door omits them. */
 function busyRoleLines(roles: readonly EngineRole[] | undefined): string[] {
   if (roles === undefined) {
@@ -161,7 +191,9 @@ function busyRoleLines(roles: readonly EngineRole[] | undefined): string[] {
   const lines: string[] = []
   for (const role of roles) {
     if (role.active > 0 || role.waiting > 0) {
-      lines.push(`${role.role} ${role.active} active, ${role.waiting} waiting`)
+      const counts = `${role.role} ${role.active} active, ${role.waiting} waiting`
+      const model = roleModel(role)
+      lines.push(model === undefined ? counts : `${counts} · ${model}`)
     }
   }
   return lines
@@ -198,7 +230,10 @@ export function releaseHoldIds(
  * `held_until` is still in the future, or when this session placed the hold
  * and the list has not reported that field yet. When any `roles` entry has
  * `waiting` greater than zero, the description appends the sum as `N waiting`,
- * and the tooltip lists each busy role. A positive `active_leases` is the
+ * and the tooltip lists each busy role. A role's `model`, when the door sends
+ * one, is appended on that tooltip line; when the role is queued and nothing
+ * is active yet, the same id is also appended on the description (the queue
+ * head). An absent `model` adds nothing. A positive `active_leases` is the
  * tooltip when the engine reports no busy role. A future `idle_until` appends
  * `idle until <time>` the same way a hold appends its deadline; a past, equal,
  * or missing value adds nothing. A present `superseded` appends
@@ -234,6 +269,7 @@ export function toEngineNodes(
       idleLabel(futureInstant(engine.idle_until, now)),
       supersededLabel(engine.superseded),
       waiting > 0 ? `${waiting} waiting` : undefined,
+      ...queueHeadModels(engine.roles),
     ]
       .filter((part): part is string => part !== undefined)
       .join(' · ')

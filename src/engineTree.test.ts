@@ -106,6 +106,41 @@ describe('toEngineNodes', () => {
     expect(node?.heldUntil).toBeUndefined()
   })
 
+  test('a queued role names the model the door sent, and a role without one does not', () => {
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'llama',
+          state: 'running',
+          roles: [{ role: 'chat', active: 0, waiting: 2, model: 'foo.gguf' }],
+        },
+        {
+          id: 'comfy',
+          kind: 'openai-http',
+          state: 'running',
+          roles: [{ role: 'chat', active: 1, waiting: 0 }],
+        },
+        {
+          id: 'vision',
+          kind: 'llama',
+          state: 'running',
+          roles: [{ role: 'vision', active: 1, waiting: 0, model: 'see.gguf' }],
+        },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const llama = nodes.find((n) => n.id === 'llama')
+    expect(llama?.description).toBe('llama · running · 2 waiting · foo.gguf')
+    expect(llama?.tooltip).toBe('chat 0 active, 2 waiting · foo.gguf')
+    const comfy = nodes.find((n) => n.id === 'comfy')
+    expect(comfy?.description).toBe('openai-http · running')
+    expect(comfy?.tooltip).toBe('chat 1 active, 0 waiting')
+    const vision = nodes.find((n) => n.id === 'vision')
+    expect(vision?.description).toBe('llama · running')
+    expect(vision?.tooltip).toBe('vision 1 active, 0 waiting · see.gguf')
+  })
+
   test('three callers queued on one role read as that waiting total', () => {
     const response: EnginesListResponse = {
       engines: [
