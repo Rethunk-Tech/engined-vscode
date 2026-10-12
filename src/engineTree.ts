@@ -23,6 +23,11 @@ interface EngineRole {
   model?: string
 }
 
+/** One route this engine declares it can serve. `model` is that route's addressable id. */
+interface EngineCapability {
+  model?: string
+}
+
 interface EngineRow {
   id: string
   kind: string
@@ -48,6 +53,12 @@ interface EngineRow {
    * `unavailable`. Absent, or present on any other state, adds nothing.
    */
   last_error?: string
+  /**
+   * Declared models this engine can be asked for, one entry per route.
+   * Absent when it has no model-bearing routes. The tooltip lists these ids;
+   * a live role's `model` is a different field and stays on its own line.
+   */
+  capabilities?: EngineCapability[]
 }
 
 export interface EnginesListResponse {
@@ -224,7 +235,42 @@ function busyRoleLines(roles: readonly EngineRole[] | undefined): string[] {
   return lines
 }
 
-function engineTooltip(engine: EngineRow, description: string): string {
+/** Declared model ids named in full before the rest collapse to a count. */
+const CAPABILITY_MODELS_SHOWN = 4
+
+function declaredModelIds(capabilities: readonly EngineCapability[]): string[] {
+  const seen = new Set<string>()
+  const models: string[] = []
+  for (const capability of capabilities) {
+    const { model } = capability
+    if (model === undefined || model.length === 0 || seen.has(model)) {
+      continue
+    }
+    seen.add(model)
+    models.push(model)
+  }
+  return models
+}
+
+/** Compact tooltip line for declared models. Absent capabilities, or none with a model id, add nothing. */
+function capabilitySummary(
+  capabilities: readonly EngineCapability[] | undefined,
+): string | undefined {
+  if (capabilities === undefined || capabilities.length === 0) {
+    return undefined
+  }
+  const models = declaredModelIds(capabilities)
+  const [first] = models
+  if (first === undefined) {
+    return undefined
+  }
+  if (models.length <= CAPABILITY_MODELS_SHOWN) {
+    return `models: ${models.join(', ')}`
+  }
+  return `${models.length} models, including ${first}`
+}
+
+function baseTooltip(engine: EngineRow, description: string): string {
   if (engine.state === 'unavailable' && engine.fix !== undefined) {
     const error = lastErrorLabel(engine)
     return error === undefined ? engine.fix : `${engine.fix}\n${error}`
@@ -237,6 +283,12 @@ function engineTooltip(engine: EngineRow, description: string): string {
     return `${description}\n${engine.active_leases} active`
   }
   return description
+}
+
+function engineTooltip(engine: EngineRow, description: string): string {
+  const text = baseTooltip(engine, description)
+  const summary = capabilitySummary(engine.capabilities)
+  return summary === undefined ? text : `${text}\n${summary}`
 }
 
 /**
@@ -261,7 +313,9 @@ export function releaseHoldIds(
  * is active yet, the same id is also appended on the description (the queue
  * head). An absent `model` adds nothing. A `last_error` on a `failed` or
  * `unavailable` engine is appended; an absent field, or the same field on any
- * other state, adds nothing. A positive `active_leases` is the
+ * other state, adds nothing. When `capabilities` names declared models, the
+ * tooltip appends a compact summary of those ids; an absent field adds
+ * nothing, and that summary is not the live role model. A positive `active_leases` is the
  * tooltip when the engine reports no busy role. A future `idle_until` appends
  * `idle until <time>` the same way a hold appends its deadline; a past, equal,
  * or missing value adds nothing. A present `superseded` appends

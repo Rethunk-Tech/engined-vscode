@@ -226,7 +226,9 @@ describe('toEngineNodes', () => {
       expect(node?.description).not.toContain('held')
     }
   })
+})
 
+describe('release candidates', () => {
   test('release candidates are the session set plus rows still held by the list', () => {
     expect(releaseHoldIds(new Set(['llama', 'comfy']), ['comfy', 'whisper'])).toEqual([
       'comfy',
@@ -235,7 +237,9 @@ describe('toEngineNodes', () => {
     ])
     expect(releaseHoldIds(new Set(), [])).toEqual([])
   })
+})
 
+describe('missing engines response', () => {
   test('missing response maps to no nodes', () => {
     expect(toEngineNodes(undefined, { heldIds: new Set(), door: DOOR, doorCount: 1 })).toEqual([])
   })
@@ -330,6 +334,42 @@ describe('last error', () => {
     const kokoro = nodes.find((n) => n.id === 'kokoro')
     expect(kokoro?.description).toBe('tts · running')
     expect(kokoro?.tooltip).not.toContain('container is not running')
+  })
+})
+
+describe('declared capabilities', () => {
+  test('the tooltip names a declared model id and leaves the live role model line alone', () => {
+    const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const recorded = nodes.find((n) => n.id === 'llama')
+    expect(recorded?.tooltip).toContain('ornith')
+    expect(recorded?.tooltip).toContain('models: ornith')
+    expect(recorded?.description).not.toContain('ornith')
+    const cursor = nodes.find((n) => n.id === 'cursor')
+    expect(cursor?.tooltip).toContain('models, including auto')
+    const piper = nodes.find((n) => n.id === 'piper')
+    expect(piper?.tooltip).not.toContain('models')
+
+    const response: EnginesListResponse = {
+      engines: [
+        {
+          id: 'llama',
+          kind: 'llama',
+          state: 'running',
+          roles: [{ role: 'chat', active: 1, waiting: 0, model: 'foo.gguf' }],
+          capabilities: [{ model: 'ornith' }],
+        },
+        { id: 'comfy', kind: 'openai-http', state: 'running', capabilities: [] },
+        { id: 'whisper', kind: 'stt', state: 'running', capabilities: [{}] },
+      ],
+    }
+    const rows = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const llama = rows.find((n) => n.id === 'llama')
+    expect(llama?.description).toBe('llama · running')
+    expect(llama?.tooltip).toBe('chat 1 active, 0 waiting · foo.gguf\nmodels: ornith')
+    const comfy = rows.find((n) => n.id === 'comfy')
+    expect(comfy?.tooltip).toBe('openai-http · running')
+    const whisper = rows.find((n) => n.id === 'whisper')
+    expect(whisper?.tooltip).toBe('stt · running')
   })
 })
 
