@@ -10,7 +10,7 @@ Decided shape: `engined_transcribe` stops offering translate until engined's tra
 
 ### Read
 
-- `package.json:122` — tool name `engined_transcribe`. `userDescription` at `:129` and the `translate` property at `:139` are what the model is offered.
+- `package.json:122` — tool name `engined_transcribe`. `modelDescription` at `:131` and the `translate` property at `:139` are what the model is offered.
 - `src/workspaceTools.ts:240` — `transcribeTool`. `:368` registers the name `engined_transcribe`. `:259` appends the unreliability note when `translate === true`.
 - `src/toolRequests.ts:109` — `buildTranscribeRequest` selects `/openai/v1/audio/translations` when `translate === true` (`:115`).
 - `README.md:29` — Features line that offers translate. `docs/tools.md:34` documents the parameter and the note.
