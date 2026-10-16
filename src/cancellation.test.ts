@@ -7,7 +7,11 @@ function token(cancelled: boolean) {
     isCancellationRequested: cancelled,
     onCancellationRequested(listener: () => void) {
       listeners.push(listener)
-      return { dispose() {} }
+      return {
+        dispose() {
+          // cancellationSignal never unsubscribes.
+        },
+      }
     },
     cancel() {
       for (const listener of listeners) {
