@@ -13,6 +13,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/defaultModels.ts` | `resolveDefaultModel`: the one selection rule behind every `engined.defaultModels.*` setting (configured id if it still qualifies, else the automatic pick). No `vscode` import. |
 | `src/completions.ts` | Prefix/suffix slicing, the `/openai/v1/completions` request/reply shapes, and the inline-completion provider's document-selector schemes. No `vscode` import. |
 | `src/neighbourContext.ts` | Snippet selection for completions' `extra` field (cap, ordering, exclusion). No `vscode` import. |
+| `src/configUi.ts` | Runs `engined --configsvc-url` (runner injectable) and turns its output into the config UI URL or the CLI's explanation behind `engined: Open Config UI`. No `vscode` import. |
 | `src/status.ts` | Status bar text/tooltip formatting and the route-header-vs-fallback resolution. No `vscode` import. |
 | `src/usageReport.ts` | Aggregates `GET /engined/v1/usage` rows across doors into totals and the per-day/per-route Markdown tables `engined: Usage Report` shows. No `vscode` import. |
 | `src/workspaceTools.ts` | The five `engined_*` language-model tools (confirmation dialogs, workspace file I/O); reaches the activation module's state only through `ToolHost`. Imports `vscode`. |

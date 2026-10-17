@@ -15,6 +15,7 @@ import {
 import {
   chooseDefaultModels,
   holdModel,
+  openConfigUi,
   registerEngineTreeCommands,
   releaseHold,
   showQuickPick,
@@ -164,6 +165,7 @@ export function activate(context: vscode.ExtensionContext): void {
       useForAllChatFeatures(s),
     ),
     vscode.commands.registerCommand('engined.restoreChatSettings', () => restoreChatSettings(s)),
+    vscode.commands.registerCommand('engined.openConfigUi', () => openConfigUi()),
     vscode.commands.registerCommand('engined.showLog', () => s.output.show()),
     vscode.commands.registerCommand('engined.holdModel', () => holdModel(s)),
     vscode.commands.registerCommand('engined.releaseHold', () => releaseHold(s)),

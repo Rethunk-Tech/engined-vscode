@@ -329,6 +329,10 @@
     },
     "commands": [
       {
+        "command": "engined.openConfigUi",
+        "title": "engined: Open Config UI"
+      },
+      {
         "command": "engined.refreshModels",
         "title": "engined: Refresh Models"
       },
@@ -465,6 +469,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "engined.openConfigUi",
+          "when": "view == engined.engines",
+          "group": "navigation"
+        },
         {
           "command": "engined.refreshEngines",
           "when": "view == engined.engines",

@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode'
 import { getDoors, setDefaultModel, setReasoningEffort } from './config.ts'
+import { ENABLE_CONFIGSVC_COMMAND, resolveConfigUi, runEnginedConfigsvcUrl } from './configUi.ts'
 import { DEFAULT_MODEL_ROLES, qualifyingRows } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { ReasoningLevel } from './door.ts'
@@ -270,4 +271,18 @@ export function registerEngineTreeCommands(s: Session): vscode.Disposable[] {
       return
     }),
   ]
+}
+
+/** `engined: Open Config UI`: opens the URL (with its one-time token) `engined --configsvc-url` prints; the URL is never logged. */
+export async function openConfigUi(): Promise<void> {
+  const result = await resolveConfigUi(runEnginedConfigsvcUrl)
+  if ('url' in result) {
+    await vscode.env.openExternal(vscode.Uri.parse(result.url))
+    return
+  }
+  const copy = 'Copy enable command'
+  const pick = await vscode.window.showWarningMessage(`engined: ${result.message}`, copy)
+  if (pick === copy) {
+    await vscode.env.clipboard.writeText(ENABLE_CONFIGSVC_COMMAND)
+  }
 }
