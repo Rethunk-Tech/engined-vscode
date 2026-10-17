@@ -194,8 +194,25 @@ export async function showUsageReport(): Promise<void> {
   }
   const usages = await fetchAllUsage(getDoors(), pick.days)
   const report = buildUsageReport(usages, pick.days)
-  const doc = await vscode.workspace.openTextDocument({ content: report, language: 'markdown' })
-  await vscode.commands.executeCommand('markdown.showPreview', doc.uri)
+  usageReport = report
+  usageReportChanged.fire(USAGE_REPORT_URI)
+  await vscode.commands.executeCommand('markdown.showPreview', USAGE_REPORT_URI)
+}
+
+export const USAGE_REPORT_SCHEME = 'engined-usage'
+const USAGE_REPORT_URI = vscode.Uri.from({ scheme: USAGE_REPORT_SCHEME, path: '/Usage report.md' })
+const usageReportChanged = new vscode.EventEmitter<vscode.Uri>()
+let usageReport = ''
+
+/** Serves the latest usage report as a read-only document; an untitled one is dirty and editable, and VS Code keeps resurrecting its tab. */
+export function registerUsageReportProvider(): vscode.Disposable[] {
+  return [
+    usageReportChanged,
+    vscode.workspace.registerTextDocumentContentProvider(USAGE_REPORT_SCHEME, {
+      onDidChange: usageReportChanged.event,
+      provideTextDocumentContent: () => usageReport,
+    }),
+  ]
 }
 
 // --- activation ---------------------------------------------------------

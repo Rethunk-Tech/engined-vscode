@@ -17,6 +17,7 @@ import {
   holdModel,
   openConfigUi,
   registerEngineTreeCommands,
+  registerUsageReportProvider,
   releaseHold,
   showQuickPick,
   showUsageReport,
@@ -171,6 +172,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.releaseHold', () => releaseHold(s)),
     vscode.commands.registerCommand('engined.refreshEngines', () => s.engineExplorer.refresh()),
     ...registerEngineTreeCommands(s),
+    ...registerUsageReportProvider(),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('engined.pollSeconds')) {
         restartPollTimer(s)
