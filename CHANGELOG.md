@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-17
+
+### Fixed
+
+- `engined: Usage Report` opens as a read-only preview that refreshes on each run, instead of an unsaved untitled document whose tab kept coming back after it was closed.
+
 ## [0.1.1] - 2026-10-17
 
 ### Added
