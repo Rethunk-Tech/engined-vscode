@@ -6,6 +6,7 @@ import type { Door } from './door.ts'
 import {
   doorGroupNote,
   type EnginesListResponse,
+  enginesViewMessage,
   formatResourceLine,
   releaseHoldIds,
   stateIcon,
@@ -558,5 +559,18 @@ describe('truncateLogLines', () => {
     expect(truncated).toHaveLength(500)
     expect(truncated[0]).toBe('line 100')
     expect(truncated.at(-1)).toBe('line 599')
+  })
+})
+
+describe('enginesViewMessage', () => {
+  test('a lone door drops its name; several doors keep it; clean doors say nothing', () => {
+    const bad = { name: 'a', url: 'http://x', configError: 'bad toml' }
+    const down = { name: 'b', url: 'http://y', failure: 'refused' }
+    expect(enginesViewMessage([bad])).toBe('config not loaded: bad toml')
+    expect(enginesViewMessage([down])).toBe("can't reach http://y (refused)")
+    expect(enginesViewMessage([bad, down])).toBe(
+      "a: config not loaded: bad toml\nb: can't reach http://y (refused)",
+    )
+    expect(enginesViewMessage([{ name: 'a', url: 'u', configError: '' }])).toBeUndefined()
   })
 })

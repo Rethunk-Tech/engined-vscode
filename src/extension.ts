@@ -28,7 +28,7 @@ import { COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES } from './completions.ts'
 import { getDoors } from './config.ts'
 import { describeError } from './describeError.ts'
 import { fetchAllDoors } from './doorClient.ts'
-import { EngineExplorer } from './engineExplorer.ts'
+import { EngineExplorer, type EngineTreeItem } from './engineExplorer.ts'
 import { connectAllEngineEvents, restartPollTimer, stopEngineEvents } from './pollDriver.ts'
 import { ModelPoller } from './polling.ts'
 import { resolveRoleRow } from './routes.ts'
@@ -82,7 +82,17 @@ function createSession(context: vscode.ExtensionContext): Session {
     output,
     statusBarItem,
     poller,
-    engineExplorer: new EngineExplorer(heldEngineIds, log, getDoors, () => poller.rows),
+    engineExplorer: new EngineExplorer(
+      heldEngineIds,
+      log,
+      getDoors,
+      () => poller.rows,
+      (text) => {
+        if (enginesView !== undefined) {
+          enginesView.message = text
+        }
+      },
+    ),
     searchIndex: new SearchIndex(
       context.storageUri ?? context.globalStorageUri,
       () => poller.rows,
@@ -121,6 +131,8 @@ function clearPollTimer(s: Session): void {
   }
 }
 
+let enginesView: vscode.TreeView<EngineTreeItem> | undefined
+
 export function activate(context: vscode.ExtensionContext): void {
   const s = createSession(context)
   session = s
@@ -131,6 +143,9 @@ export function activate(context: vscode.ExtensionContext): void {
   }
   s.background(s.engineExplorer.refresh())
 
+  enginesView = vscode.window.createTreeView('engined.engines', {
+    treeDataProvider: s.engineExplorer,
+  })
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
   context.subscriptions.push(
     s.output,
@@ -138,7 +153,7 @@ export function activate(context: vscode.ExtensionContext): void {
     s.engineExplorer,
     s.modelsChanged,
     vscode.window.onDidChangeActiveColorTheme(() => renderStatusBar(s)),
-    vscode.window.registerTreeDataProvider('engined.engines', s.engineExplorer),
+    enginesView,
     vscode.lm.registerLanguageModelChatProvider('engined', new EnginedChatProvider(s)),
     vscode.languages.registerInlineCompletionItemProvider(
       COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES.map((scheme) => ({ scheme, pattern: '**' })),

@@ -112,6 +112,25 @@ describe('postChatCompletion', () => {
 })
 
 describe('fetchAllDoors', () => {
+  test('a door whose models 503 but whose engines list carries config_error is reachable', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        return new URL(req.url).pathname === '/openai/v1/models'
+          ? new Response('{"error":"config"}', { status: 503 })
+          : Response.json({ engines: [], config_error: 'bad toml' })
+      },
+    })
+    try {
+      const door = { name: 'a', url: `http://127.0.0.1:${server.port}` }
+      const { doorStatus, chatModels } = await fetchAllDoors([door])
+      expect(doorStatus).toEqual([{ door, reachable: true, configError: 'bad toml' }])
+      expect(chatModels).toEqual([])
+    } finally {
+      await server.stop(true)
+    }
+  })
+
   test('config_error marks a reachable door; a failing engines list changes nothing', async () => {
     const serve = (engines: Response) =>
       Bun.serve({

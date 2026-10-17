@@ -134,12 +134,13 @@ export async function fetchAllDoors(
     if (result?.status === 'fulfilled') {
       chatModels.push(...result.value.chatModels)
       rows.push(...result.value.rows)
-      const configError = configErrors[i]
-      return configError === undefined
-        ? { door, reachable: true }
-        : { door, reachable: true, configError }
     }
-    return { door, reachable: false }
+    const configError = configErrors[i]
+    if (configError === undefined) {
+      return result?.status === 'fulfilled' ? { door, reachable: true } : { door, reachable: false }
+    }
+    // The door answered with a config error: engined is up, just not serving models.
+    return { door, reachable: true, configError }
   })
   return { chatModels, rows, doorStatus }
 }

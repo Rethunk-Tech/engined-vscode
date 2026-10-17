@@ -110,6 +110,29 @@ export function doorGroupNote(response: EnginesListResponse | undefined): DoorGr
   return { description: error, tooltip: error }
 }
 
+/** One door's engines-list outcome: the fetch failed (`failure`), or it answered, possibly with a `config_error`. */
+export interface DoorListOutcome {
+  name: string
+  url: string
+  failure?: string
+  configError?: string
+}
+
+/** The engines view's `TreeView.message`: why a door contributes no rows. `undefined` when every door listed cleanly. A lone door drops its name prefix. */
+export function enginesViewMessage(outcomes: readonly DoorListOutcome[]): string | undefined {
+  const prefix = (name: string) => (outcomes.length === 1 ? '' : `${name}: `)
+  const lines = outcomes.flatMap((o) => {
+    if (o.failure !== undefined) {
+      return [`${prefix(o.name)}can't reach ${o.url} (${o.failure})`]
+    }
+    if (o.configError !== undefined && o.configError !== '') {
+      return [`${prefix(o.name)}config not loaded: ${o.configError}`]
+    }
+    return []
+  })
+  return lines.length === 0 ? undefined : lines.join('\n')
+}
+
 /** A codicon id (no `$()` wrapper -- that's the markdown/package.json spelling; `vscode.ThemeIcon` takes the bare id) per engine state. */
 export function stateIcon(state: string): string {
   switch (state) {
