@@ -102,6 +102,17 @@ async function fetchModels(
   }
 }
 
+/** The door's `config_error` from the engines list, or `undefined` when absent, empty, or the fetch fails -- an engines failure never changes reachability. */
+async function fetchConfigError(door: Door, signal?: AbortSignal): Promise<string | undefined> {
+  try {
+    const body = (await fetchEngines(door.url, signal)) as { config_error?: unknown } | null
+    const error = body?.config_error
+    return typeof error === 'string' && error !== '' ? error : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export interface DoorsPoll extends ModelsPoll {
   /** One entry per configured door, in `doors`' own order -- the status popup's one reachability line per door. */
   doorStatus: DoorReachability[]
@@ -112,9 +123,10 @@ export async function fetchAllDoors(
   doors: readonly Door[],
   signal?: AbortSignal,
 ): Promise<DoorsPoll> {
-  const results = await Promise.allSettled(
-    doors.map((door) => fetchModels(door, doors.length, signal)),
-  )
+  const [results, configErrors] = await Promise.all([
+    Promise.allSettled(doors.map((door) => fetchModels(door, doors.length, signal))),
+    Promise.all(doors.map((door) => fetchConfigError(door, signal))),
+  ])
   const chatModels: EnginedModelInfo[] = []
   const rows: EnginedModelRow[] = []
   const doorStatus: DoorReachability[] = doors.map((door, i) => {
@@ -122,7 +134,10 @@ export async function fetchAllDoors(
     if (result?.status === 'fulfilled') {
       chatModels.push(...result.value.chatModels)
       rows.push(...result.value.rows)
-      return { door, reachable: true }
+      const configError = configErrors[i]
+      return configError === undefined
+        ? { door, reachable: true }
+        : { door, reachable: true, configError }
     }
     return { door, reachable: false }
   })

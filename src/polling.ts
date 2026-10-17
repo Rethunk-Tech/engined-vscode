@@ -82,7 +82,7 @@ export class ModelPoller {
       poll = {
         chatModels: [],
         rows: [],
-        doorStatus: this.#doorStatus.map((d) => ({ ...d, reachable: false })),
+        doorStatus: this.#doorStatus.map(({ door }) => ({ door, reachable: false })),
       }
     }
     this.#doorStatus = poll.doorStatus

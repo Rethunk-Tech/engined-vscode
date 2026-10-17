@@ -212,6 +212,26 @@ describe('buildTooltip', () => {
     expect(tooltip).toContain('`systemctl --user start engined`')
   })
 
+  test('a reachable door refusing its config is a warning, with the escaped error', () => {
+    const configError = 'parse <b>x</b> & y'
+    const single = buildTooltip({
+      ...baseInput,
+      doors: [{ name: 'local', url: 'http://x', reachable: true, configError }],
+    })
+    expect(single).toContain('$(warning) config not loaded')
+    expect(single).toContain('parse &lt;b&gt;x&lt;/b&gt; &amp; y')
+    expect(single).not.toContain('$(pass-filled) reachable')
+    const multi = buildTooltip({
+      ...baseInput,
+      doors: [
+        { name: 'a', url: 'http://a', reachable: true, configError },
+        { name: 'b', url: 'http://b', reachable: true },
+      ],
+    })
+    expect(multi).toContain('$(warning) 2/2 doors reachable')
+    expect(multi).toContain('config not loaded: parse')
+  })
+
   test('more than one door renders a Doors table, one row per door', () => {
     const tooltip = buildTooltip({
       ...baseInput,

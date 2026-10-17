@@ -3,6 +3,7 @@ import {
   agenticBusyMessage,
   DoorHttpError,
   doorErrorMessage,
+  fetchAllDoors,
   postChatCompletion,
 } from './doorClient.ts'
 
@@ -106,6 +107,35 @@ describe('postChatCompletion', () => {
       expect(hits).toBe(1)
     } finally {
       server.stop(true)
+    }
+  })
+})
+
+describe('fetchAllDoors', () => {
+  test('config_error marks a reachable door; a failing engines list changes nothing', async () => {
+    const serve = (engines: Response) =>
+      Bun.serve({
+        port: 0,
+        fetch(req) {
+          return new URL(req.url).pathname === '/openai/v1/models'
+            ? Response.json({ data: [] })
+            : engines
+        },
+      })
+    const refusing = serve(Response.json({ data: [], config_error: 'bad toml' }))
+    const broken = serve(new Response('nope', { status: 500 }))
+    try {
+      const a = { name: 'a', url: `http://127.0.0.1:${refusing.port}` }
+      const b = { name: 'b', url: `http://127.0.0.1:${broken.port}` }
+      const doors = [a, b]
+      const { doorStatus } = await fetchAllDoors(doors)
+      expect(doorStatus).toEqual([
+        { door: a, reachable: true, configError: 'bad toml' },
+        { door: b, reachable: true },
+      ])
+    } finally {
+      await refusing.stop(true)
+      await broken.stop(true)
     }
   })
 })

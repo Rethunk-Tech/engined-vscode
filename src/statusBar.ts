@@ -6,6 +6,7 @@ import { getDefaultModel, getDoors } from './config.ts'
 import { LOADING_TICK_MS } from './constants.ts'
 import { DEFAULT_MODEL_ROLES, resolveDefaultModel } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
+import type { DoorReachability } from './door.ts'
 import { fetchAllUsage } from './doorClient.ts'
 import type { Session } from './session.ts'
 import type { ThemeKind } from './status.ts'
@@ -103,12 +104,13 @@ function tooltipMarkdown(s: Session): vscode.MarkdownString {
       // Before the first poll resolves, `doorStatus` is empty -- assume every configured door
       // reachable, matching the sync default `renderStatusBar` shows at activation.
       doors: (s.poller.doorStatus.length > 0
-        ? s.poller.doorStatus.map((d) => ({ door: d.door, reachable: d.reachable }))
-        : getDoors().map((door) => ({ door, reachable: true }))
+        ? s.poller.doorStatus
+        : getDoors().map((door): DoorReachability => ({ door, reachable: true }))
       ).map((d) => ({
         name: d.door.name,
         url: d.door.url,
         reachable: d.reachable,
+        configError: d.configError,
       })),
       lastChat: s.lastChatCall,
       lastBackground: s.lastBackgroundCall,
@@ -154,7 +156,10 @@ export function renderStatusBar(s: Session): void {
       s.inFlightChat.promptTokenEstimate,
     )
   } else if (s.lastChatCall === undefined) {
-    s.statusBarItem.text = `$(server) engined (${s.poller.models.length})`
+    const glyph = s.poller.doorStatus.some((d) => d.configError !== undefined)
+      ? '$(warning)'
+      : '$(server)'
+    s.statusBarItem.text = `${glyph} engined (${s.poller.models.length})`
   } else {
     s.statusBarItem.text = formatCallLine(s.lastChatCall)
   }

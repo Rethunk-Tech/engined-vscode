@@ -144,6 +144,7 @@ interface DoorLine {
   name: string
   url: string
   reachable: boolean
+  configError?: string
 }
 
 /** `/engined/v1/usage?days=1` folded to what the popup shows -- `extension.ts` caches/refreshes this, never blocking a render. */
@@ -264,16 +265,24 @@ function section(title: string, body: string): string {
 
 // --- header --------------------------------------------------------------
 
-function singleDoorHeaderChip(reachable: boolean): string {
-  return reachable
+/** Door-supplied text goes into a `supportHtml` hover, so markup characters must not survive. */
+function escapeHtml(text: string): string {
+  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+}
+
+function singleDoorHeaderChip(door: DoorLine | undefined): string {
+  if (door?.reachable !== true) {
+    return `${chip('$(error) unreachable', COLOR_ERROR)} -- start it with \`systemctl --user start engined\``
+  }
+  return door.configError === undefined
     ? chip('$(pass-filled) reachable', COLOR_OK)
-    : `${chip('$(error) unreachable', COLOR_ERROR)} -- start it with \`systemctl --user start engined\``
+    : `${chip('$(warning) config not loaded', COLOR_WARN)} -- ${muted(escapeHtml(door.configError))}`
 }
 
 /** More than one door -- a summary count, error only when every door is down, warning when some are. */
 function multiDoorHeaderChip(doors: readonly DoorLine[]): string {
   const reachableCount = doors.filter((d) => d.reachable).length
-  const allUp = reachableCount === doors.length
+  const allUp = reachableCount === doors.length && doors.every((d) => d.configError === undefined)
   const allDown = reachableCount === 0
   let color = COLOR_WARN
   let glyph = '$(warning)'
@@ -288,8 +297,17 @@ function multiDoorHeaderChip(doors: readonly DoorLine[]): string {
 }
 
 function doorRow(d: DoorLine): string {
-  const glyph = d.reachable ? chip('$(pass-filled)', COLOR_OK) : chip('$(error)', COLOR_ERROR)
-  const suffix = d.reachable ? '' : ` ${muted('unreachable')}`
+  const degraded = d.reachable && d.configError !== undefined
+  const glyph = d.reachable
+    ? degraded
+      ? chip('$(warning)', COLOR_WARN)
+      : chip('$(pass-filled)', COLOR_OK)
+    : chip('$(error)', COLOR_ERROR)
+  const suffix = d.reachable
+    ? d.configError === undefined
+      ? ''
+      : ` ${muted(`config not loaded: ${escapeHtml(d.configError)}`)}`
+    : ` ${muted('unreachable')}`
   return row(d.name, `${glyph} ${d.url}${suffix}`)
 }
 
@@ -475,7 +493,7 @@ export function buildTooltip(input: TooltipInput): string {
   const headerParts = [
     '<b>engined</b>',
     input.doors.length <= 1
-      ? singleDoorHeaderChip(input.doors[0]?.reachable ?? false)
+      ? singleDoorHeaderChip(input.doors[0])
       : multiDoorHeaderChip(input.doors),
     muted(`${input.modelCount} model(s)`),
   ]

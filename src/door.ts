@@ -19,6 +19,8 @@ export function qualifyId(doorName: string, rawId: string, doorCount: number): s
 export interface DoorReachability {
   door: Door
   reachable: boolean
+  /** engined's `config_error` from the engines list: the door answers, but the operator's config did not load. Never set on an unreachable door. */
+  configError?: string
 }
 
 /** `qualifyId`'s inverse: with more than one door, `<door name>/<rawId>` splits on the first `/` (a door name never contains one); with one door, the id was never qualified. */
