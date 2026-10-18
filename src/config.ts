@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 import type { ModelRole } from './defaultModels.ts'
 import type { Door, ReasoningLevel } from './door.ts'
-import { REASONING_LEVELS } from './door.ts'
+import { REASONING_LEVELS, usableDoors } from './door.ts'
 import type { SplitOptions } from './promptSplit.ts'
 import { DEFAULT_SPLIT } from './promptSplit.ts'
 
@@ -20,7 +20,7 @@ function config(): vscode.WorkspaceConfiguration {
 
 /** `engined.doors`, or the single local default when unset/empty. */
 export function getDoors(): Door[] {
-  const doors = config().get<Door[]>('doors', DEFAULT_DOORS)
+  const doors = usableDoors(config().get<Door[]>('doors', DEFAULT_DOORS))
   return doors.length > 0 ? doors : DEFAULT_DOORS
 }
 

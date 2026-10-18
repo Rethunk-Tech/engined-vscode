@@ -11,6 +11,11 @@ export interface Door {
   url: string
 }
 
+/** Drops door names that contain `/`, which would break `splitQualifiedId`. */
+export function usableDoors(doors: readonly Door[]): Door[] {
+  return doors.filter((d) => !d.name.includes('/'))
+}
+
 /** `rawId` unqualified with one door (existing single-door settings keep working); `<door name>/<rawId>` with more than one. */
 export function qualifyId(doorName: string, rawId: string, doorCount: number): string {
   return doorCount > 1 ? `${doorName}/${rawId}` : rawId

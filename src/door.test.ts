@@ -14,6 +14,7 @@ import {
   reasoningLevelsFor,
   snapReasoningEffort,
   splitQualifiedId,
+  usableDoors,
 } from './door.ts'
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
@@ -216,6 +217,14 @@ describe('splitQualifiedId', () => {
 
   test('more than one door, no slash in the id: no door name', () => {
     expect(splitQualifiedId('claude', 2)).toEqual({ doorName: undefined, rawId: 'claude' })
+  })
+})
+
+describe('usableDoors', () => {
+  test('drops a door whose name contains a slash', () => {
+    const local: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
+    const bad: Door = { name: 'gpu/box', url: 'http://10.0.0.5:29200' }
+    expect(usableDoors([local, bad])).toEqual([local])
   })
 })
 
