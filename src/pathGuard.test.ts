@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 
@@ -34,5 +36,19 @@ describe('resolveWorkspacePath', () => {
 
   test('throws when no workspace folder is open', () => {
     expect(() => resolveWorkspacePath([], 'a.png')).toThrow(PathEscapeError)
+  })
+
+  test('rejects a symlink inside the workspace whose target is outside it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pathGuard-'))
+    const root = join(dir, 'ws')
+    mkdirSync(root)
+    const secret = join(dir, 'secret.txt')
+    writeFileSync(secret, 'x')
+    symlinkSync(secret, join(root, 'link.txt'))
+    try {
+      expect(() => resolveWorkspacePath([root], 'link.txt')).toThrow(PathEscapeError)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })
