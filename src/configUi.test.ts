@@ -29,4 +29,10 @@ describe('resolveConfigUi', () => {
       message: 'engined printed no config UI URL',
     })
   })
+
+  test('a line that starts like a URL but is not a single http(s) URL is not opened', async () => {
+    expect(
+      await resolveConfigUi(run({ stdout: 'http://127.0.0.1:29300/?token=abc extra\n' })),
+    ).toEqual({ message: 'engined printed no config UI URL' })
+  })
 })

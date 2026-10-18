@@ -24,16 +24,36 @@ export function runEnginedConfigsvcUrl(): Promise<CliRun> {
   })
 }
 
+/** One stdout line that is exactly an `http:`/`https:` URL, or `undefined`. */
+function httpUrlLine(line: string): string | undefined {
+  if (/\s/.test(line) || !/^https?:\/\//.test(line)) {
+    return undefined
+  }
+  try {
+    const parsed = new URL(line)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return undefined
+    }
+    return parsed.href
+  } catch {
+    return undefined
+  }
+}
+
 /** The CLI prints the bare URL on stdout (exit 0), or its explanation on stderr (exit 1). */
 export async function resolveConfigUi(run: () => Promise<CliRun>): Promise<ConfigUiResult> {
   const { stdout, stderr, code } = await run()
   const url = stdout
     .split('\n')
     .map((line) => line.trim())
-    .find((line) => /^https?:\/\//.test(line))
+    .map(httpUrlLine)
+    .find((line) => line !== undefined)
   if (code === 0 && url !== undefined) {
     return { url }
   }
-  const why = (stderr.trim() || stdout.trim()).split('\n')[0]
+  const stderrWhy = stderr.trim().split('\n')[0]
+  const stdoutWhy = stdout.trim().split('\n')[0]
+  const why =
+    stderrWhy || (stdoutWhy !== undefined && /^https?:\/\//.test(stdoutWhy) ? '' : stdoutWhy)
   return { message: why || 'engined printed no config UI URL' }
 }
