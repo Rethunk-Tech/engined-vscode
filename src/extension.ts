@@ -146,6 +146,13 @@ export function activate(context: vscode.ExtensionContext): void {
   enginesView = vscode.window.createTreeView('engined.engines', {
     treeDataProvider: s.engineExplorer,
   })
+  // A view opened long after activation would otherwise show whatever the last
+  // refresh found, which is nothing when engined was down at activation.
+  enginesView.onDidChangeVisibility((e) => {
+    if (e.visible) {
+      s.background(s.engineExplorer.refresh())
+    }
+  })
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
   context.subscriptions.push(
     s.output,

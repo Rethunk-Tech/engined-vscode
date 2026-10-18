@@ -420,6 +420,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "engined.engines",
+        "contents": "No engines listed yet. If engined was not running, start it, then refresh.\n[Refresh](command:engined.refreshEngines)\n[Open Config UI](command:engined.openConfigUi)"
+      }
+    ],
     "menus": {
       "view/item/context": [
         {
