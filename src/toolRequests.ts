@@ -1,11 +1,13 @@
 /**
- * Request shapes for the four `engined_*` tools. Pure: takes the row
- * `defaultModels.ts` (`resolveDefaultModel`) already chose and builds the
- * request `extension.ts` sends -- route picking itself lives there, as the
- * one shared rule behind every `engined.defaultModels.*` setting.
+ * Request shapes for the four `engined_*` tools. The builders are pure: they
+ * take the row `defaultModels.ts` (`resolveDefaultModel`) already chose.
+ * `requestSpeech` is the one call that talks to the door, because a workspace
+ * voice file has to be uploaded before the speech body can name it.
  */
 
 import type { EnginedModelRow } from './door.ts'
+import { postForm, postJson } from './doorClient.ts'
+import { resolveWorkspacePath } from './pathGuard.ts'
 
 const IMAGE_SIDE_MIN = 64
 const IMAGE_SIDE_MAX = 4096
@@ -132,6 +134,85 @@ export function buildSpeakRequest(
     path: '/openai/v1/audio/speech',
     body: { model: row.routeId, input: input.text, voice: input.voice },
   }
+}
+
+const VOICE_UPLOAD_PATH = '/engined/v1/audio/voices'
+
+interface WorkspaceFiles {
+  roots: readonly string[]
+  readFile: (absolutePath: string) => Promise<Uint8Array | undefined>
+}
+
+/** A `vc_` string is already a handle. One the door did not issue is its 400, not a file to upload. */
+function isVoiceHandle(voice: string): boolean {
+  return voice.startsWith('vc_')
+}
+
+/** `a/b.wav` is a path; `af_heart` is a name. A name must not be refused just because no folder is open. */
+function isVoicePath(voice: string): boolean {
+  return voice.startsWith('.') || voice.includes('/') || voice.includes('\\')
+}
+
+function voiceFileName(voice: string): string {
+  const base = voice.slice(Math.max(voice.lastIndexOf('/'), voice.lastIndexOf('\\')) + 1)
+  return base === '' ? 'voice.wav' : base
+}
+
+function uploadedHandle(uploaded: unknown): string {
+  if (
+    uploaded !== null &&
+    typeof uploaded === 'object' &&
+    'voice' in uploaded &&
+    typeof uploaded.voice === 'string' &&
+    uploaded.voice !== ''
+  ) {
+    return uploaded.voice
+  }
+  throw new ToolRouteError('engined returned no voice handle')
+}
+
+/**
+ * The `voice` to send. A file inside the workspace is uploaded and replaced
+ * by the handle; a bare name or an existing handle is left as the caller wrote it.
+ * An escaping path throws `PathEscapeError` before any request.
+ */
+async function voiceForSpeech(
+  voice: string | undefined,
+  workspace: WorkspaceFiles,
+  upload: (file: File) => Promise<unknown>,
+): Promise<string | undefined> {
+  if (voice === undefined || isVoiceHandle(voice)) {
+    return voice
+  }
+  if (workspace.roots.length === 0 && !isVoicePath(voice)) {
+    return voice
+  }
+  const absolute = resolveWorkspacePath(workspace.roots, voice)
+  const bytes = await workspace.readFile(absolute)
+  if (bytes === undefined) {
+    return voice
+  }
+  return uploadedHandle(await upload(new File([new Uint8Array(bytes)], voiceFileName(voice))))
+}
+
+/** Speak `input.text`. A workspace voice file is cloned on `row.door` first; the speech POST then names the handle. */
+export async function requestSpeech(
+  row: EnginedModelRow,
+  input: { text: string; voice?: string },
+  workspace: WorkspaceFiles,
+  signal?: AbortSignal,
+): Promise<ArrayBuffer> {
+  const voice = await voiceForSpeech(input.voice, workspace, (file) => {
+    const form = new FormData()
+    form.set('file', file)
+    return postForm(row.door.url, VOICE_UPLOAD_PATH, form, signal)
+  })
+  const req = buildSpeakRequest(row, { text: input.text, voice })
+  const audio = await postJson(row.door.url, req.path, req.body, signal)
+  if (!(audio instanceof ArrayBuffer)) {
+    throw new ToolRouteError('engined returned no audio')
+  }
+  return audio
 }
 
 /** The workspace file a tool will read or write, as `prepareInvocation` shows it. */

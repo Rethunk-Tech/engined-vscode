@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'bun:test'
+import { join } from 'node:path'
 import type { Door, EnginedModelRow } from './door.ts'
+import { PathEscapeError } from './pathGuard.ts'
 import {
   buildImageRequest,
   buildReadImageRequest,
   buildSpeakRequest,
   buildTranscribeRequest,
   confirmationMessage,
+  requestSpeech,
   ToolRouteError,
 } from './toolRequests.ts'
 
@@ -128,6 +131,135 @@ describe('request builders', () => {
   test('speech carries voice through', () => {
     const req = buildSpeakRequest(piper, { text: 'hello', voice: 'v1' })
     expect(req.body).toEqual({ model: '@/piper/local', input: 'hello', voice: 'v1' })
+  })
+
+  test('a workspace voice file is uploaded, then spoken with the returned handle', async () => {
+    const reference = new Uint8Array([1, 2, 3, 4])
+    const paths: string[] = []
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        const path = new URL(req.url).pathname
+        paths.push(path)
+        if (path === '/engined/v1/audio/voices') {
+          const form = await req.formData()
+          const file = form.get('file')
+          if (!(file instanceof File)) {
+            return new Response('expected file', { status: 400 })
+          }
+          expect(file.name).toBe('me.wav')
+          expect(new Uint8Array(await file.arrayBuffer())).toEqual(reference)
+          return Response.json({ voice: 'vc_cef8305b2eb7c0bf8766de6b1f5d0fab.wav', bytes: 4 })
+        }
+        expect(await req.json()).toEqual({
+          model: '@/piper/local',
+          input: 'hello',
+          voice: 'vc_cef8305b2eb7c0bf8766de6b1f5d0fab.wav',
+        })
+        return new Response(Uint8Array.from([9, 8, 7]), {
+          headers: { 'content-type': 'audio/wav' },
+        })
+      },
+    })
+    try {
+      const row: EnginedModelRow = {
+        ...piper,
+        door: { name: 'local', url: `http://127.0.0.1:${server.port}` },
+      }
+      const audio = await requestSpeech(
+        row,
+        { text: 'hello', voice: 'clips/me.wav' },
+        {
+          roots: ['/workspace/project'],
+          readFile: async (absolute) => {
+            expect(absolute).toBe(join('/workspace/project', 'clips/me.wav'))
+            return reference
+          },
+        },
+      )
+      expect(paths).toEqual(['/engined/v1/audio/voices', '/openai/v1/audio/speech'])
+      expect(new Uint8Array(audio)).toEqual(Uint8Array.from([9, 8, 7]))
+    } finally {
+      await server.stop(true)
+    }
+  })
+
+  test('a bare voice name or a vc_ handle is sent as-is and not uploaded', async () => {
+    const paths: string[] = []
+    const bodies: unknown[] = []
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        paths.push(new URL(req.url).pathname)
+        bodies.push(await req.json())
+        return new Response(Uint8Array.from([1]), { headers: { 'content-type': 'audio/wav' } })
+      },
+    })
+    try {
+      const row: EnginedModelRow = {
+        ...piper,
+        door: { name: 'local', url: `http://127.0.0.1:${server.port}` },
+      }
+      const roots = ['/workspace/project']
+      await requestSpeech(
+        row,
+        { text: 'hello', voice: 'af_heart' },
+        { roots, readFile: async () => undefined },
+      )
+      await requestSpeech(
+        row,
+        { text: 'hello', voice: 'af_heart' },
+        {
+          roots: [],
+          readFile: async () => {
+            throw new Error('a bare name is not a path when no folder is open')
+          },
+        },
+      )
+      let reads = 0
+      await requestSpeech(
+        row,
+        { text: 'hello', voice: 'vc_already.wav' },
+        {
+          roots,
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      )
+      expect(reads).toBe(0)
+      expect(paths).toEqual([
+        '/openai/v1/audio/speech',
+        '/openai/v1/audio/speech',
+        '/openai/v1/audio/speech',
+      ])
+      expect(bodies).toEqual([
+        { model: '@/piper/local', input: 'hello', voice: 'af_heart' },
+        { model: '@/piper/local', input: 'hello', voice: 'af_heart' },
+        { model: '@/piper/local', input: 'hello', voice: 'vc_already.wav' },
+      ])
+    } finally {
+      await server.stop(true)
+    }
+  })
+
+  test('a voice path outside the workspace is refused before any upload', async () => {
+    let reads = 0
+    await expect(
+      requestSpeech(
+        piper,
+        { text: 'hello', voice: '../secret.wav' },
+        {
+          roots: ['/workspace/project'],
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      ),
+    ).rejects.toThrow(PathEscapeError)
+    expect(reads).toBe(0)
   })
 })
 

@@ -57,6 +57,6 @@ Semantic search over the open workspace: file chunks are embedded through `/open
 | --- | --- | --- |
 | `text` | string | required |
 | `outputPath` | string | required, workspace-relative |
-| `voice` | string | optional |
+| `voice` | string | optional. A workspace-relative path that exists in the workspace is uploaded to `/engined/v1/audio/voices`, and the speech request sends the returned `vc_….wav` handle. A bare voice name or a `vc_` handle is sent unchanged. A path outside the workspace is refused. |
 
 Route: `/openai/v1/audio/speech`. Route selection: `engined.defaultModels.speech`. Writes the synthesized audio to `outputPath`.

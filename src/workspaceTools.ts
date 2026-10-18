@@ -13,10 +13,10 @@ import type { SearchIndex } from './searchIndex.ts'
 import {
   buildImageRequest,
   buildReadImageRequest,
-  buildSpeakRequest,
   buildTranscribeRequest,
   type ConfirmationTarget,
   confirmationMessage,
+  requestSpeech,
   ToolRouteError,
 } from './toolRequests.ts'
 
@@ -43,6 +43,24 @@ function workspaceRoots(): string[] {
 async function readWorkspaceFile(path: string): Promise<Uint8Array> {
   const resolved = resolveWorkspacePath(workspaceRoots(), path)
   return await vscode.workspace.fs.readFile(vscode.Uri.file(resolved))
+}
+
+/** Bytes when `absolutePath` is a file; `undefined` when it is missing or not a file. */
+async function readExistingFile(absolutePath: string): Promise<Uint8Array | undefined> {
+  const uri = vscode.Uri.file(absolutePath)
+  let stat: vscode.FileStat
+  try {
+    stat = await vscode.workspace.fs.stat(uri)
+  } catch (error) {
+    if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
+      return undefined
+    }
+    throw error
+  }
+  if (stat.type !== vscode.FileType.File) {
+    return undefined
+  }
+  return await vscode.workspace.fs.readFile(uri)
 }
 
 async function writeWorkspaceFile(path: string, data: Uint8Array): Promise<vscode.Uri> {
@@ -294,16 +312,12 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
   async invoke(options, token) {
     try {
       const row = host().resolveRoleRow('speech')
-      const req = buildSpeakRequest(row, {
-        text: options.input.text,
-        voice: options.input.voice,
-      })
-      const audio = (await postJson(
-        row.door.url,
-        req.path,
-        req.body,
+      const audio = await requestSpeech(
+        row,
+        { text: options.input.text, voice: options.input.voice },
+        { roots: workspaceRoots(), readFile: readExistingFile },
         cancellationSignal(token),
-      )) as ArrayBuffer
+      )
       await writeWorkspaceFile(options.input.outputPath, new Uint8Array(audio))
       return new vscode.LanguageModelToolResult([
         new vscode.LanguageModelTextPart(`Wrote ${options.input.outputPath}`),
