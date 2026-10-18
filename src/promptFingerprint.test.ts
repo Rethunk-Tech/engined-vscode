@@ -22,6 +22,31 @@ describe('fingerprint', () => {
     })
   })
 
+  test('a longer or extra message differs at the first extra character', () => {
+    const cases: {
+      current: string[]
+      previous: string[]
+      want: { message: number; charInMessage: number; charOverall: number }
+    }[] = [
+      {
+        current: ['hello!'],
+        previous: ['hello'],
+        want: { message: 0, charInMessage: 5, charOverall: 5 },
+      },
+      {
+        current: ['same', 'next'],
+        previous: ['same'],
+        want: { message: 1, charInMessage: 0, charOverall: 4 },
+      },
+    ]
+    for (const { current, previous, want } of cases) {
+      expect(
+        fingerprint({ messages: current, tools: '[]' }, { messages: previous, tools: '[]' })
+          .firstDifference,
+      ).toEqual(want)
+    }
+  })
+
   test('reports no difference and flags a changed tool set without exposing content', () => {
     const a = { messages: ['secret prompt'], tools: '[x]' }
     const line = describeFingerprint(

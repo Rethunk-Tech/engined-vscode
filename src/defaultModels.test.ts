@@ -62,6 +62,22 @@ describe('resolveDefaultModel: image', () => {
     expect(resolved.row?.id).toBe('@/comfy/local')
     expect(resolved.unusableReason).toContain('not an installed engined route')
   })
+
+  test('a configured id that is listed but unavailable falls back, with a reason', () => {
+    const comfy = rows.find((row) => row.id === '@/comfy/local')
+    if (comfy === undefined) {
+      throw new Error('fixtures/models.json has no @/comfy/local')
+    }
+    const listed = [
+      ...rows.map((row) =>
+        row.id === '@/comfy/local' ? { ...row, state: 'unavailable' as const } : row,
+      ),
+      { ...comfy, id: '@/comfy/other', routeId: '@/comfy/other' },
+    ]
+    const resolved = resolveDefaultModel(listed, 'image', '@/comfy/local')
+    expect(resolved.row?.id).toBe('@/comfy/other')
+    expect(resolved.unusableReason).toContain('unavailable')
+  })
 })
 
 describe('resolveDefaultModel: ocr and vision', () => {

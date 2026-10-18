@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { EnginedModelInfo } from './door.ts'
-import { buildChatRequestBody } from './requestBuilder.ts'
+import { buildChatRequestBody, plainMessageContent } from './requestBuilder.ts'
 
 function modelInfo(overrides: Partial<EnginedModelInfo['row']> = {}): EnginedModelInfo {
   const row = {
@@ -26,6 +26,38 @@ function modelInfo(overrides: Partial<EnginedModelInfo['row']> = {}): EnginedMod
     row,
   }
 }
+
+describe('plainMessageContent', () => {
+  test('counts text and tool JSON, never image bytes', () => {
+    const cases: { parts: Parameters<typeof plainMessageContent>[0]['parts']; want: string }[] = [
+      { parts: [{ type: 'text', text: 'hello' }], want: 'hello' },
+      {
+        parts: [{ type: 'toolCall', id: '1', name: 'f', arguments: { a: 1 } }],
+        want: '{"a":1}',
+      },
+      {
+        parts: [{ type: 'toolCall', id: '1', name: 'f', arguments: undefined }],
+        want: '{}',
+      },
+      { parts: [{ type: 'toolResult', toolCallId: '1', text: 'ok' }], want: 'ok' },
+      {
+        parts: [{ type: 'image', mimeType: 'image/png', base64: 'AAAA' }],
+        want: '',
+      },
+      {
+        parts: [
+          { type: 'text', text: 'see ' },
+          { type: 'image', mimeType: 'image/png', base64: 'AAAA' },
+          { type: 'toolResult', toolCallId: '1', text: 'done' },
+        ],
+        want: 'see done',
+      },
+    ]
+    for (const { parts, want } of cases) {
+      expect(plainMessageContent({ role: 'user', parts })).toBe(want)
+    }
+  })
+})
 
 describe('buildChatRequestBody', () => {
   test('sends the door-owned routeId, not the qualified model id, as the request model', () => {
