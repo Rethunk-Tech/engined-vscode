@@ -8,18 +8,14 @@
   "files": {
     "includes": [
       "**",
-      "!**/node_modules",
-      "!**/generated",
       "!**/*.dc.html",
       "!**/*.min.js",
-      "!**/vendor",
-      "!.claude",
       "!**/database.types.ts",
       "!**/design/doc-page.js",
       "!**/design/support.js",
-      "!dist",
-      "!*.vsix",
-      "!src/fixtures"
+      "!**/generated",
+      "!**/vendor",
+      "!.claude"
     ]
   },
   "formatter": {
@@ -28,32 +24,47 @@
     "lineEnding": "lf",
     "lineWidth": 100
   },
+  "javascript": {
+    "globals": ["Bun"],
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all"
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "rules": {
       "preset": "all",
-      "correctness": {
-        "noSolidDestructuredProps": "off",
-        "useQwikValidLexicalScope": "off",
-        "noUnresolvedImports": "off",
-        "useImportExtensions": "on"
-      },
-      "suspicious": {
-        "noReactSpecificProps": "off",
-        "noExplicitAny": "error",
-        "noUnnecessaryConditions": "off"
-      },
-      "performance": {
-        "noAwaitInLoops": "off",
-        "noJsxPropsBind": "off",
-        "useSolidForComponent": "off",
-        "noImgElement": "off"
-      },
       "style": {
-        "noJsxLiterals": "off",
+        "noNonNullAssertion": "error",
+        "useImportType": "error",
+        "noContinue": "off",
+        "noTernary": "off",
+        "useExportsLast": "off",
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 500
+          }
+        },
         "noIncrementDecrement": {
           "level": "on",
           "options": {
             "allowForLoopAfterthoughts": true
+          }
+        },
+        "useFilenamingConvention": {
+          "level": "on",
+          "options": {
+            "strictCase": false,
+            "filenameCases": ["camelCase", "PascalCase", "kebab-case", "export"]
           }
         },
         "useNamingConvention": {
@@ -77,33 +88,9 @@
               }
             ]
           }
-        },
-        "useFilenamingConvention": {
-          "level": "on",
-          "options": {
-            "strictCase": false,
-            "filenameCases": ["camelCase", "PascalCase", "kebab-case", "export"]
-          }
-        },
-        "noExcessiveLinesPerFile": {
-          "level": "error",
-          "options": {
-            "maxLines": 500
-          }
-        },
-        "useImportType": "error",
-        "noNonNullAssertion": "error",
-        "noContinue": "off",
-        "noTernary": "off",
-        "useExportsLast": "off"
+        }
       },
       "complexity": {
-        "noExcessiveCognitiveComplexity": {
-          "level": "error",
-          "options": {
-            "maxAllowedComplexity": 25
-          }
-        },
         "noExcessiveLinesPerFunction": {
           "level": "error",
           "options": {
@@ -112,7 +99,24 @@
             "skipIifes": true
           }
         },
-        "noUselessReturn": "off"
+        "noUselessReturn": "off",
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": {
+            "maxAllowedComplexity": 25
+          }
+        }
+      },
+      "correctness": {
+        "useImportExtensions": "on",
+        "noUnresolvedImports": "off",
+        "noSolidDestructuredProps": "off",
+        "useQwikValidLexicalScope": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noReactSpecificProps": "off",
+        "noUnnecessaryConditions": "off"
       },
       "security": {
         "noSecrets": {
@@ -125,55 +129,28 @@
       "nursery": {
         "noFloatingPromises": "error",
         "noMisusedPromises": "error"
-      }
-    }
-  },
-  "javascript": {
-    "globals": ["Bun"],
-    "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "asNeeded",
-      "trailingCommas": "all"
-    }
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
+      },
+      "performance": {
+        "noAwaitInLoops": "off",
+        "noImgElement": "off",
+        "noJsxPropsBind": "off",
+        "useSolidForComponent": "off"
       }
     }
   },
   "overrides": [
     {
       "includes": [
-        "**/*.test.ts",
-        "**/*.test.tsx",
         "**/*.spec.ts",
         "**/*.spec.tsx",
-        "**/test/**",
-        "**/__tests__/**"
+        "**/*.pw.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "**/test/**"
       ],
       "linter": {
         "rules": {
-          "correctness": {
-            "noNodejsModules": "off",
-            "noProcessGlobal": "off",
-            "noUnresolvedImports": "off"
-          },
-          "security": {
-            "noSecrets": "off"
-          },
-          "performance": {
-            "noNamespaceImport": "off",
-            "useTopLevelRegex": "off"
-          },
-          "suspicious": {
-            "useAwait": "off",
-            "noBitwiseOperators": "off",
-            "noMisplacedAssertion": "off",
-            "noSkippedTests": "off",
-            "noConsole": "off"
-          },
           "complexity": {
             "noExcessiveCognitiveComplexity": {
               "level": "error",
@@ -190,6 +167,18 @@
               }
             }
           },
+          "correctness": {
+            "noNodejsModules": "off",
+            "noProcessGlobal": "off",
+            "noUnresolvedImports": "off"
+          },
+          "performance": {
+            "noNamespaceImport": "off",
+            "useTopLevelRegex": "off"
+          },
+          "security": {
+            "noSecrets": "off"
+          },
           "style": {
             "noExcessiveLinesPerFile": {
               "level": "error",
@@ -200,12 +189,19 @@
             "noMagicNumbers": "off",
             "noProcessEnv": "off",
             "useComponentExportOnlyModules": "off"
+          },
+          "suspicious": {
+            "noBitwiseOperators": "off",
+            "noConsole": "off",
+            "noMisplacedAssertion": "off",
+            "noSkippedTests": "off",
+            "useAwait": "off"
           }
         }
       }
     },
     {
-      "includes": ["**/e2e/**", "**/playwright.config.ts", "**/playwright.*.config.ts"],
+      "includes": ["**/e2e/**", "**/playwright.*.config.ts", "**/playwright.config.ts"],
       "linter": {
         "rules": {
           "correctness": {
@@ -213,30 +209,30 @@
             "noProcessGlobal": "off",
             "noUnresolvedImports": "off"
           },
-          "security": {
-            "noSecrets": "off"
-          },
           "performance": {
             "useTopLevelRegex": "off"
           },
-          "suspicious": {
-            "noConsole": "off"
+          "security": {
+            "noSecrets": "off"
           },
           "style": {
             "noDefaultExport": "off",
             "noMagicNumbers": "off",
             "noProcessEnv": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
           }
         }
       }
     },
     {
       "includes": [
-        "**/scripts/**",
-        "tools/**",
-        "**/*.config.ts",
+        "**/*.config.js",
         "**/*.config.mjs",
-        "**/*.config.js"
+        "**/*.config.ts",
+        "**/scripts/**",
+        "tools/**"
       ],
       "linter": {
         "rules": {
@@ -248,23 +244,25 @@
           "performance": {
             "useTopLevelRegex": "off"
           },
-          "suspicious": {
-            "noConsole": "off"
-          },
           "style": {
             "noDefaultExport": "off",
             "noProcessEnv": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
           }
         }
       }
     },
     {
       "includes": [
-        "**/src/server/**",
+        "**/app/**/route.ts",
         "**/apps/server/**",
         "**/apps/worker/**",
-        "**/app/**/route.ts",
-        "**/src/app/api/**"
+        "**/lib/server/**",
+        "**/pages/api/**",
+        "**/src/app/api/**",
+        "**/src/server/**"
       ],
       "linter": {
         "rules": {
@@ -296,11 +294,22 @@
       }
     },
     {
+      "includes": ["**/scroll-region.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveTabindex": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["src/**"],
       "linter": {
         "rules": {
           "correctness": {
             "noNodejsModules": "off",
+            "noProcessGlobal": "off",
             "noUndeclaredDependencies": "off"
           },
           "performance": {
