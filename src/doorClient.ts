@@ -9,6 +9,7 @@ import { HTTP_NOT_FOUND, HTTP_TOO_MANY_REQUESTS, MS_PER_SECOND } from './constan
 import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { mapAnswerableRows, mapModels } from './door.ts'
 import { type ImagePreviewFrame, readImageEvents } from './imageStream.ts'
+import type { RerankResult } from './search.ts'
 
 const EVENT_STREAM = 'text/event-stream'
 const RETRY_AFTER_SECONDS = /^\d+(\.\d+)?$/
@@ -277,7 +278,7 @@ export async function openEngineEventsStream(
   return res.body
 }
 
-export interface DoorResponse<T> {
+interface DoorResponse<T> {
   data: T
   headers: Headers
 }
@@ -372,11 +373,6 @@ export async function postEmbeddings(
     }
   }
   return vectors
-}
-
-export interface RerankResult {
-  index: number
-  score?: number
 }
 
 /** `POST /openai/v1/rerank`: a query against a document list, scored and ordered by the reranker's own reply. */
