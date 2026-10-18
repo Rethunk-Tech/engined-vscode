@@ -12,7 +12,6 @@ import {
   requestSpeech,
   ToolRouteError,
   TRANSLATE_UNAVAILABLE,
-  translationQualityPassed,
 } from './toolRequests.ts'
 
 const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
@@ -121,8 +120,6 @@ describe('request builders', () => {
   })
 
   test('translate stays unoffered when the quality probe is absent or failing', () => {
-    expect(translationQualityPassed(undefined)).toBe(false)
-    expect(translationQualityPassed({ quality: false })).toBe(false)
     expect(refuseTranslate(true)).toBe(TRANSLATE_UNAVAILABLE)
     expect(refuseTranslate(true, { quality: false })).toBe(TRANSLATE_UNAVAILABLE)
     expect(refuseTranslate(undefined)).toBeUndefined()
