@@ -9,18 +9,12 @@
       "egress": "none",
       "streaming": true,
       "tools": true,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "role": "chat",
       "state": "running",
       "capabilities": {
-        "input": [
-          "text"
-        ],
-        "output": [
-          "text"
-        ]
+        "input": ["text"],
+        "output": ["text"]
       },
       "object": "model",
       "created": 1710000000,
@@ -34,9 +28,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/embeddings"
-      ],
+      "serves": ["/openai/v1/embeddings"],
       "role": "embedding",
       "state": "running",
       "capabilities": {},
@@ -52,20 +44,13 @@
       "egress": "none",
       "streaming": true,
       "tools": true,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "role": "vision",
       "vision": "describe",
       "state": "running",
       "capabilities": {
-        "input": [
-          "text",
-          "image"
-        ],
-        "output": [
-          "text"
-        ]
+        "input": ["text", "image"],
+        "output": ["text"]
       },
       "object": "model",
       "created": 1710000000,
@@ -79,20 +64,13 @@
       "egress": "none",
       "streaming": true,
       "tools": true,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "role": "vision",
       "vision": "read",
       "state": "running",
       "capabilities": {
-        "input": [
-          "text",
-          "image"
-        ],
-        "output": [
-          "text"
-        ]
+        "input": ["text", "image"],
+        "output": ["text"]
       },
       "object": "model",
       "created": 1710000000,
@@ -106,9 +84,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -123,9 +99,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -140,25 +114,14 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {
-        "input": [
-          "text",
-          "image"
-        ],
-        "output": [
-          "text"
-        ],
+        "input": ["text", "image"],
+        "output": ["text"],
         "context_in": 200000,
         "context_out": 64000,
-        "reasoning": [
-          "none",
-          "low",
-          "high"
-        ]
+        "reasoning": ["none", "low", "high"]
       },
       "object": "model",
       "created": 1710000000,
@@ -172,9 +135,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -189,9 +150,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -206,9 +165,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -223,9 +180,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -240,9 +195,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -257,9 +210,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -274,9 +225,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -291,9 +240,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -308,9 +255,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -325,9 +270,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -342,9 +285,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -359,9 +300,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -376,9 +315,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -393,9 +330,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -410,9 +345,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -427,9 +360,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -444,9 +375,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -461,9 +390,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -478,9 +405,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -495,9 +420,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -512,9 +435,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -529,9 +450,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -546,9 +465,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -563,9 +480,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -580,9 +495,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -597,9 +510,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -614,9 +525,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -631,9 +540,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -648,9 +555,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -665,9 +570,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -682,9 +585,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -699,9 +600,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -716,9 +615,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -733,9 +630,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -750,9 +645,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -767,9 +660,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -784,9 +675,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -801,9 +690,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -818,9 +705,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -835,9 +720,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -852,9 +735,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -869,9 +750,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -886,9 +765,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -903,9 +780,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -920,9 +795,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -937,9 +810,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -954,9 +825,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -971,9 +840,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -988,9 +855,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1005,9 +870,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1022,9 +885,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1039,9 +900,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1056,9 +915,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1073,9 +930,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1090,9 +945,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1107,9 +960,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1124,9 +975,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1141,9 +990,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1158,9 +1005,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1175,9 +1020,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1192,9 +1035,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1209,9 +1050,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1226,9 +1065,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1243,9 +1080,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1260,9 +1095,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1277,9 +1110,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1294,9 +1125,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1311,9 +1140,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1328,9 +1155,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1345,9 +1170,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1362,9 +1185,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1379,9 +1200,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1396,9 +1215,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1413,9 +1230,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1430,9 +1245,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1447,9 +1260,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1464,9 +1275,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1481,9 +1290,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1498,9 +1305,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1515,9 +1320,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1532,9 +1335,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1549,9 +1350,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1566,9 +1365,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1583,9 +1380,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1600,9 +1395,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1617,9 +1410,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1634,9 +1425,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1651,9 +1440,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1668,9 +1455,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1685,9 +1470,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1702,9 +1485,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1719,9 +1500,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1736,9 +1515,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1753,9 +1530,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1770,9 +1545,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1787,9 +1560,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1804,9 +1575,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1821,9 +1590,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1838,9 +1605,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1855,9 +1620,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1872,9 +1635,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1889,9 +1650,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1906,9 +1665,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1923,9 +1680,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1940,9 +1695,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1957,9 +1710,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1974,9 +1725,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -1991,9 +1740,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2008,9 +1755,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2025,9 +1770,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2042,9 +1785,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2059,9 +1800,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2076,9 +1815,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2093,9 +1830,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2110,9 +1845,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2127,9 +1860,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2144,9 +1875,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2161,9 +1890,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2178,9 +1905,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2195,9 +1920,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2212,9 +1935,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2229,9 +1950,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2246,9 +1965,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2263,9 +1980,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2280,9 +1995,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2297,9 +2010,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2314,9 +2025,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2331,9 +2040,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2348,9 +2055,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2365,9 +2070,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2382,9 +2085,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2399,9 +2100,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2416,9 +2115,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2433,9 +2130,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2450,9 +2145,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2467,9 +2160,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2484,9 +2175,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2501,9 +2190,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2518,9 +2205,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2535,9 +2220,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2552,9 +2235,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2569,9 +2250,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2586,9 +2265,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2603,9 +2280,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2620,9 +2295,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2637,9 +2310,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2654,9 +2325,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2671,9 +2340,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2688,9 +2355,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2705,9 +2370,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2722,9 +2385,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2739,9 +2400,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2756,9 +2415,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2773,9 +2430,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2790,9 +2445,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2807,9 +2460,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2824,9 +2475,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2841,9 +2490,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2858,9 +2505,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2875,9 +2520,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2892,9 +2535,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2909,9 +2550,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2926,9 +2565,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2943,9 +2580,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2960,9 +2595,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2977,9 +2610,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -2994,9 +2625,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3011,9 +2640,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3028,9 +2655,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3045,9 +2670,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3062,9 +2685,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3079,9 +2700,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3096,9 +2715,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3113,9 +2730,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3130,9 +2745,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3147,9 +2760,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3164,9 +2775,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3181,9 +2790,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3198,9 +2805,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3215,9 +2820,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3232,9 +2835,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3249,9 +2850,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3266,9 +2865,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3283,9 +2880,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3300,9 +2895,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3317,9 +2910,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3334,9 +2925,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3351,9 +2940,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3368,9 +2955,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3385,9 +2970,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3402,9 +2985,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3419,9 +3000,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3436,9 +3015,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3453,9 +3030,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3470,9 +3045,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3487,9 +3060,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3504,9 +3075,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3521,9 +3090,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3538,9 +3105,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3555,9 +3120,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3572,9 +3135,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3589,9 +3150,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3606,9 +3165,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3623,9 +3180,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3640,9 +3195,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3657,9 +3210,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3674,9 +3225,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3691,9 +3240,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3708,9 +3255,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3725,9 +3270,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3742,9 +3285,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3759,9 +3300,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3776,9 +3315,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3793,9 +3330,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3810,9 +3345,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3827,9 +3360,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3844,9 +3375,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3861,9 +3390,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3878,9 +3405,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3895,9 +3420,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3912,9 +3435,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3929,9 +3450,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3946,9 +3465,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3963,9 +3480,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3980,9 +3495,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -3997,9 +3510,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4014,9 +3525,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4031,9 +3540,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4048,9 +3555,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4065,9 +3570,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4082,9 +3585,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4099,9 +3600,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4116,9 +3615,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4133,9 +3630,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4150,9 +3645,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4167,9 +3660,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4184,9 +3675,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4201,9 +3690,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4218,9 +3705,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4235,9 +3720,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4252,9 +3735,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4269,9 +3750,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4286,9 +3765,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4303,9 +3780,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4320,9 +3795,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4337,9 +3810,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4354,9 +3825,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4371,9 +3840,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4388,9 +3855,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4405,9 +3870,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4422,9 +3885,7 @@
       "egress": "remote",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4438,9 +3899,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/speech"
-      ],
+      "serves": ["/openai/v1/audio/speech"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4454,9 +3913,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/speech"
-      ],
+      "serves": ["/openai/v1/audio/speech"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4470,9 +3927,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/speech"
-      ],
+      "serves": ["/openai/v1/audio/speech"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4486,9 +3941,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/speech"
-      ],
+      "serves": ["/openai/v1/audio/speech"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4503,9 +3956,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/transcriptions"
-      ],
+      "serves": ["/openai/v1/audio/transcriptions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4520,9 +3971,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/transcriptions"
-      ],
+      "serves": ["/openai/v1/audio/transcriptions"],
       "state": "installed",
       "capabilities": {},
       "object": "model",
@@ -4537,10 +3986,7 @@
       "egress": "none",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/audio/transcriptions",
-        "/openai/v1/audio/translations"
-      ],
+      "serves": ["/openai/v1/audio/transcriptions", "/openai/v1/audio/translations"],
       "translate": true,
       "state": "installed",
       "capabilities": {},
@@ -4577,21 +4023,13 @@
       "id": "chain-private",
       "streaming": true,
       "tools": true,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "running",
       "capabilities": {
-        "input": [
-          "text"
-        ],
-        "output": [
-          "text"
-        ]
+        "input": ["text"],
+        "output": ["text"]
       },
-      "hops": [
-        "@/llama/ornith"
-      ],
+      "hops": ["@/llama/ornith"],
       "object": "model",
       "created": 1710000000,
       "owned_by": "engined"
@@ -4600,22 +4038,13 @@
       "id": "chain-public",
       "streaming": true,
       "tools": false,
-      "serves": [
-        "/openai/v1/chat/completions"
-      ],
+      "serves": ["/openai/v1/chat/completions"],
       "state": "running",
       "capabilities": {
-        "input": [
-          "text"
-        ],
-        "output": [
-          "text"
-        ]
+        "input": ["text"],
+        "output": ["text"]
       },
-      "hops": [
-        "@/llama/ornith",
-        "@/claude/sonnet-5"
-      ],
+      "hops": ["@/llama/ornith", "@/claude/sonnet-5"],
       "object": "model",
       "created": 1710000000,
       "owned_by": "engined"
