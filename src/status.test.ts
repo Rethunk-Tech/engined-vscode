@@ -246,6 +246,28 @@ describe('buildTooltip', () => {
     expect(tooltip).toContain('http://127.0.0.1:29200')
     expect(tooltip).toContain('http://10.0.0.5:29200')
   })
+
+  test('door name, url, route, held id, and default names are HTML-escaped', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      doors: [
+        { name: 'a<b>', url: 'http://x/<img>', reachable: true },
+        { name: 'ok', url: 'http://y', reachable: true },
+      ],
+      lastChat: { route: '@/x/<script>alert(1)', egress: 'none', wallMs: 100 },
+      heldEngines: ['<held>'],
+      defaults: [{ label: 'Image', resolvedName: '<img>', configured: true }],
+    })
+    expect(tooltip).not.toContain('<script>')
+    expect(tooltip).not.toContain('<img>')
+    expect(tooltip).not.toContain('<held>')
+    expect(tooltip).not.toContain('a<b>')
+    expect(tooltip).toContain('a&lt;b&gt;')
+    expect(tooltip).toContain('http://x/&lt;img&gt;')
+    expect(tooltip).toContain('&lt;script&gt;alert(1)')
+    expect(tooltip).toContain('&lt;held&gt;')
+    expect(tooltip).toContain('&lt;img&gt;')
+  })
 })
 
 describe('buildTooltip calls table', () => {

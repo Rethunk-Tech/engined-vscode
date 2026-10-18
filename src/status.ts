@@ -308,7 +308,7 @@ function doorRow(d: DoorLine): string {
       ? ''
       : ` ${muted(`config not loaded: ${escapeHtml(d.configError)}`)}`
     : ` ${muted('unreachable')}`
-  return row(d.name, `${glyph} ${d.url}${suffix}`)
+  return row(escapeHtml(d.name), `${glyph} ${escapeHtml(d.url)}${suffix}`)
 }
 
 // --- calls table (one table, calls as columns) ----------------------------
@@ -322,7 +322,7 @@ interface CallColumn {
 function routeCell(call: CallRecord): string {
   const local = isLocalEgress(call.egress)
   const glyph = local ? '$(server)' : '$(cloud)'
-  return `${glyph} ${shortModelName(call.route)} ${muted(local ? '(local)' : '(remote)')}`
+  return `${glyph} ${escapeHtml(shortModelName(call.route))} ${muted(local ? '(local)' : '(remote)')}`
 }
 
 function tokensCell(call: CallRecord): string {
@@ -418,13 +418,14 @@ function defaultRowPair(line: DefaultModelLine): [string, string] {
   if (line.resolvedName === undefined) {
     return [line.label, muted('none available')]
   }
+  const resolved = escapeHtml(line.resolvedName)
   if (line.unusableConfigured !== undefined) {
     return [
       line.label,
-      `${chip(`${line.unusableConfigured} unavailable`, COLOR_WARN)}, using ${line.resolvedName}`,
+      `${chip(`${escapeHtml(line.unusableConfigured)} unavailable`, COLOR_WARN)}, using ${resolved}`,
     ]
   }
-  return [line.label, line.configured ? line.resolvedName : `${line.resolvedName} ${muted('auto')}`]
+  return [line.label, line.configured ? resolved : `${resolved} ${muted('auto')}`]
 }
 
 /**
@@ -498,7 +499,7 @@ export function buildTooltip(input: TooltipInput): string {
     muted(`${input.modelCount} model(s)`),
   ]
   if (input.heldEngines !== undefined && input.heldEngines.length > 0) {
-    headerParts.push(muted(`held: ${input.heldEngines.join(', ')}`))
+    headerParts.push(muted(`held: ${input.heldEngines.map(escapeHtml).join(', ')}`))
   }
   if (input.chatSettingsRouted === true) {
     headerParts.push(chip('Chat features routed to engined', COLOR_ROUTED))
