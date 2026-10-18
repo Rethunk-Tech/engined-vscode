@@ -49,17 +49,29 @@ export function resolveWorkspacePath(roots: readonly string[], requested: string
   if (requested.includes('\0')) {
     throw new PathEscapeError('path contains a NUL byte')
   }
-  const candidate = isAbsolute(requested)
-    ? resolve(requested)
-    : resolve(roots[0] as string, requested)
   const normalizedRoots = roots.map((root) => resolve(root))
-  if (!containedIn(candidate, normalizedRoots)) {
-    throw new PathEscapeError(`"${requested}" resolves outside every open workspace folder`)
+  const candidates = isAbsolute(requested)
+    ? [resolve(requested)]
+    : normalizedRoots.map((root) => resolve(root, requested))
+  let fallback: string | undefined
+  for (const candidate of candidates) {
+    if (!containedIn(candidate, normalizedRoots)) {
+      continue
+    }
+    const realCandidate = realpathExistingPrefix(candidate)
+    const realRoots = normalizedRoots.map((root) => realpathExistingPrefix(root))
+    if (!containedIn(realCandidate, realRoots)) {
+      continue
+    }
+    try {
+      realpathSync(candidate)
+      return candidate
+    } catch {
+      fallback ??= candidate
+    }
   }
-  const realCandidate = realpathExistingPrefix(candidate)
-  const realRoots = normalizedRoots.map((root) => realpathExistingPrefix(root))
-  if (!containedIn(realCandidate, realRoots)) {
-    throw new PathEscapeError(`"${requested}" resolves outside every open workspace folder`)
+  if (fallback !== undefined) {
+    return fallback
   }
-  return candidate
+  throw new PathEscapeError(`"${requested}" resolves outside every open workspace folder`)
 }

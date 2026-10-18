@@ -30,6 +30,22 @@ describe('resolveWorkspacePath', () => {
     )
   })
 
+  test('a relative path that exists only in a later folder resolves there', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pathGuard-multi-'))
+    const first = join(dir, 'one')
+    const second = join(dir, 'two')
+    mkdirSync(first)
+    mkdirSync(second)
+    writeFileSync(join(second, 'only-here.wav'), 'x')
+    try {
+      expect(resolveWorkspacePath([first, second], 'only-here.wav')).toBe(
+        join(second, 'only-here.wav'),
+      )
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
   test('rejects an absolute path whose .. segments climb out of the root', () => {
     expect(() => resolveWorkspacePath([ROOT], `${ROOT}/../../etc/passwd`)).toThrow(PathEscapeError)
   })
