@@ -29,7 +29,7 @@ Then open Copilot Chat's model picker and choose an `engined` model. Full runboo
 - Five agent tools: generate/edit images, OCR or describe an image, transcribe or translate audio, synthesize speech, semantic workspace search
 - Inline completions (ghost text), optionally with neighbouring-file context
 - Status bar shows what answered, whether it ran locally, tokens used, and a loading state
-- An Engines view for warming, holding, and stopping engines, with live resource usage
+- An Engines view for warming, holding, and stopping engines; running local containers also show live RAM/GPU use
 - A usage report (per-day/per-route requests, tokens, cost, and local/remote split) across every configured door
 - Image attachments work on a text-only engined model that engined bridges to a vision route
 - Copilot's Context Window meter shows the token usage engined reports for each reply

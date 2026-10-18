@@ -5,7 +5,7 @@ Every `engined.*` setting. Configure through VS Code's Settings UI (search "engi
 | Setting | Default | Description |
 | --- | --- | --- |
 | `engined.doors` | `[{ "name": "local", "url": "http://127.0.0.1:29200" }]` | Every engined door to poll and route to. With one door, model/engine ids stay plain; with more than one, an id becomes `<door name>/<id>` and every request routes to the door that owns it. |
-| `engined.pollSeconds` | `30` | How often to re-poll the model list. `0` disables polling (use `engined: Refresh Models` instead). |
+| `engined.pollSeconds` | `30` | How often to re-poll the model list. `0` disables polling (use `engined: Refresh Models` instead). While an engines-events stream is connected, the interval is at least 300 seconds. |
 | `engined.reasoningEffort` | `medium` | Default reasoning effort for models that support it. Mapping details: [reasoning-effort.md](reasoning-effort.md). |
 | `engined.reasoningEffortByModel` | `{}` | Per-model override, keyed by model id. |
 | `engined.chat.splitChunkChars` | `2000` | Split long user messages into turns of about this many characters, at blank lines, closing tags or line ends, never inside a code fence or JSON value. A hybrid model like Ornith reuses a cached prompt only up to a message boundary, so this makes new chats faster. `0` disables. |

@@ -2,7 +2,7 @@
 
 Detailed parameters for the five `engined_*` tools. See [HUMANS.md](../HUMANS.md#usage) for the overview.
 
-Every tool works from whatever chat model is currently answering -- engined's own models or any other vendor's (Copilot's included). The tool itself always runs against engined's local door; only the tool's result travels back to whichever model is running the conversation, so with a cloud model that result leaves the machine even though the tool ran locally.
+Every tool works from whatever chat model is currently answering -- engined's own models or any other vendor's (Copilot's included). The tool request goes to the door that owns the resolved route (which may be remote-egress); the confirmation names that route and warns when content will leave the machine. The tool's result then travels back to whichever model is running the conversation, so with a cloud chat model that result leaves the machine even when the tool itself stayed local. `engined_search` still refuses a non-local embed/rerank route unless `engined.search.allowRemote` is set.
 
 Each tool can be attached to a chat request by typing `#enginedImage`, `#enginedReadImage`, `#enginedTranscribe`, `#enginedSearch`, or `#enginedSpeak`.
 

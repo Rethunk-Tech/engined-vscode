@@ -68,7 +68,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 - The same listing's `capabilities`, when the engine declares any model ids, appends a compact summary of those ids on the Engines tooltip. Four or fewer are named in full; a longer list names the count and one id. An absent field, or entries with no model id, adds nothing. The summary is the engine's declared models, separate from a live role's `model`.
 - The same listing's `config_error`, present while a config reload failed to parse, is the door group's description and tooltip. An absent or empty field adds nothing. Idle-until, hold, last_error, capabilities, and role-model text stay as they are.
 - The same listing's `discovery`, keyed by engine id, appends that entry's `last_error` and `fetched_at` on the matching agentic-cli row's tooltip when those fields are present (`fetched <time>` for the timestamp). An absent `discovery`, or an entry missing the field, adds nothing. `models` and `findings` stay on the status shape and are not a second capabilities model-id line.
-- `engined.doors` replaces `engined.url` outright (greenfield -- no alias). A row's `id` is `qualifyId`'d against its door and is what VS Code/settings see; `routeId` is the door's own unqualified id and is the only thing ever sent in a request body. Every request goes to the door that owns the row/engine it names, never a single configured URL.
+- `engined.doors` is the only configured address list (an array of `{ name, url }`; there is no single-URL setting). A row's `id` is `qualifyId`'d against its door and is what VS Code/settings see; `routeId` is the door's own unqualified id and is the only thing ever sent in a request body. Every request goes to the door that owns the row/engine it names.
 - `GET /engined/v1/engines/:id/resources` is fetched only for an engine the Engines view categorizes as a running, local, container-kind engine -- an `agentic-cli` engine, an unavailable one, and one backing only remote-egress rows never get a `resources` call, and their raw JSON never reaches the tree.
 
 ## Testing
@@ -77,4 +77,4 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 
 ## Gate budget
 
-`.gate.toml` adds the one CI step detection missed: `bun run ci` ends with `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build. Measured 2026-10-09 with `gate --profile` at load 19 to 21 (CPU is the evidence): warm 0.17 to 0.4 s wall and 1.1 to 1.6 CPU-s; cold (a clone without `dist`, throwaway bun cache) 0.37 s wall and 1.7 CPU-s. Far inside budget; the 281 tests take 41 ms and nothing repeats work.
+`.gate.toml` adds the one CI step detection missed: `bun run ci` ends with `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build.

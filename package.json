@@ -237,7 +237,7 @@
         "engined.pollSeconds": {
           "type": "number",
           "default": 30,
-          "description": "How often to poll engined's model list. 0 disables polling."
+          "description": "How often to poll engined's model list. 0 disables polling. While an engines-events stream is connected, the interval is at least 300 seconds."
         },
         "engined.reasoningEffort": {
           "type": "string",
@@ -525,7 +525,7 @@
   },
   "scripts": {
     "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --outfile dist/extension.cjs && bun run smoke",
-    "lint": "biome check .",
+    "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test",
