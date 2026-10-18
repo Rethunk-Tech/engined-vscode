@@ -18,6 +18,7 @@ import type {
   EnginesListResponse,
 } from './engineTree.ts'
 import {
+  copyFixText,
   doorGroupNote,
   enginesViewMessage,
   formatResourceLine,
@@ -229,5 +230,9 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
 }
 
 export function copyFixCommand(fix: string | undefined): Thenable<void> {
-  return vscode.env.clipboard.writeText(fix ?? '')
+  const text = copyFixText(fix)
+  if (text === undefined) {
+    return vscode.window.showErrorMessage('engined: no fix to copy').then(() => undefined)
+  }
+  return vscode.env.clipboard.writeText(text)
 }

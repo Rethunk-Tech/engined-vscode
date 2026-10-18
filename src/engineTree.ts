@@ -429,6 +429,11 @@ export function releaseHoldIds(
   return [...new Set([...sessionHeld, ...listedHeld])].sort()
 }
 
+/** The door `fix` string to copy, or `undefined` when Copy Fix must not write the clipboard. */
+export function copyFixText(fix: string | undefined): string | undefined {
+  return fix === undefined || fix === '' ? undefined : fix
+}
+
 /**
  * `GET /engined/v1/engines`'s rows -> what the tree shows. A row is held when
  * `held_until` is still in the future, or when this session placed the hold

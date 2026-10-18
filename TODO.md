@@ -83,32 +83,6 @@ Rejected: auto-refreshing then picking. Refresh is a separate command. Rejected:
 - Cancelling a non-empty pick still returns without a message.
 - `bun test` and `bun run ci` stay clean.
 
-## Copy Fix with no `fix` string writes an empty clipboard
-
-`copyFixCommand` (`src/engineExplorer.ts:235`) does `vscode.env.clipboard.writeText(fix ?? '')`. There is no toast when `fix` is undefined or empty. The command is offered on `engine-unavailable` and `engine-has-fix`. A race where the next poll dropped `fix` still copies nothing and looks like success.
-
-Decided shape: when `fix` is undefined or empty, show an error message and do not write the clipboard. When it is non-empty, write it exactly as today. Extract the empty-vs-text decision to a vscode-free function so `bun test` covers it.
-
-Rejected: copying `last_error` as a fallback. Copy Fix is the door's `fix` command string (`HUMANS.md:58`).
-
-### Read
-
-1. `src/engineExplorer.ts:235` `copyFixCommand` — the `?? ''` write.
-2. `src/commands.ts:284` — the tree-item wrapper that passes `item.node.fix`.
-3. `src/engineTree.ts:201` — `EngineNode.fix`.
-4. `src/engineTree.test.ts:38` — unavailable rows that carry `fix`.
-
-### Traps
-
-- **Do not write an empty string on the failure path.** A previous successful copy would stay in the clipboard, which is better than replacing it with nothing.
-- **The tree-item command still no-ops when `item.kind !== 'engine'`.** That guard stays in `commands.ts`; the empty-fix check is only for a real engine row.
-
-### Acceptance
-
-- A call with `fix` undefined or `''` does not write the clipboard and surfaces an error message.
-- A call with a non-empty `fix` writes that string and does not show the error.
-- `bun test` and `bun run ci` stay clean.
-
 <!--
 ## A sentence naming the problem, not the solution
 

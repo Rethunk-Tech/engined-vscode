@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Door } from './door.ts'
 import {
+  copyFixText,
   doorGroupNote,
   type EnginesListResponse,
   enginesViewMessage,
@@ -239,6 +240,14 @@ describe('release candidates', () => {
       'whisper',
     ])
     expect(releaseHoldIds(new Set(), [])).toEqual([])
+  })
+})
+
+describe('copyFixText', () => {
+  test('undefined or empty fix is not copied; a non-empty fix is returned as-is', () => {
+    expect(copyFixText(undefined)).toBeUndefined()
+    expect(copyFixText('')).toBeUndefined()
+    expect(copyFixText('engined engines openai start')).toBe('engined engines openai start')
   })
 })
 
