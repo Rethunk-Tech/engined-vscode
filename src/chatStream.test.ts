@@ -79,6 +79,25 @@ describe('readChatStream', () => {
     })
     expect(usage?.cachedTokens).toBe(8)
   })
+
+  test('flushes a final data line that has no trailing newline', async () => {
+    const stream = streamFromText(
+      'data: {"choices":[{"delta":{"content":"hi"}}]}\n' +
+        'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":3,"completion_tokens":1}}',
+    )
+    let text = ''
+    let usage: { promptTokens?: number; completionTokens?: number } | undefined
+    await readChatStream(stream, {
+      text: (delta) => {
+        text += delta
+      },
+      usage: (u) => {
+        usage = u
+      },
+    })
+    expect(text).toBe('hi')
+    expect(usage).toEqual({ promptTokens: 3, completionTokens: 1 })
+  })
 })
 
 describe('buildCopilotUsage', () => {

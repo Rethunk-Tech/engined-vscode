@@ -124,6 +124,34 @@ function splitLines(buffer: string): [string[], string] {
   return [lines, rest]
 }
 
+function takeDataLine(
+  line: string,
+  sink: StreamSink,
+  calls: ToolCallSlot[],
+  usage: ChatUsage,
+): void {
+  const chunk = parseDataLine(line)
+  if (chunk === undefined) {
+    return
+  }
+  const delta = chunk.choices?.[0]?.delta
+  if (delta?.content) {
+    sink.text(delta.content)
+  }
+  stitchToolCalls(calls, delta?.tool_calls ?? [])
+  if (chunk.usage !== undefined) {
+    usage.promptTokens = chunk.usage.prompt_tokens
+    usage.completionTokens = chunk.usage.completion_tokens
+    usage.cachedTokens = chunk.usage.prompt_tokens_details?.cached_tokens
+  }
+  if (chunk.engined?.cost_usd !== undefined) {
+    usage.costUsd = chunk.engined.cost_usd
+  }
+  if (chunk.usage !== undefined || chunk.engined?.cost_usd !== undefined) {
+    sink.usage?.({ ...usage })
+  }
+}
+
 /**
  * Read an OpenAI-shaped SSE completion, emitting text deltas as they arrive
  * via `sink.text` and returning the stitched tool calls once the stream ends.
@@ -137,35 +165,28 @@ export async function readChatStream(
   const calls: ToolCallSlot[] = []
   const usage: ChatUsage = {}
   let buffer = ''
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) {
-      break
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) {
+        break
+      }
+      buffer += decoder.decode(value, { stream: true })
+      const [lines, rest] = splitLines(buffer)
+      buffer = rest
+      for (const line of lines) {
+        takeDataLine(line, sink, calls, usage)
+      }
     }
-    buffer += decoder.decode(value, { stream: true })
-    const [lines, rest] = splitLines(buffer)
-    buffer = rest
-    for (const line of lines) {
-      const chunk = parseDataLine(line)
-      if (chunk === undefined) {
-        continue
-      }
-      const delta = chunk.choices?.[0]?.delta
-      if (delta?.content) {
-        sink.text(delta.content)
-      }
-      stitchToolCalls(calls, delta?.tool_calls ?? [])
-      if (chunk.usage !== undefined) {
-        usage.promptTokens = chunk.usage.prompt_tokens
-        usage.completionTokens = chunk.usage.completion_tokens
-        usage.cachedTokens = chunk.usage.prompt_tokens_details?.cached_tokens
-      }
-      if (chunk.engined?.cost_usd !== undefined) {
-        usage.costUsd = chunk.engined.cost_usd
-      }
-      if (chunk.usage !== undefined || chunk.engined?.cost_usd !== undefined) {
-        sink.usage?.({ ...usage })
-      }
+    buffer += decoder.decode()
+    if (buffer.length > 0) {
+      takeDataLine(buffer, sink, calls, usage)
+    }
+  } finally {
+    try {
+      reader.releaseLock()
+    } catch {
+      // The stream was already cancelled.
     }
   }
   return calls
