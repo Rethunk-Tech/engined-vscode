@@ -245,4 +245,20 @@ describe('SearchIndex.search cancellation', () => {
     expect(hits.length).toBeGreaterThan(0)
     expect(logs.some((l) => l.includes('rerank failed'))).toBe(true)
   })
+
+  test('an empty rerank ranking keeps cosine order', async () => {
+    const rerankRow = { ...ROW, serves: ['/openai/v1/embeddings', '/openai/v1/rerank'] }
+    const { host } = fakeHost()
+    const logs: string[] = []
+    const index = new SearchIndex(
+      uri('/storage'),
+      () => [rerankRow as EnginedModelRow],
+      (l) => logs.push(l),
+      host,
+    )
+    rerankImpl = () => Promise.resolve([])
+    const hits = await index.search('hello', 5)
+    expect(hits.length).toBeGreaterThan(0)
+    expect(logs.some((l) => l.includes('rerank failed'))).toBe(false)
+  })
 })

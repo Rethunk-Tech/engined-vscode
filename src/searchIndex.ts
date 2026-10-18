@@ -10,6 +10,7 @@ import { Buffer } from 'node:buffer'
 import { runInBackground } from './background.ts'
 import { BYTES_PER_KIB } from './constants.ts'
 import { resolveDefaultModel } from './defaultModels.ts'
+import { describeError } from './describeError.ts'
 import type { EnginedModelRow } from './door.ts'
 import type { TextChunk } from './search.ts'
 import { chunkFile, mergeRerank, planIndexUpdate, searchableRows, topK } from './search.ts'
@@ -105,7 +106,7 @@ export class SearchIndex {
 
   #background(work: Promise<void>): void {
     runInBackground(work, (error) =>
-      this.#log(`search: background task failed: ${describe(error)}`),
+      this.#log(`search: background task failed: ${describeError(error)}`),
     )
   }
 
@@ -114,7 +115,7 @@ export class SearchIndex {
       await this.#host.createDirectory(this.#storageUri)
       await this.#host.writeFile(this.#indexUri, Buffer.from(JSON.stringify(this.#index)))
     } catch (error) {
-      this.#log(`search: failed to save index: ${describe(error)}`)
+      this.#log(`search: failed to save index: ${describeError(error)}`)
     }
   }
 
@@ -249,7 +250,7 @@ export class SearchIndex {
       }
       content = Buffer.from(bytes).toString('utf8')
     } catch (error) {
-      this.#log(`search: skipping ${path}: ${describe(error)}`)
+      this.#log(`search: skipping ${path}: ${describeError(error)}`)
       return true
     }
     const chunks = chunkFile(path, content)
@@ -305,7 +306,7 @@ export class SearchIndex {
         this.#background(this.#refreshSerialized())
       }, REFRESH_DEBOUNCE_MS)
     } catch (error) {
-      this.#log(`search: could not check ${uri.fsPath}: ${describe(error)}`)
+      this.#log(`search: could not check ${uri.fsPath}: ${describeError(error)}`)
     }
   }
 
@@ -327,7 +328,7 @@ export class SearchIndex {
         await this.#refresh(false)
       } while (this.#refreshAgain)
     } catch (error) {
-      this.#log(`search: background refresh failed: ${describe(error)}`)
+      this.#log(`search: background refresh failed: ${describeError(error)}`)
     } finally {
       this.#refreshing = false
     }
@@ -357,12 +358,14 @@ export class SearchIndex {
           { model: rerankRow.routeId, query, documents: ordered.map((e) => e.text) },
           signal,
         )
-        ordered = mergeRerank(ordered, results, ordered.length)
+        if (results.length > 0) {
+          ordered = mergeRerank(ordered, results, ordered.length)
+        }
       } catch (error) {
         if (signal?.aborted) {
           throw error
         }
-        this.#log(`search: rerank failed, using cosine order instead: ${describe(error)}`)
+        this.#log(`search: rerank failed, using cosine order instead: ${describeError(error)}`)
       }
     }
     return ordered.slice(0, maxResults).map((e) => ({
@@ -372,8 +375,4 @@ export class SearchIndex {
       text: e.text,
     }))
   }
-}
-
-function describe(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }
