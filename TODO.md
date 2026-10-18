@@ -29,6 +29,32 @@ Decided shape: a failing translation or rerank probe shows on the engine row bes
 - A row with no probe field, and a row whose probe passed, keeps the description and tooltip `toEngineNodes` already produces, including the cases in `src/engineTree.test.ts:291`.
 - `bun test` and `bun run ci` stay clean.
 
+## Transcribe never passes a quality probe into `refuseTranslate`
+
+`refuseTranslate` (`src/toolRequests.ts`) takes an optional `probe` and allows `translate: true` only when `probe.quality === true`. `transcribeTool.invoke` (`src/workspaceTools.ts`) calls it with the input flag alone, so every translate request is refused. `RawModelRow.translate` (`src/door.ts`) is whether the row serves `/openai/v1/audio/translations`, not a quality pass — treating that boolean as `probe.quality` would re-offer the route the refusal exists to block.
+
+Decided shape: pass the door's quality-probe result into `refuseTranslate` once that field exists on the models list (the same engined listing field the Engines-row probe TODO needs). Until then the no-probe refusal stays. A row with no probe field keeps refusing `translate: true`.
+
+Rejected: reading `row.translate` as the probe. That flag means the translations path exists.
+
+### Read
+
+- `src/toolRequests.ts` — `refuseTranslate(translate, probe?)`.
+- `src/workspaceTools.ts` — `refuseTranslate(options.input.translate)` with no probe.
+- `src/door.ts` — `RawModelRow.translate`.
+- The models JSON has no quality-probe field today.
+
+### Traps
+
+- **`row.translate` is not quality.** Wiring it as `probe.quality` undoes the refusal.
+- **The Engines-row probe TODO is display.** This one is the transcribe tool's request path. They share the missing engined field, not the UI work.
+
+### Acceptance
+
+- `refuseTranslate(true, { quality: true })` still allows the translations path.
+- `refuseTranslate(true)` with no probe, and `refuseTranslate(true, { quality: false })`, still return `TRANSLATE_UNAVAILABLE`.
+- `bun test` and `bun run ci` stay clean.
+
 ## Warm Model and Hold Model open an empty picker when nothing is listed
 
 `warmModel` (`src/commands.ts:20`) maps `s.poller.rows` into a quick pick. `holdModel` (`src/commands.ts:47`) maps `qualifiedEngineIds(s.poller.rows, ...)`. When that list is empty — door unreachable, or three failed polls emptied the poller (`src/polling.ts`) — VS Code still opens a picker with no items. The operator gets no sentence saying why, unlike `releaseHold` which already shows `engined: no engines are held` (`src/commands.ts:72`).
