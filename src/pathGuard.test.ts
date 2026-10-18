@@ -38,6 +38,10 @@ describe('resolveWorkspacePath', () => {
     expect(() => resolveWorkspacePath([], 'a.png')).toThrow(PathEscapeError)
   })
 
+  test('rejects a NUL in the requested path', () => {
+    expect(() => resolveWorkspacePath([ROOT], 'notes\0/../../etc/passwd')).toThrow(PathEscapeError)
+  })
+
   test('rejects a symlink inside the workspace whose target is outside it', () => {
     const dir = mkdtempSync(join(tmpdir(), 'pathGuard-'))
     const root = join(dir, 'ws')

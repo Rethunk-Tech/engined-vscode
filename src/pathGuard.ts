@@ -46,6 +46,9 @@ export function resolveWorkspacePath(roots: readonly string[], requested: string
   if (roots.length === 0) {
     throw new PathEscapeError('no workspace folder is open')
   }
+  if (requested.includes('\0')) {
+    throw new PathEscapeError('path contains a NUL byte')
+  }
   const candidate = isAbsolute(requested)
     ? resolve(requested)
     : resolve(roots[0] as string, requested)
