@@ -127,4 +127,17 @@ describe('buildUsageReport', () => {
     expect(report).toContain('down: unreachable')
     expect(report).toContain('No usage data')
   })
+
+  test('route and door names cannot inject markdown table cells', () => {
+    const usages: DoorUsage[] = [
+      {
+        door: { name: 'local', url: 'http://x' },
+        status: 'ok',
+        rows: [row({ route: 'a | b\n- [x](http://evil)' })],
+      },
+    ]
+    const report = buildUsageReport(usages, 7)
+    expect(report).not.toContain('\n- [x](http://evil)')
+    expect(report).toContain('a \\| b')
+  })
 })

@@ -97,13 +97,21 @@ function costCell(t: UsageTotals): string {
   return t.costUsd === undefined ? '' : formatCostUsd(t.costUsd)
 }
 
+function mdCell(text: string): string {
+  return text
+    .replaceAll('\\', '\\\\')
+    .replaceAll('|', '\\|')
+    .replaceAll('\r', '')
+    .replaceAll('\n', ' ')
+}
+
 function mdTable(headers: readonly string[], rows: readonly (readonly string[])[]): string {
   if (rows.length === 0) {
     return '_No usage data._'
   }
   const header = `| ${headers.join(' | ')} |`
   const sep = `| ${headers.map(() => '---').join(' | ')} |`
-  const body = rows.map((r) => `| ${r.join(' | ')} |`).join('\n')
+  const body = rows.map((r) => `| ${r.map(mdCell).join(' | ')} |`).join('\n')
   return [header, sep, body].join('\n')
 }
 
