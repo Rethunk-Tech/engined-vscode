@@ -12,3 +12,16 @@ export const BYTES_PER_KIB = 1024
 export const THOUSAND = 1000
 export const LOADING_TICK_MS = 300
 export const CHAT_SETTINGS_ROUTED_CONTEXT = 'engined.chatSettingsRouted'
+
+/** Status-bar click menu. `commands.ts` `showQuickPick` renders this list. */
+export const STATUS_QUICK_PICK = [
+  { label: 'Refresh models', action: 'refresh' },
+  { label: 'Warm model', action: 'warm' },
+  { label: 'Hold engine', action: 'hold' },
+  { label: 'Release hold', action: 'unhold' },
+  { label: 'Set reasoning effort (global)', action: 'effort-global' },
+  { label: 'Set reasoning effort for a model', action: 'effort-model' },
+  { label: 'Choose default models', action: 'default-models' },
+  { label: 'Usage report', action: 'usage' },
+  { label: 'Show log', action: 'log' },
+] as const

@@ -3,6 +3,7 @@
 import * as vscode from 'vscode'
 import { getDoors, setDefaultModel, setReasoningEffort } from './config.ts'
 import { ENABLE_CONFIGSVC_COMMAND, resolveConfigUi, runEnginedConfigsvcUrl } from './configUi.ts'
+import { STATUS_QUICK_PICK } from './constants.ts'
 import { DEFAULT_MODEL_ROLES, qualifyingRows } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { ReasoningLevel } from './door.ts'
@@ -93,20 +94,7 @@ export async function releaseHold(s: Session): Promise<void> {
 }
 
 export async function showQuickPick(s: Session): Promise<void> {
-  const pick = await vscode.window.showQuickPick(
-    [
-      { label: 'Refresh models', action: 'refresh' as const },
-      { label: 'Warm model', action: 'warm' as const },
-      { label: 'Hold engine', action: 'hold' as const },
-      { label: 'Release hold', action: 'unhold' as const },
-      { label: 'Set reasoning effort (global)', action: 'effort-global' as const },
-      { label: 'Set reasoning effort for a model', action: 'effort-model' as const },
-      { label: 'Choose default models', action: 'default-models' as const },
-      { label: 'Usage report', action: 'usage' as const },
-      { label: 'Show engined s.log', action: 'log' as const },
-    ],
-    { title: 'engined' },
-  )
+  const pick = await vscode.window.showQuickPick([...STATUS_QUICK_PICK], { title: 'engined' })
   if (pick === undefined) {
     return
   }

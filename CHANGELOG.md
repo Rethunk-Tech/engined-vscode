@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The status-bar quick pick's log action is labeled "Show log".
+
 ### Added
 
 - `engined_generateImage` reports sampler progress while the picture renders, on generations and edits.

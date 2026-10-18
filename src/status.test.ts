@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { STATUS_QUICK_PICK } from './constants.ts'
 import {
   abbreviateTokenCount,
   buildTooltip,
@@ -527,5 +528,13 @@ describe('meterDataUri', () => {
     expect(light).not.toContain('var(')
     expect(dark).not.toContain('var(')
     expect(light).not.toBe(dark)
+  })
+})
+
+describe('STATUS_QUICK_PICK', () => {
+  test('the log action is labeled Show log, not a leaked identifier', () => {
+    const log = STATUS_QUICK_PICK.find((item) => item.action === 'log')
+    expect(log?.label).toBe('Show log')
+    expect(STATUS_QUICK_PICK.some((item) => item.label.includes('s.log'))).toBe(false)
   })
 })
