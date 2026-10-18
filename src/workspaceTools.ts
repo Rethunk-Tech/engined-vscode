@@ -22,6 +22,7 @@ import {
   buildTranscribeRequest,
   type ConfirmationTarget,
   confirmationMessage,
+  refuseTranslate,
   requestSpeech,
   ToolRouteError,
 } from './toolRequests.ts'
@@ -336,11 +337,14 @@ interface TranscribeInput {
 const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
   async invoke(options, token) {
     try {
+      const refused = refuseTranslate(options.input.translate)
+      if (refused !== undefined) {
+        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(refused)])
+      }
       const bytes = await readWorkspaceFile(options.input.path)
-      const row = host().resolveRoleRow('transcription', transcriptionPath(options.input.translate))
+      const row = host().resolveRoleRow('transcription', '/openai/v1/audio/transcriptions')
       const req = buildTranscribeRequest(row, {
         audio: new Blob([bytes]),
-        translate: options.input.translate,
       })
       const form = new FormData()
       form.set('model', req.form.model)
@@ -352,17 +356,13 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
         typeof result === 'object' && result !== null && 'text' in result
           ? (result.text ?? '')
           : String(result)
-      const note =
-        options.input.translate === true
-          ? '\n\nNote: speech translation on this route is measured unreliable (it can return fluent but wrong English); prefer transcribing and translating the text.'
-          : ''
-      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text + note)])
+      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
     } catch (error) {
       return toolError(error)
     }
   },
   async prepareInvocation(options) {
-    const row = host().resolveRoleRow('transcription', transcriptionPath(options.input.translate))
+    const row = host().resolveRoleRow('transcription', '/openai/v1/audio/transcriptions')
     return {
       confirmationMessages: {
         title: 'Transcribe audio',
@@ -374,10 +374,6 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       },
     }
   },
-}
-
-function transcriptionPath(translate: boolean | undefined): string {
-  return translate === true ? '/openai/v1/audio/translations' : '/openai/v1/audio/transcriptions'
 }
 
 interface SpeakInput {

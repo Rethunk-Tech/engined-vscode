@@ -36,11 +36,8 @@ Route: `/openai/v1/chat/completions` against a vision row. `mode: "ocr"` needs a
 | Input | Type | Notes |
 | --- | --- | --- |
 | `path` | string | required, workspace-relative |
-| `translate` | boolean | render as English rather than the spoken language |
 
-Route: `/openai/v1/audio/transcriptions`, or `/openai/v1/audio/translations` when `translate: true` and the resolved row also serves that path. Route selection: `engined.defaultModels.transcription`.
-
-`translate: true` appends a note to the result: speech translation is measured unreliable on this route (large-v3-turbo-q8_0 has rendered "El gato negro..." as "The black man...", per engined's own `AGENTS.md`) -- prefer transcribing and translating the text with a chat model instead.
+Route: `/openai/v1/audio/transcriptions`. Route selection: `engined.defaultModels.transcription`. Speech translation is not offered until a quality probe passes; a `translate` request is refused in the tool result. Transcribe the file and translate the text with a chat model.
 
 ## `engined_search`
 

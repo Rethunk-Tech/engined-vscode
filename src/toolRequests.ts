@@ -108,6 +108,25 @@ export interface TranscribeRequest {
   form: { model: string; file: Blob }
 }
 
+/** Speech translation stays off until a quality probe scores a pass. Absent or failing is a refusal. */
+export function translationQualityPassed(probe: { quality?: boolean } | undefined): boolean {
+  return probe?.quality === true
+}
+
+export const TRANSLATE_UNAVAILABLE =
+  'Speech translation is not offered until a quality probe passes; transcribe the file and translate the text with a chat model.'
+
+/** `undefined` means transcribe. A string is the tool-result refusal. */
+export function refuseTranslate(
+  translate: boolean | undefined,
+  probe?: { quality?: boolean },
+): string | undefined {
+  if (translate !== true || translationQualityPassed(probe)) {
+    return undefined
+  }
+  return TRANSLATE_UNAVAILABLE
+}
+
 export function buildTranscribeRequest(
   row: EnginedModelRow,
   input: { audio: Blob; translate?: boolean },

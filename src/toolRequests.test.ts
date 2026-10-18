@@ -8,8 +8,11 @@ import {
   buildSpeakRequest,
   buildTranscribeRequest,
   confirmationMessage,
+  refuseTranslate,
   requestSpeech,
   ToolRouteError,
+  TRANSLATE_UNAVAILABLE,
+  translationQualityPassed,
 } from './toolRequests.ts'
 
 const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
@@ -115,6 +118,15 @@ describe('request builders', () => {
     })
     expect(req.model).toBe('@/llama/ocr')
     expect(req.messages[0].content[1].image_url.url).toBe('data:image/png;base64,AAAA')
+  })
+
+  test('translate stays unoffered when the quality probe is absent or failing', () => {
+    expect(translationQualityPassed(undefined)).toBe(false)
+    expect(translationQualityPassed({ quality: false })).toBe(false)
+    expect(refuseTranslate(true)).toBe(TRANSLATE_UNAVAILABLE)
+    expect(refuseTranslate(true, { quality: false })).toBe(TRANSLATE_UNAVAILABLE)
+    expect(refuseTranslate(undefined)).toBeUndefined()
+    expect(refuseTranslate(true, { quality: true })).toBeUndefined()
   })
 
   test('transcribe picks the translations path when asked to translate', () => {

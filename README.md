@@ -26,7 +26,7 @@ Then open Copilot Chat's model picker and choose an `engined` model. Full runboo
 ## Features
 
 - Local chat models in Copilot's model picker, streamed through engined
-- Five agent tools: generate/edit images, OCR or describe an image, transcribe or translate audio, synthesize speech, semantic workspace search
+- Five agent tools: generate/edit images, OCR or describe an image, transcribe audio, synthesize speech, semantic workspace search
 - Inline completions (ghost text), optionally with neighbouring-file context
 - Status bar shows what answered, whether it ran locally, tokens used, and a loading state
 - An Engines view for warming, holding, and stopping engines; running local containers also show live RAM/GPU use
