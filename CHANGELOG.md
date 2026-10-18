@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `engined_speak` uploads a workspace-relative `voice` file to `/engined/v1/audio/voices` and sends the returned handle. A bare voice name or an existing `vc_` handle is sent unchanged.
+
 ## [0.1.4] - 2026-10-18
 
 ### Fixed
