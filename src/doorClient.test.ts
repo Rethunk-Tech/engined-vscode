@@ -161,6 +161,7 @@ describe('fetchAllDoors', () => {
 })
 
 const IMAGE = { created: 1, data: [{ b64_json: Buffer.from('png').toString('base64') }] }
+const INLINE_PREVIEW = Buffer.from('jpeg').toString('base64')
 
 function imageSse(): string {
   return [
@@ -169,6 +170,9 @@ function imageSse(): string {
     '',
     'event: preview',
     'data: {"bytes":12,"format":"jpeg"}',
+    '',
+    'event: preview',
+    `data: ${JSON.stringify({ bytes: 4, format: 'jpeg', image: INLINE_PREVIEW })}`,
     '',
     'event: progress',
     'data: {"value":4,"max":4,"node":"4"}',
@@ -194,19 +198,28 @@ describe('postImage', () => {
     })
     const base = `http://127.0.0.1:${server.port}`
     const lines: string[] = []
+    const previews: { image: string; format: string }[] = []
     try {
       const onProgress = (line: string): void => {
         lines.push(line)
+      }
+      const onPreview = (frame: { image: string; format: string }): void => {
+        previews.push(frame)
       }
       const generated = await postImage(
         base,
         '/openai/v1/images/generations',
         { json: { model: '@/comfy/local', prompt: 'a red cube' } },
-        { onProgress },
+        { onProgress, onPreview },
       )
       const form = new FormData()
       form.set('prompt', 'a blue cube')
-      const edited = await postImage(base, '/openai/v1/images/edits', { form }, { onProgress })
+      const edited = await postImage(
+        base,
+        '/openai/v1/images/edits',
+        { form },
+        { onProgress, onPreview },
+      )
       expect(generated).toEqual(IMAGE)
       expect(edited).toEqual(IMAGE)
       expect(accepts).toEqual(['text/event-stream', 'text/event-stream'])
@@ -217,6 +230,10 @@ describe('postImage', () => {
         'Rendering 4/4 node 4',
         'Rendering 1/4 node 4',
         'Rendering 4/4 node 4',
+      ])
+      expect(previews).toEqual([
+        { image: INLINE_PREVIEW, format: 'jpeg' },
+        { image: INLINE_PREVIEW, format: 'jpeg' },
       ])
     } finally {
       await server.stop(true)

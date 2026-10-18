@@ -7,6 +7,12 @@ import type { ModelRole } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postChatCompletion, postForm, postImage } from './doorClient.ts'
+import {
+  type ImagePreviewFrame,
+  type PreviewFile,
+  removePreviewFile,
+  writePreviewFile,
+} from './imageStream.ts'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 import { truncateSnippet } from './search.ts'
 import type { SearchIndex } from './searchIndex.ts'
@@ -67,6 +73,45 @@ async function writeWorkspaceFile(path: string, data: Uint8Array): Promise<vscod
   const uri = vscode.Uri.file(resolveWorkspacePath(workspaceRoots(), path))
   await vscode.workspace.fs.writeFile(uri, data)
   return uri
+}
+
+async function deleteWorkspaceFile(path: string): Promise<void> {
+  const uri = vscode.Uri.file(resolveWorkspacePath(workspaceRoots(), path))
+  try {
+    await vscode.workspace.fs.delete(uri)
+  } catch (error) {
+    if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
+      return
+    }
+    throw error
+  }
+}
+
+/**
+ * Show one inline preview while the picture renders. Tool `progress.report`
+ * carries a message string and no image, so the frame is written to
+ * `<outputPath>.preview.<format>` and opened beside the chat. A later frame
+ * replaces that file. The caller removes it when the call ends.
+ */
+async function showImagePreview(
+  outputPath: string,
+  file: PreviewFile,
+  frame: ImagePreviewFrame,
+): Promise<void> {
+  let uri: vscode.Uri | undefined
+  await writePreviewFile(file, outputPath, frame, {
+    write: async (path, bytes) => {
+      uri = await writeWorkspaceFile(path, bytes)
+    },
+    remove: deleteWorkspaceFile,
+  })
+  if (uri === undefined) {
+    return
+  }
+  await vscode.commands.executeCommand('vscode.open', uri, {
+    preview: true,
+    viewColumn: vscode.ViewColumn.Beside,
+  })
 }
 
 /** `path` as the confirmation dialog names it: workspace-relative, and whether a write would replace a file. */
@@ -146,6 +191,7 @@ function reportToolProgress(holder: object, message: string): boolean {
 
 const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   async invoke(options, token) {
+    const preview: PreviewFile = { path: undefined }
     try {
       const source =
         options.input.sourcePath === undefined
@@ -170,6 +216,7 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
               progressLines.push(line)
             }
           },
+          onPreview: (frame) => showImagePreview(options.input.outputPath, preview, frame),
         },
       )) as { data: { b64_json: string }[] }
       const png = result.data[0]?.b64_json
@@ -177,6 +224,7 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
         throw new Error('engined returned no image data')
       }
       const uri = await writeWorkspaceFile(options.input.outputPath, Buffer.from(png, 'base64'))
+      await removePreviewFile(preview, deleteWorkspaceFile)
       // The image is shown to the user, not returned to the model: a tool can't tell which
       // model called it, and Copilot's backend fails the next turn fetching an image part.
       await vscode.commands.executeCommand('vscode.open', uri, {
@@ -191,6 +239,11 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
         ),
       ])
     } catch (error) {
+      try {
+        await removePreviewFile(preview, deleteWorkspaceFile)
+      } catch {
+        // The render error is the one the tool reports.
+      }
       return toolError(error)
     }
   },

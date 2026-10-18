@@ -19,7 +19,7 @@ Every path a tool reads or writes must resolve inside an open workspace folder; 
 
 Route: `/openai/v1/images/generations`, or `/openai/v1/images/edits` when `sourcePath` is given. Route selection: `engined.defaultModels.image`, falling back to the first installed row that serves the needed path.
 
-Returns the written path as text and opens the image beside the chat. Progress is reported while the picture renders. The image is not sent back to the model: a tool cannot tell which model called it, and Copilot models fail their next turn fetching an image result.
+Returns the written path as text and opens the image beside the chat. Progress is reported while the picture renders. An inline preview frame is written to `<outputPath>.preview.jpeg` or `<outputPath>.preview.png`, opened beside the chat, and removed when the final image is written. The image is not sent back to the model: a tool cannot tell which model called it, and Copilot models fail their next turn fetching an image result.
 
 ## `engined_readImage`
 

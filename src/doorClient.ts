@@ -8,7 +8,7 @@
 import { HTTP_NOT_FOUND, HTTP_TOO_MANY_REQUESTS, MS_PER_SECOND } from './constants.ts'
 import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { mapAnswerableRows, mapModels } from './door.ts'
-import { readImageEvents } from './imageStream.ts'
+import { type ImagePreviewFrame, readImageEvents } from './imageStream.ts'
 
 const EVENT_STREAM = 'text/event-stream'
 
@@ -436,6 +436,7 @@ export function fetchAllUsage(
 async function readImageResponse(
   res: Response,
   onProgress: (line: string) => void,
+  onPreview?: (frame: ImagePreviewFrame) => void | Promise<void>,
 ): Promise<unknown> {
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
@@ -444,7 +445,7 @@ async function readImageResponse(
     if (res.body === null) {
       throw new Error('engined returned no image data')
     }
-    return readImageEvents(res.body, onProgress)
+    return readImageEvents(res.body, onProgress, onPreview)
   }
   return res.headers.get('content-type')?.includes('application/json') === true
     ? res.json()
@@ -453,14 +454,19 @@ async function readImageResponse(
 
 /**
  * POST an image generation (`json`) or edit (`form`). Sends `Accept: text/event-stream`.
- * Events report each `progress` line and return the `image` event's JSON; an `error` event throws.
- * A door that answers with any other content type is the single JSON body it always returned.
+ * Events report each `progress` line, each inline `preview`, and return the `image` event's JSON;
+ * an `error` event throws. A door that answers with any other content type is the single JSON
+ * body it always returned.
  */
 export async function postImage(
   baseUrl: string,
   path: string,
   body: { json: unknown } | { form: FormData },
-  options: { signal?: AbortSignal; onProgress: (line: string) => void },
+  options: {
+    signal?: AbortSignal
+    onProgress: (line: string) => void
+    onPreview?: (frame: ImagePreviewFrame) => void | Promise<void>
+  },
 ): Promise<unknown> {
   const headers: Record<string, string> = { accept: EVENT_STREAM }
   if (!('form' in body)) {
@@ -472,7 +478,7 @@ export async function postImage(
     body: 'form' in body ? body.form : JSON.stringify(body.json),
     signal: options.signal,
   })
-  return readImageResponse(res, options.onProgress)
+  return readImageResponse(res, options.onProgress, options.onPreview)
 }
 
 /** A multipart POST -- transcription. Image edits go through `postImage`, which asks for progress events. */
