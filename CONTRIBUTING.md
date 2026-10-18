@@ -20,7 +20,7 @@ See [AGENTS.md](AGENTS.md) for the file-by-file map and invariants.
 
 ## Testing
 
-`bun test` runs every `src/**/*.test.ts` with no VS Code host and no mocks — the pure modules (`door.ts`, `chatStream.ts`, `requestBuilder.ts`, `pathGuard.ts`, `polling.ts`, `toolRequests.ts`) are exercised directly against fixtures recorded from a real engined door in `src/fixtures/`. Do not hand-edit those fixtures; re-record them from a real door instead. The modules that import `vscode` (`extension.ts`, `config.ts`, `searchIndex.ts`, `engineExplorer.ts`) are thin adapters with no unit test — the decisions they make live in the pure modules they wire together.
+`bun test` runs every `src/**/*.test.ts` without a VS Code host. Pure modules (`door.ts`, `chatStream.ts`, `requestBuilder.ts`, `pathGuard.ts`, `polling.ts`, `toolRequests.ts`, …) are exercised against fixtures recorded from a real engined door in `src/fixtures/`. Do not hand-edit those fixtures; re-record them from a real door instead. `doorClient.test.ts` talks to an in-process `Bun.serve`. `searchIndex.test.ts` drives `SearchIndex` through an in-memory `SearchHost`. Modules that import `vscode` (`extension.ts`, `config.ts`, `engineExplorer.ts`, `searchHost.ts`) stay thin adapters — the decisions they make live in the pure modules they wire together.
 
 ## Documentation tiers
 

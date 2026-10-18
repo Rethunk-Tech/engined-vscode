@@ -1,9 +1,9 @@
 /**
  * The workspace-scanning and on-disk-index half of `engined_search`: finds
  * candidate files, keeps a chunk+vector index in `context.storageUri`, and
- * answers a query by cosine top-k with an optional rerank pass. The only
- * `vscode`-importing file for this unit -- `search.ts` holds the pure
- * chunking/scoring/planning logic this file calls into.
+ * answers a query by cosine top-k with an optional rerank pass. No `vscode`
+ * import -- `searchHost.ts` is the vscode adapter; `search.ts` holds the
+ * pure chunking/scoring/planning logic this file calls into.
  */
 
 import { Buffer } from 'node:buffer'

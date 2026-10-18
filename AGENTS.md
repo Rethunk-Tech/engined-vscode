@@ -8,6 +8,7 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | --- | --- |
 | `src/door.ts` | `/openai/v1/models` row -> `EnginedModelInfo` mapping, poll-change serialization, reasoning-level ordering/snapping, and door id qualification (`qualifyId`/`splitQualifiedId`/`doorByName`/`qualifiedEngineIds`). No `vscode` import. |
 | `src/chatStream.ts` | SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader in [`Rethunk-Tech/engined`](https://github.com/Rethunk-Tech/engined), and `buildCopilotUsage` (the reader's own `ChatUsage` -> the OpenAI usage JSON Copilot's context-window meter reads). No `vscode` import. |
+| `src/imageStream.ts` | SSE reader for image `progress`/`preview`/`image`/`error` events. No `vscode` import. |
 | `src/requestBuilder.ts` | Plain VS Code-shaped messages -> the OpenAI chat request body; token estimation. No `vscode` import. |
 | `src/toolRequests.ts` | Request shapes for the `engined_*` tools, built against an already-resolved row. No `vscode` import. |
 | `src/defaultModels.ts` | `resolveDefaultModel`: the one selection rule behind every `engined.defaultModels.*` setting (configured id if it still qualifies, else the automatic pick). No `vscode` import. |
@@ -18,19 +19,25 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/usageReport.ts` | Aggregates `GET /engined/v1/usage` rows across doors into totals and the per-day/per-route Markdown tables `engined: Usage Report` shows. No `vscode` import. |
 | `src/workspaceTools.ts` | The five `engined_*` language-model tools (confirmation dialogs, workspace file I/O); reaches the activation module's state only through `ToolHost`. Imports `vscode`. |
 | `src/background.ts` | `runInBackground`: starts a promise without awaiting it and routes a rejection to a handler instead of an unhandled rejection. No `vscode` import. |
+| `src/cancellation.ts` | `vscode.CancellationToken` -> `AbortSignal` for tool calls. No `vscode` import. |
+| `src/constants.ts` | Shared numeric/HTTP/context-key literals. No `vscode` import. |
+| `src/describeError.ts` | Thrown value -> the one-line status/log/tool text. No `vscode` import. |
+| `src/unreachable.ts` | Exhaustive-`switch` terminator (`never`). No `vscode` import. |
+| `src/compareCodeUnits.ts` | UTF-16 code-unit string order. No `vscode` import. |
 | `src/pathGuard.ts` | The workspace-folder trust boundary every tool path crosses. No `vscode` import. |
 | `src/polling.ts` | `ModelPoller`: tracks both the chat-only model list and every answerable row; fires only on an actual change, empties after 3 consecutive failures. No `vscode` import. |
 | `src/doorClient.ts` | The only file that calls `fetch` against the door; `fetchAllDoors` fans a poll out across every configured door and merges the reachable ones. No `vscode` import. |
 | `src/search.ts` | Chunking a file into overlapping windows, cosine top-k, index-update planning (which files a refresh must touch), and folding a rerank reply back over the cosine order. No `vscode` import. |
-| `src/engineEvents.ts` | SSE frame parsing for `GET /engined/v1/engines/events` and the reconnect-backoff sequence. No `vscode` import. |
+| `src/engineEvents.ts` | SSE frame parsing for `GET /engined/v1/engines/events` and the reconnect-backoff sequence. No `vscode` import -- `pollDriver.ts` owns the reader loop. |
 | `src/engineTree.ts` | `GET /engined/v1/engines` JSON -> the plain tree-item rows the Engines view renders (door-qualified, category-based description, resource-fetch eligibility), and `GET .../resources` JSON -> its one-line display. No `vscode` import. |
 | `src/tokenCount.ts` | `provideTokenCount`'s cache-then-door-then-estimate decision, and the small LRU keyed by (model, content hash) behind it. No `vscode` import. |
 | `src/chatSettingsPlan.ts` | The settings `engined.useForAllChatFeatures` writes and how to restore them. No `vscode` import. |
 | `src/promptFingerprint.ts` | Content-free hashes/offsets locating where a chat request first differs from the previous one (prompt-cache diagnostics). No `vscode` import. |
 | `src/promptSplit.ts` | Splits long prompt text at structural boundaries so hybrid models can resume a cached prompt at more points. No `vscode` import. |
 | `src/config.ts` | Reads/writes `engined.*` settings, including `engined.doors`. Imports `vscode`. |
-| `src/searchIndex.ts` | The workspace-scanning/storage half of `engined_search`: finds candidate files, keeps the chunk+vector index in `context.storageUri`, calls `search.ts` for the pure logic. Imports `vscode`. |
-| `src/engineExplorer.ts` | The Engines `TreeDataProvider`, its commands (warm/hold/release/stop/logs/copy-fix), a door-group parent level once more than one door is configured (its description and tooltip carry that list's `config_error` when present), the view message naming each door that failed or refused its config, and the live-events subscription that refreshes it. Imports `vscode`. |
+| `src/searchIndex.ts` | The workspace-scanning/storage half of `engined_search`: finds candidate files, keeps the chunk+vector index in `context.storageUri`, calls `search.ts` for the pure logic. No `vscode` import. |
+| `src/searchHost.ts` | `SearchHost` plus the production `vscode` implementation `engined_search` uses. Imports `vscode`. |
+| `src/engineExplorer.ts` | The Engines `TreeDataProvider`, its commands (warm/hold/release/stop/logs/copy-fix), a door-group parent level once more than one door is configured (its description and tooltip carry that list's `config_error` when present), and the view message naming each door that failed or refused its config. Imports `vscode`. |
 | `src/routeHeaders.ts` | `x-engined-route/egress/chain/cost-usd` response headers -> a call's route and cost. No `vscode` import. |
 | `src/session.ts` | The `Session` object `activate` builds once: output channel, status bar, poller, caches and timers, passed explicitly to every module below (the shape `ToolHost` and `SearchHost` use for the tools and the search index). Type-only `vscode` import. |
 | `src/chatProvider.ts` | The `LanguageModelChatProvider`: VS Code messages <-> plain shapes, the streamed reply, token counts, and each call's status-bar record. Imports `vscode`. |
@@ -70,4 +77,4 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 
 ## Gate budget
 
-`.gate.toml` adds the one CI step detection missed: `bun run ci` ends with `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build. Measured 2026-10-09 with `gate --profile` at load 19 to 21 (CPU is the evidence): warm 0.17 to 0.4 s wall and 1.1 to 1.6 CPU-s; cold (a clone without `dist`, throwaway bun cache) 0.37 s wall and 1.7 CPU-s. Far inside budget; the 246 tests take 41 ms and nothing repeats work.
+`.gate.toml` adds the one CI step detection missed: `bun run ci` ends with `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build. Measured 2026-10-09 with `gate --profile` at load 19 to 21 (CPU is the evidence): warm 0.17 to 0.4 s wall and 1.1 to 1.6 CPU-s; cold (a clone without `dist`, throwaway bun cache) 0.37 s wall and 1.7 CPU-s. Far inside budget; the 281 tests take 41 ms and nothing repeats work.
