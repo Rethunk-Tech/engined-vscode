@@ -46,18 +46,18 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   readonly #getRows: () => readonly EnginedModelRow[]
   readonly #setMessage: (text: string | undefined) => void
 
-  constructor(
-    heldIds: ReadonlySet<string>,
-    log: (line: string) => void,
-    getDoors: () => Door[],
-    getRows: () => readonly EnginedModelRow[],
-    setMessage: (text: string | undefined) => void,
-  ) {
-    this.#heldIds = heldIds
-    this.#log = log
-    this.#getDoors = getDoors
-    this.#getRows = getRows
-    this.#setMessage = setMessage
+  constructor(deps: {
+    heldIds: ReadonlySet<string>
+    log: (line: string) => void
+    getDoors: () => Door[]
+    getRows: () => readonly EnginedModelRow[]
+    setMessage: (text: string | undefined) => void
+  }) {
+    this.#heldIds = deps.heldIds
+    this.#log = deps.log
+    this.#getDoors = deps.getDoors
+    this.#getRows = deps.getRows
+    this.#setMessage = deps.setMessage
   }
 
   /** Qualified ids whose latest engines-list row still has a future `held_until`. */

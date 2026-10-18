@@ -80,17 +80,17 @@ function createSession(context: vscode.ExtensionContext): Session {
     output,
     statusBarItem,
     poller,
-    engineExplorer: new EngineExplorer(
-      heldEngineIds,
+    engineExplorer: new EngineExplorer({
+      heldIds: heldEngineIds,
       log,
       getDoors,
-      () => poller.rows,
-      (text) => {
+      getRows: () => poller.rows,
+      setMessage: (text) => {
         if (enginesView !== undefined) {
           enginesView.message = text
         }
       },
-    ),
+    }),
     searchIndex: new SearchIndex(
       context.storageUri ?? context.globalStorageUri,
       () => poller.rows,

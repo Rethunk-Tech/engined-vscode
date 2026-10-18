@@ -11,6 +11,9 @@ export type ConfigUiResult = { url: string } | { message: string }
 
 export const ENABLE_CONFIGSVC_COMMAND = 'systemctl --user enable --now engined-configsvc.service'
 
+const HAS_WHITESPACE = /\s/
+const HTTP_URL_PREFIX = /^https?:\/\//
+
 export function runEnginedConfigsvcUrl(): Promise<CliRun> {
   return new Promise((resolve) => {
     execFile('engined', ['--configsvc-url'], { timeout: 15_000 }, (error, stdout, stderr) => {
@@ -26,7 +29,7 @@ export function runEnginedConfigsvcUrl(): Promise<CliRun> {
 
 /** One stdout line that is exactly an `http:`/`https:` URL, or `undefined`. */
 function httpUrlLine(line: string): string | undefined {
-  if (/\s/.test(line) || !/^https?:\/\//.test(line)) {
+  if (HAS_WHITESPACE.test(line) || !HTTP_URL_PREFIX.test(line)) {
     return undefined
   }
   try {
@@ -54,6 +57,6 @@ export async function resolveConfigUi(run: () => Promise<CliRun>): Promise<Confi
   const stderrWhy = stderr.trim().split('\n')[0]
   const stdoutWhy = stdout.trim().split('\n')[0]
   const why =
-    stderrWhy || (stdoutWhy !== undefined && /^https?:\/\//.test(stdoutWhy) ? '' : stdoutWhy)
+    stderrWhy || (stdoutWhy !== undefined && HTTP_URL_PREFIX.test(stdoutWhy) ? '' : stdoutWhy)
   return { message: why || 'engined printed no config UI URL' }
 }
