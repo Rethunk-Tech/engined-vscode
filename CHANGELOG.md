@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-18
+
 ### Added
 
 - Inline completions pause while the engines list shows the completion model waiting behind another job; the status bar appends `waiting`. `engined.completions.pauseOnContention` (default on) disables it.
