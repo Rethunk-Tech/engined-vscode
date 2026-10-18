@@ -1,8 +1,8 @@
 /**
  * The only place that actually talks to the engined door over HTTP. No
  * `vscode` import: `extension.ts` supplies the URL and abort signal, which
- * keeps this file testable in isolation even though no test currently mocks
- * the network.
+ * keeps this file testable in isolation. `doorClient.test.ts` drives it with
+ * an in-process `Bun.serve`.
  */
 
 import { HTTP_NOT_FOUND, HTTP_TOO_MANY_REQUESTS, MS_PER_SECOND } from './constants.ts'
@@ -11,6 +11,7 @@ import { mapAnswerableRows, mapModels } from './door.ts'
 import { type ImagePreviewFrame, readImageEvents } from './imageStream.ts'
 
 const EVENT_STREAM = 'text/event-stream'
+const RETRY_AFTER_SECONDS = /^\d+(\.\d+)?$/
 
 /** OpenAI `{error:{message}}` or the older `{error:"..."}` string. */
 export function doorErrorMessage(error: unknown): string | undefined {
@@ -58,12 +59,19 @@ export function agenticBusyMessage(seconds: number): string {
 }
 
 function retryAfterSeconds(headers: Headers): number | undefined {
-  const raw = headers.get('retry-after')
-  if (raw === null) {
+  const raw = headers.get('retry-after')?.trim()
+  if (raw === undefined || raw === '') {
     return undefined
   }
-  const n = Number(raw)
-  return Number.isFinite(n) && n >= 0 ? n : undefined
+  if (RETRY_AFTER_SECONDS.test(raw)) {
+    const n = Number(raw)
+    return Number.isFinite(n) && n >= 0 ? n : undefined
+  }
+  const at = Date.parse(raw)
+  if (!Number.isFinite(at)) {
+    return undefined
+  }
+  return Math.max(0, (at - Date.now()) / MS_PER_SECOND)
 }
 
 function delay(ms: number, signal?: AbortSignal): Promise<void> {
@@ -105,31 +113,19 @@ async function fetchModels(
   }
 }
 
-/** The door's `config_error` from the engines list, or `undefined` when absent, empty, or the fetch fails -- an engines failure never changes reachability. */
-async function fetchConfigError(door: Door, signal?: AbortSignal): Promise<string | undefined> {
-  try {
-    const body = (await fetchEngines(door.url, signal)) as { config_error?: unknown } | null
-    const error = body?.config_error
-    return typeof error === 'string' && error !== '' ? error : undefined
-  } catch {
-    return undefined
-  }
-}
-
 export interface DoorsPoll extends ModelsPoll {
   /** One entry per configured door, in `doors`' own order -- the status popup's one reachability line per door. */
   doorStatus: DoorReachability[]
 }
 
-/** Polls every configured door and merges the reachable ones' rows/models. A door that fails contributes nothing, not a thrown error -- one down door must not blank out the rest. */
+/** Polls every configured door's models list and merges the reachable ones' rows. A door that fails contributes nothing, not a thrown error -- one down door must not blank out the rest. Does not fetch `/engined/v1/engines`; `config_error` is the Engines view's listing. */
 export async function fetchAllDoors(
   doors: readonly Door[],
   signal?: AbortSignal,
 ): Promise<DoorsPoll> {
-  const [results, configErrors] = await Promise.all([
-    Promise.allSettled(doors.map((door) => fetchModels(door, doors.length, signal))),
-    Promise.all(doors.map((door) => fetchConfigError(door, signal))),
-  ])
+  const results = await Promise.allSettled(
+    doors.map((door) => fetchModels(door, doors.length, signal)),
+  )
   const chatModels: EnginedModelInfo[] = []
   const rows: EnginedModelRow[] = []
   const doorStatus: DoorReachability[] = doors.map((door, i) => {
@@ -137,13 +133,9 @@ export async function fetchAllDoors(
     if (result?.status === 'fulfilled') {
       chatModels.push(...result.value.chatModels)
       rows.push(...result.value.rows)
+      return { door, reachable: true }
     }
-    const configError = configErrors[i]
-    if (configError === undefined) {
-      return result?.status === 'fulfilled' ? { door, reachable: true } : { door, reachable: false }
-    }
-    // The door answered with a config error: engined is up, just not serving models.
-    return { door, reachable: true, configError }
+    return { door, reachable: false }
   })
   return { chatModels, rows, doorStatus }
 }
@@ -164,7 +156,10 @@ export async function fetchEngineLogs(
   tail: number,
   signal?: AbortSignal,
 ): Promise<string[]> {
-  const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/logs?tail=${tail}`, { signal })
+  const res = await fetch(
+    `${baseUrl}/engined/v1/engines/${encodeURIComponent(id)}/logs?tail=${tail}`,
+    { signal },
+  )
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
@@ -183,7 +178,9 @@ export async function fetchEngineResources(
   id: string,
   signal?: AbortSignal,
 ): Promise<EngineResources | { error: string }> {
-  const res = await fetch(`${baseUrl}/engined/v1/engines/${id}/resources`, { signal })
+  const res = await fetch(`${baseUrl}/engined/v1/engines/${encodeURIComponent(id)}/resources`, {
+    signal,
+  })
   const raw = await res.text()
   const parsed = parseJsonOrUndefined(raw)
   if (parsed === undefined) {
@@ -203,7 +200,7 @@ export async function fetchEngineResources(
 
 /** `POST /engined/v1/engines/<id>/stop`. */
 export async function stopEngine(baseUrl: string, id: string, signal?: AbortSignal): Promise<void> {
-  await postJson(baseUrl, `/engined/v1/engines/${id}/stop`, {}, signal)
+  await postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/stop`, {}, signal)
 }
 
 /** `POST /engined/v1/tokenize`: a vocab-only token count for a route that lists it in `serves`, no engine started. */
@@ -248,7 +245,7 @@ export async function holdEngine(
   signal?: AbortSignal,
 ): Promise<void> {
   const query = seconds === undefined ? '' : `?seconds=${seconds}`
-  await postJson(baseUrl, `/engined/v1/engines/${id}/hold${query}`, {}, signal)
+  await postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/hold${query}`, {}, signal)
 }
 
 /** `POST /engined/v1/engines/<id>/unhold`: ends a hold early. */
@@ -257,7 +254,7 @@ export async function unholdEngine(
   id: string,
   signal?: AbortSignal,
 ): Promise<void> {
-  await postJson(baseUrl, `/engined/v1/engines/${id}/unhold`, {}, signal)
+  await postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/unhold`, {}, signal)
 }
 
 /** `GET /engined/v1/engines/events`: the live SSE body, unparsed -- `engineEvents.ts` reads the frames out of it. */

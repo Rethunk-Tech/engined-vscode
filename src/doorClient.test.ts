@@ -4,6 +4,7 @@ import {
   DoorHttpError,
   doorErrorMessage,
   fetchAllDoors,
+  fetchEngineLogs,
   postChatCompletion,
   postImage,
 } from './doorClient.ts'
@@ -110,52 +111,99 @@ describe('postChatCompletion', () => {
       server.stop(true)
     }
   })
+
+  test('retries a 429 once when Retry-After is an HTTP-date at most 10 s away', async () => {
+    let hits = 0
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        hits += 1
+        if (hits === 1) {
+          return new Response(JSON.stringify({ error: { message: 'Too many requests' } }), {
+            status: 429,
+            headers: {
+              'content-type': 'application/json',
+              'retry-after': new Date(Date.now() - 1000).toUTCString(),
+            },
+          })
+        }
+        return new Response('data: [DONE]\n\n', {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' },
+        })
+      },
+    })
+    try {
+      const { body } = await postChatCompletion(
+        `http://127.0.0.1:${server.port}`,
+        { model: 'x', messages: [] },
+        new AbortController().signal,
+      )
+      expect(hits).toBe(2)
+      expect(body).toBeInstanceOf(ReadableStream)
+    } finally {
+      server.stop(true)
+    }
+  })
 })
 
 describe('fetchAllDoors', () => {
-  test('a door whose models 503 but whose engines list carries config_error is reachable', async () => {
+  test('polls models only; engines is never fetched even when models 503', async () => {
+    const paths: string[] = []
     const server = Bun.serve({
       port: 0,
       fetch(req) {
-        return new URL(req.url).pathname === '/openai/v1/models'
-          ? new Response('{"error":"config"}', { status: 503 })
-          : Response.json({ engines: [], config_error: 'bad toml' })
+        paths.push(new URL(req.url).pathname)
+        return new Response('{"error":"config"}', { status: 503 })
       },
     })
     try {
       const door = { name: 'a', url: `http://127.0.0.1:${server.port}` }
       const { doorStatus, chatModels } = await fetchAllDoors([door])
-      expect(doorStatus).toEqual([{ door, reachable: true, configError: 'bad toml' }])
+      expect(doorStatus).toEqual([{ door, reachable: false }])
       expect(chatModels).toEqual([])
+      expect(paths).toEqual(['/openai/v1/models'])
     } finally {
       await server.stop(true)
     }
   })
 
-  test('config_error marks a reachable door; a failing engines list changes nothing', async () => {
-    const serve = (engines: Response) =>
-      Bun.serve({
-        port: 0,
-        fetch(req) {
-          return new URL(req.url).pathname === '/openai/v1/models'
-            ? Response.json({ data: [] })
-            : engines
-        },
-      })
-    const refusing = serve(Response.json({ data: [], config_error: 'bad toml' }))
-    const broken = serve(new Response('nope', { status: 500 }))
+  test('a models-ok door is reachable without consulting engines', async () => {
+    const paths: string[] = []
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        paths.push(new URL(req.url).pathname)
+        return Response.json({ data: [] })
+      },
+    })
     try {
-      const a = { name: 'a', url: `http://127.0.0.1:${refusing.port}` }
-      const b = { name: 'b', url: `http://127.0.0.1:${broken.port}` }
-      const doors = [a, b]
-      const { doorStatus } = await fetchAllDoors(doors)
-      expect(doorStatus).toEqual([
-        { door: a, reachable: true, configError: 'bad toml' },
-        { door: b, reachable: true },
-      ])
+      const door = { name: 'a', url: `http://127.0.0.1:${server.port}` }
+      const { doorStatus } = await fetchAllDoors([door])
+      expect(doorStatus).toEqual([{ door, reachable: true }])
+      expect(paths).toEqual(['/openai/v1/models'])
     } finally {
-      await refusing.stop(true)
-      await broken.stop(true)
+      await server.stop(true)
+    }
+  })
+})
+
+describe('fetchEngineLogs', () => {
+  test('encodes the engine id in the path', async () => {
+    let pathname = ''
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const { pathname: path } = new URL(req.url)
+        pathname = path
+        return Response.json({ lines: [] })
+      },
+    })
+    try {
+      await fetchEngineLogs(`http://127.0.0.1:${server.port}`, 'a/b', 10)
+      expect(pathname).toBe(`/engined/v1/engines/${encodeURIComponent('a/b')}/logs`)
+    } finally {
+      server.stop(true)
     }
   })
 })
