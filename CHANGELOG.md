@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `engined_generateImage` reports sampler progress while the picture renders, on generations and edits.
 - `engined_speak` uploads a workspace-relative `voice` file to `/engined/v1/audio/voices` and sends the returned handle. A bare voice name or an existing `vc_` handle is sent unchanged.
 - A chain in the model picker shows the hops it was written with, including `@/<chain-id>`. A row with no declared hops keeps its existing tooltip.
 

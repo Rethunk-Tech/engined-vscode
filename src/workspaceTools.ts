@@ -6,7 +6,7 @@ import { readChatStream } from './chatStream.ts'
 import type { ModelRole } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { EnginedModelRow } from './door.ts'
-import { postChatCompletion, postForm, postJson } from './doorClient.ts'
+import { postChatCompletion, postForm, postImage } from './doorClient.ts'
 import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 import { truncateSnippet } from './search.ts'
 import type { SearchIndex } from './searchIndex.ts'
@@ -123,6 +123,27 @@ function imagePath(sourcePath: string | undefined): string {
   return sourcePath === undefined ? '/openai/v1/images/generations' : '/openai/v1/images/edits'
 }
 
+/**
+ * The tool invocation type has no progress channel. A host that still exposes
+ * `progress.report` gets each sampler line as it arrives; otherwise the result
+ * text carries the last line once the picture is written.
+ */
+function reportToolProgress(holder: object, message: string): boolean {
+  if (!('progress' in holder)) {
+    return false
+  }
+  const { progress } = holder
+  if (progress === null || typeof progress !== 'object' || !('report' in progress)) {
+    return false
+  }
+  const { report } = progress
+  if (typeof report !== 'function') {
+    return false
+  }
+  report.call(progress, { message })
+  return true
+}
+
 const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   async invoke(options, token) {
     try {
@@ -136,19 +157,21 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
         size: options.input.size,
         source,
       })
-      const result =
-        req.path === '/openai/v1/images/generations'
-          ? ((await postJson(row.door.url, req.path, req.body, cancellationSignal(token))) as {
-              data: { b64_json: string }[]
-            })
-          : ((await postForm(
-              row.door.url,
-              req.path,
-              buildEditForm(req.form),
-              cancellationSignal(token),
-            )) as {
-              data: { b64_json: string }[]
-            })
+      const progressLines: string[] = []
+      const result = (await postImage(
+        row.door.url,
+        req.path,
+        'body' in req ? { json: req.body } : { form: buildEditForm(req.form) },
+        {
+          signal: cancellationSignal(token),
+          onProgress: (line) => {
+            const reported = reportToolProgress(options, line) || reportToolProgress(token, line)
+            if (!reported) {
+              progressLines.push(line)
+            }
+          },
+        },
+      )) as { data: { b64_json: string }[] }
       const png = result.data[0]?.b64_json
       if (png === undefined) {
         throw new Error('engined returned no image data')
@@ -160,9 +183,11 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
         preview: true,
         viewColumn: vscode.ViewColumn.Beside,
       })
+      const status = progressLines.at(-1)
+      const note = status === undefined ? '' : `\n${status}.`
       return new vscode.LanguageModelToolResult([
         new vscode.LanguageModelTextPart(
-          `Wrote ${options.input.outputPath}; it is open beside the chat for the user to see.`,
+          `Wrote ${options.input.outputPath}; it is open beside the chat for the user to see.${note}`,
         ),
       ])
     } catch (error) {

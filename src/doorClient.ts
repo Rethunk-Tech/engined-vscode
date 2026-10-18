@@ -8,6 +8,9 @@
 import { HTTP_NOT_FOUND, HTTP_TOO_MANY_REQUESTS, MS_PER_SECOND } from './constants.ts'
 import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
 import { mapAnswerableRows, mapModels } from './door.ts'
+import { readImageEvents } from './imageStream.ts'
+
+const EVENT_STREAM = 'text/event-stream'
 
 /** OpenAI `{error:{message}}` or the older `{error:"..."}` string. */
 export function doorErrorMessage(error: unknown): string | undefined {
@@ -264,7 +267,7 @@ export async function openEngineEventsStream(
 ): Promise<ReadableStream<Uint8Array>> {
   const res = await fetch(`${baseUrl}/engined/v1/engines/events`, {
     signal,
-    headers: { accept: 'text/event-stream' },
+    headers: { accept: EVENT_STREAM },
   })
   if (!res.ok || res.body === null) {
     throw new DoorHttpError(res.status, await res.text())
@@ -337,7 +340,7 @@ export async function postJsonWithHeaders(
   return { data, headers: res.headers }
 }
 
-/** A JSON POST against an arbitrary door path -- image generation/edit request, speech request. */
+/** A JSON POST against an arbitrary door path -- speech request, engine control. */
 export async function postJson(
   baseUrl: string,
   path: string,
@@ -430,7 +433,49 @@ export function fetchAllUsage(
   return Promise.all(doors.map((door) => fetchUsage(door, days, signal)))
 }
 
-/** A multipart POST -- image edit, transcription. */
+async function readImageResponse(
+  res: Response,
+  onProgress: (line: string) => void,
+): Promise<unknown> {
+  if (!res.ok) {
+    throw new DoorHttpError(res.status, await res.text())
+  }
+  if (res.headers.get('content-type')?.includes(EVENT_STREAM) === true) {
+    if (res.body === null) {
+      throw new Error('engined returned no image data')
+    }
+    return readImageEvents(res.body, onProgress)
+  }
+  return res.headers.get('content-type')?.includes('application/json') === true
+    ? res.json()
+    : res.arrayBuffer()
+}
+
+/**
+ * POST an image generation (`json`) or edit (`form`). Sends `Accept: text/event-stream`.
+ * Events report each `progress` line and return the `image` event's JSON; an `error` event throws.
+ * A door that answers with any other content type is the single JSON body it always returned.
+ */
+export async function postImage(
+  baseUrl: string,
+  path: string,
+  body: { json: unknown } | { form: FormData },
+  options: { signal?: AbortSignal; onProgress: (line: string) => void },
+): Promise<unknown> {
+  const headers: Record<string, string> = { accept: EVENT_STREAM }
+  if (!('form' in body)) {
+    headers['content-type'] = 'application/json'
+  }
+  const res = await fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers,
+    body: 'form' in body ? body.form : JSON.stringify(body.json),
+    signal: options.signal,
+  })
+  return readImageResponse(res, options.onProgress)
+}
+
+/** A multipart POST -- transcription. Image edits go through `postImage`, which asks for progress events. */
 export async function postForm(
   baseUrl: string,
   path: string,

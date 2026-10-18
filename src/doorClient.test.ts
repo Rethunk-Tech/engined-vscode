@@ -5,6 +5,7 @@ import {
   doorErrorMessage,
   fetchAllDoors,
   postChatCompletion,
+  postImage,
 } from './doorClient.ts'
 
 describe('doorErrorMessage', () => {
@@ -155,6 +156,138 @@ describe('fetchAllDoors', () => {
     } finally {
       await refusing.stop(true)
       await broken.stop(true)
+    }
+  })
+})
+
+const IMAGE = { created: 1, data: [{ b64_json: Buffer.from('png').toString('base64') }] }
+
+function imageSse(): string {
+  return [
+    'event: progress',
+    'data: {"value":1,"max":4,"node":"4"}',
+    '',
+    'event: preview',
+    'data: {"bytes":12,"format":"jpeg"}',
+    '',
+    'event: progress',
+    'data: {"value":4,"max":4,"node":"4"}',
+    '',
+    'event: image',
+    `data: ${JSON.stringify(IMAGE)}`,
+    '',
+    '',
+  ].join('\n')
+}
+
+describe('postImage', () => {
+  test('generations and edits ask for events, report progress, and return the image event', async () => {
+    const accepts: string[] = []
+    const contentTypes: string[] = []
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        accepts.push(req.headers.get('accept') ?? '')
+        contentTypes.push(req.headers.get('content-type') ?? '')
+        return new Response(imageSse(), { headers: { 'content-type': 'text/event-stream' } })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    const lines: string[] = []
+    try {
+      const onProgress = (line: string): void => {
+        lines.push(line)
+      }
+      const generated = await postImage(
+        base,
+        '/openai/v1/images/generations',
+        { json: { model: '@/comfy/local', prompt: 'a red cube' } },
+        { onProgress },
+      )
+      const form = new FormData()
+      form.set('prompt', 'a blue cube')
+      const edited = await postImage(base, '/openai/v1/images/edits', { form }, { onProgress })
+      expect(generated).toEqual(IMAGE)
+      expect(edited).toEqual(IMAGE)
+      expect(accepts).toEqual(['text/event-stream', 'text/event-stream'])
+      expect(contentTypes[0]).toBe('application/json')
+      expect(contentTypes[1]).toStartWith('multipart/form-data')
+      expect(lines).toEqual([
+        'Rendering 1/4 node 4',
+        'Rendering 4/4 node 4',
+        'Rendering 1/4 node 4',
+        'Rendering 4/4 node 4',
+      ])
+    } finally {
+      await server.stop(true)
+    }
+  })
+
+  test('an error event fails with the door message', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        return new Response(
+          'event: progress\ndata: {"value":1,"max":2}\n\nevent: error\ndata: {"error":{"message":"checkpoint missing","type":"invalid_request_error","param":null,"code":null}}\n\n',
+          { headers: { 'content-type': 'text/event-stream' } },
+        )
+      },
+    })
+    const lines: string[] = []
+    try {
+      await expect(
+        postImage(
+          `http://127.0.0.1:${server.port}`,
+          '/openai/v1/images/generations',
+          { json: { prompt: 'a red cube' } },
+          { onProgress: (line) => lines.push(line) },
+        ),
+      ).rejects.toThrow('checkpoint missing')
+      expect(lines).toEqual(['Rendering 1/2'])
+    } finally {
+      await server.stop(true)
+    }
+  })
+
+  test('a door that answers JSON is parsed as the image body', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const path = new URL(req.url).pathname
+        if (path.endsWith('/refused')) {
+          return Response.json(
+            { error: { message: 'empty prompt', type: 'invalid_request_error' } },
+            { status: 400 },
+          )
+        }
+        return Response.json(IMAGE)
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    try {
+      const lines: string[] = []
+      const body = await postImage(
+        base,
+        '/openai/v1/images/generations',
+        { json: { prompt: 'a red cube' } },
+        { onProgress: (line) => lines.push(line) },
+      )
+      expect(body).toEqual(IMAGE)
+      expect(lines).toEqual([])
+      await expect(
+        postImage(
+          base,
+          '/openai/v1/images/generations/refused',
+          { json: {} },
+          {
+            onProgress: () => {
+              // A refused call never renders.
+            },
+          },
+        ),
+      ).rejects.toMatchObject({ status: 400, message: 'empty prompt' })
+    } finally {
+      await server.stop(true)
     }
   })
 })
