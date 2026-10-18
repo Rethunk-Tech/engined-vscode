@@ -4,11 +4,17 @@ import * as vscode from 'vscode'
 import {
   buildCompletionsRequestBody,
   COMPLETIONS_PATH,
+  completionWaitingBehind,
   extractCompletionText,
   extractCompletionUsage,
   sliceContext,
 } from './completions.ts'
-import { getCompletionsEnabled, getDefaultModel, getNeighbourContextEnabled } from './config.ts'
+import {
+  getCompletionsEnabled,
+  getCompletionsPauseOnContention,
+  getDefaultModel,
+  getNeighbourContextEnabled,
+} from './config.ts'
 import { logUnusableIfChanged, resolveDefaultModel } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import { postJsonWithHeaders } from './doorClient.ts'
@@ -68,6 +74,16 @@ export class EnginedInlineCompletionProvider implements vscode.InlineCompletionI
     )
     const model = completionModel.row
     if (model === undefined) {
+      return undefined
+    }
+    if (
+      getCompletionsPauseOnContention() &&
+      completionWaitingBehind(s.engineExplorer.contention(), {
+        engine: model.engine,
+        routeId: model.routeId,
+      })
+    ) {
+      renderStatusBar(s)
       return undefined
     }
     const controller = new AbortController()

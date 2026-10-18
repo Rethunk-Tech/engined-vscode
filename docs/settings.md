@@ -12,6 +12,7 @@ Every `engined.*` setting. Configure through VS Code's Settings UI (search "engi
 | `engined.chat.splitAboveChars` | `8000` | Only messages longer than this are split. `0` disables. |
 | `engined.completions.enabled` | `true` | Offer inline completions (ghost text). |
 | `engined.completions.neighbourContext` | `true` | Send snippets from other open/recent editors as completions context. Only sent to a local (`egress: none`) completions route. |
+| `engined.completions.pauseOnContention` | `true` | Skip inline completion requests while the engines list shows the completion model waiting behind another job. |
 | `engined.defaultModels.image` | `""` | Model id for `engined_generateImage`. Empty is automatic. |
 | `engined.defaultModels.ocr` | `""` | Model id for `engined_readImage` OCR mode. Empty is automatic. |
 | `engined.defaultModels.vision` | `""` | Model id for `engined_readImage` describe mode. Empty is automatic. |

@@ -8,6 +8,7 @@
 
 import * as vscode from 'vscode'
 import { cancellationSignal } from './cancellation.ts'
+import type { CompletionEngineContention } from './completions.ts'
 import { DOOR_TIMEOUT_MS } from './constants.ts'
 import { describeError } from './describeError.ts'
 import type { Door, EnginedModelRow } from './door.ts'
@@ -48,12 +49,14 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   readonly onDidChangeTreeData = this.#emitter.event
   #nodes: EngineNode[] = []
   #doorNotes = new Map<string, DoorGroupNote>()
+  #contention: CompletionEngineContention[] = []
   readonly #heldIds: ReadonlySet<string>
   readonly #log: (line: string) => void
   readonly #logChannels = new Map<string, vscode.OutputChannel>()
   readonly #getDoors: () => Door[]
   readonly #getRows: () => readonly EnginedModelRow[]
   readonly #setMessage: (text: string | undefined) => void
+  readonly #onRefreshed?: () => void
 
   constructor(deps: {
     heldIds: ReadonlySet<string>
@@ -61,12 +64,19 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     getDoors: () => Door[]
     getRows: () => readonly EnginedModelRow[]
     setMessage: (text: string | undefined) => void
+    onRefreshed?: () => void
   }) {
     this.#heldIds = deps.heldIds
     this.#log = deps.log
     this.#getDoors = deps.getDoors
     this.#getRows = deps.getRows
     this.#setMessage = deps.setMessage
+    this.#onRefreshed = deps.onRefreshed
+  }
+
+  /** Latest engines-list `id`/`roles` snapshot, for completion contention. */
+  contention(): readonly CompletionEngineContention[] {
+    return this.#contention
   }
 
   /** Qualified ids whose latest engines-list row still has a future `held_until`. */
@@ -102,6 +112,12 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
               doorCount: doors.length,
               isRemote,
             }),
+            contention: (response.engines ?? []).map(
+              (engine): CompletionEngineContention => ({
+                id: engine.id,
+                roles: engine.roles,
+              }),
+            ),
           }
         } catch (error) {
           this.#log(`engines view: refresh failed for door "${door.name}": ${describeError(error)}`)
@@ -110,11 +126,13 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
             outcome: { name: door.name, url: door.url, failure: describeError(error) },
             note: NO_NOTE,
             nodes: [],
+            contention: [],
           }
         }
       }),
     )
     this.#nodes = results.flatMap((result) => result.nodes)
+    this.#contention = results.flatMap((result) => result.contention)
     this.#doorNotes = new Map(
       results.flatMap((result) =>
         result.note.description === undefined ? [] : [[result.name, result.note] as const],
@@ -122,6 +140,7 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     )
     this.#setMessage(enginesViewMessage(results.map((result): DoorListOutcome => result.outcome)))
     this.#emitter.fire()
+    this.#onRefreshed?.()
   }
 
   getTreeItem(element: EngineTreeItem): vscode.TreeItem {

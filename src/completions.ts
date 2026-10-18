@@ -2,7 +2,8 @@
  * Pure logic for inline completions (ghost text) via engined's
  * `POST /openai/v1/completions`. No `vscode` import, so this runs under
  * `bun test` with no extension host; `extension.ts` supplies the document
- * text/offset, debounce and abort wiring.
+ * text/offset, debounce and abort wiring. `completionWaitingBehind` is the
+ * engines-list check that skips requests while the completion model is queued.
  */
 
 import type { ExtraFile } from './neighbourContext.ts'
@@ -87,6 +88,62 @@ export function extractCompletionText(reply: unknown): string | undefined {
 export interface CompletionUsage {
   promptTokens?: number
   completionTokens?: number
+}
+
+/**
+ * One engines-list row's id and `roles`, enough to tell whether the
+ * completion model is queued behind another job.
+ */
+export interface CompletionEngineContention {
+  id: string
+  roles?: readonly { active: number; waiting: number; model?: string }[]
+}
+
+function roleNamesRoute(model: string | undefined, routeId: string): boolean {
+  if (model === undefined || model.length === 0) {
+    return false
+  }
+  if (model === routeId || routeId.endsWith(`/${model}`)) {
+    return true
+  }
+  const stem = model.endsWith('.gguf') ? model.slice(0, -'.gguf'.length) : model
+  if (stem !== model && (routeId === stem || routeId.endsWith(`/${stem}`))) {
+    return true
+  }
+  const last = routeId.split('/').at(-1)
+  return last === model || last === stem
+}
+
+/**
+ * True when the engines list shows the completion model waiting behind
+ * another job (or queued as the GGUF head with nothing active yet). False
+ * when that engine has nobody waiting, or when the completion model itself
+ * is already active.
+ */
+export function completionWaitingBehind(
+  engines: readonly CompletionEngineContention[],
+  completion: { engine?: string; routeId: string },
+): boolean {
+  const engine =
+    completion.engine === undefined
+      ? engines.find((row) =>
+          row.roles?.some((role) => roleNamesRoute(role.model, completion.routeId)),
+        )
+      : engines.find((row) => row.id === completion.engine)
+  if (engine?.roles === undefined) {
+    return false
+  }
+  let waiting = 0
+  let weAreActive = false
+  for (const role of engine.roles) {
+    if (role.waiting > 0) {
+      waiting += role.waiting
+    }
+    if (role.active > 0 && roleNamesRoute(role.model, completion.routeId)) {
+      weAreActive = true
+    }
+  }
+  return waiting > 0 && !weAreActive
 }
 
 /** `usage.{prompt_tokens,completion_tokens}` from a completions reply, when it carried one. */

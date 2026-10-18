@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Inline completions pause while the engines list shows the completion model waiting behind another job; the status bar appends `waiting`. `engined.completions.pauseOnContention` (default on) disables it.
 - Engines rows whose image or artifact is missing offer **engined: Obtain** (`POST /engined/v1/engines/:id/obtain`), with progress and a refresh; Copy Fix stays.
 
 ## [0.1.5] - 2026-10-18

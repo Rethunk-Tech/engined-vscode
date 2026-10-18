@@ -91,6 +91,7 @@ function createSession(context: vscode.ExtensionContext): Session {
           enginesView.message = text
         }
       },
+      onRefreshed: () => renderStatusBar(created),
     }),
     searchIndex: new SearchIndex(
       context.storageUri ?? context.globalStorageUri,

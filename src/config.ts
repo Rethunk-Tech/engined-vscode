@@ -54,6 +54,11 @@ export function getNeighbourContextEnabled(): boolean {
   return config().get<boolean>('completions.neighbourContext', true)
 }
 
+/** Pause ghost-text requests while the completion model is queued behind another job. On by default. */
+export function getCompletionsPauseOnContention(): boolean {
+  return config().get<boolean>('completions.pauseOnContention', true)
+}
+
 const DEFAULT_SEARCH_MAX_CHUNKS = 20_000
 
 /** Whether `engined_search` may embed/rerank through a non-local route. Off by default -- workspace content otherwise never leaves the machine. */

@@ -2,7 +2,13 @@
 
 import * as vscode from 'vscode'
 import { readSavedSettings } from './chatSettingsPlan.ts'
-import { getDefaultModel, getDoors } from './config.ts'
+import { completionWaitingBehind } from './completions.ts'
+import {
+  getCompletionsEnabled,
+  getCompletionsPauseOnContention,
+  getDefaultModel,
+  getDoors,
+} from './config.ts'
 import { DOOR_TIMEOUT_MS, LOADING_TICK_MS } from './constants.ts'
 import { DEFAULT_MODEL_ROLES, resolveDefaultModel } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
@@ -25,6 +31,24 @@ const TODAY_USAGE_REFRESH_MS = 60_000
 
 function rowState(s: Session, modelId: string): string | undefined {
   return s.poller.models.find((m) => m.id === modelId)?.row.state
+}
+
+function completionsPaused(s: Session): boolean {
+  if (!(getCompletionsEnabled() && getCompletionsPauseOnContention())) {
+    return false
+  }
+  const { row } = resolveDefaultModel(s.poller.rows, 'completion', getDefaultModel('completion'))
+  if (row === undefined) {
+    return false
+  }
+  return completionWaitingBehind(s.engineExplorer.contention(), {
+    engine: row.engine,
+    routeId: row.routeId,
+  })
+}
+
+function withWaitingHint(text: string, paused: boolean): string {
+  return paused ? `${text} · waiting` : text
 }
 
 /** Scrolls the shipped README to its Troubleshooting section -- no network round trip needed for a local doc. */
@@ -159,9 +183,10 @@ export function renderStatusBar(s: Session): void {
     const glyph = s.poller.doorStatus.some((d) => d.configError !== undefined)
       ? '$(warning)'
       : '$(server)'
-    s.statusBarItem.text = `${glyph} engined (${s.poller.models.length})`
+    const idle = `${glyph} engined (${s.poller.models.length})`
+    s.statusBarItem.text = withWaitingHint(idle, completionsPaused(s))
   } else {
-    s.statusBarItem.text = formatCallLine(s.lastChatCall)
+    s.statusBarItem.text = withWaitingHint(formatCallLine(s.lastChatCall), completionsPaused(s))
   }
   s.statusBarItem.tooltip = tooltipMarkdown(s)
 }

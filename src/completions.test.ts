@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   buildCompletionsRequestBody,
   COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES,
+  completionWaitingBehind,
   extractCompletionText,
   extractCompletionUsage,
   sliceContext,
@@ -87,6 +88,78 @@ describe('extractCompletionText', () => {
     expect(extractCompletionText({})).toBeUndefined()
     expect(extractCompletionText(undefined)).toBeUndefined()
     expect(extractCompletionText({ choices: [] })).toBeUndefined()
+  })
+})
+
+describe('completionWaitingBehind', () => {
+  const routeId = '@/llama/ornith'
+  const engine = 'llama'
+
+  test('pauses only when the completion model is queued and not already active', () => {
+    const cases: {
+      name: string
+      engines: Parameters<typeof completionWaitingBehind>[0]
+      completion: { engine?: string; routeId: string }
+      want: boolean
+    }[] = [
+      {
+        name: 'idle engine',
+        engines: [{ id: engine, roles: [{ active: 0, waiting: 0 }] }],
+        completion: { engine, routeId },
+        want: false,
+      },
+      {
+        name: 'chat running, nobody queued',
+        engines: [{ id: engine, roles: [{ active: 1, waiting: 0, model: 'chat.gguf' }] }],
+        completion: { engine, routeId },
+        want: false,
+      },
+      {
+        name: 'waiting behind another GGUF',
+        engines: [{ id: engine, roles: [{ active: 1, waiting: 2, model: 'chat.gguf' }] }],
+        completion: { engine, routeId },
+        want: true,
+      },
+      {
+        name: 'queue-head is another GGUF',
+        engines: [{ id: engine, roles: [{ active: 0, waiting: 3, model: 'chat.gguf' }] }],
+        completion: { engine, routeId },
+        want: true,
+      },
+      {
+        name: 'queue-head is the completion GGUF',
+        engines: [{ id: engine, roles: [{ active: 0, waiting: 1, model: 'ornith.gguf' }] }],
+        completion: { engine, routeId },
+        want: true,
+      },
+      {
+        name: 'completion model is the active job',
+        engines: [{ id: engine, roles: [{ active: 1, waiting: 2, model: 'ornith.gguf' }] }],
+        completion: { engine, routeId },
+        want: false,
+      },
+      {
+        name: 'queue is on a different engine',
+        engines: [{ id: 'whisper', roles: [{ active: 0, waiting: 4, model: 'other.gguf' }] }],
+        completion: { engine, routeId },
+        want: false,
+      },
+      {
+        name: 'no engine id, queue-head matches the route GGUF',
+        engines: [{ id: engine, roles: [{ active: 0, waiting: 1, model: 'ornith.gguf' }] }],
+        completion: { routeId },
+        want: true,
+      },
+      {
+        name: 'no engine id, waiting behind a role that is not us',
+        engines: [{ id: engine, roles: [{ active: 1, waiting: 1, model: 'chat.gguf' }] }],
+        completion: { routeId },
+        want: false,
+      },
+    ]
+    for (const c of cases) {
+      expect(completionWaitingBehind(c.engines, c.completion), c.name).toBe(c.want)
+    }
   })
 })
 

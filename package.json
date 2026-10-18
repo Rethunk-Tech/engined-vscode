@@ -264,6 +264,11 @@
           "default": true,
           "description": "Send snippets from other open/recent editors as completions context. Only sent to a local (egress: none) completions route."
         },
+        "engined.completions.pauseOnContention": {
+          "type": "boolean",
+          "default": true,
+          "description": "Skip inline completion requests while the engines list shows the completion model waiting behind another job. The status bar shows a waiting hint until the queue clears."
+        },
         "engined.defaultModels.image": {
           "type": "string",
           "default": "",
