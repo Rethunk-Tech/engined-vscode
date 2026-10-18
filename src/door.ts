@@ -79,6 +79,8 @@ interface RawModelRow {
   role?: string
   vision?: string
   translate?: boolean
+  /** Hop strings as written, including `@/<chain-id>`. Absent on a non-chain row. */
+  declared_hops?: string[]
   state: string
   capabilities: {
     input?: string[]
@@ -140,6 +142,9 @@ function tooltipFor(row: EnginedModelRow): string {
   }
   if (row.role === 'vision') {
     parts.push(`vision: ${row.vision ?? 'unknown'}`)
+  }
+  if (row.declared_hops !== undefined && row.declared_hops.length > 0) {
+    parts.push(`hops: ${row.declared_hops.join(', ')}`)
   }
   return parts.join(' · ')
 }

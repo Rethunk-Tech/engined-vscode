@@ -125,6 +125,29 @@ describe('mapModelRow', () => {
     expect(sonnet?.detail).not.toContain(DOOR.name)
   })
 
+  test('a non-empty declared_hops list is appended to the tooltip; empty or absent leaves it unchanged', () => {
+    const base = {
+      id: 'outer',
+      routeId: 'outer',
+      door: DOOR,
+      tools: false,
+      serves: ['/openai/v1/chat/completions'],
+      state: 'installed',
+      capabilities: {},
+    }
+    const withHops = mapModelRow({
+      ...base,
+      declared_hops: ['@/inner', '@/local-llama/ornith'],
+    })
+    expect(withHops?.tooltip).toBe(
+      'serves: /openai/v1/chat/completions · hops: @/inner, @/local-llama/ornith',
+    )
+    const empty = mapModelRow({ ...base, declared_hops: [] })
+    const absent = mapModelRow(base)
+    expect(empty?.tooltip).toBe('serves: /openai/v1/chat/completions')
+    expect(absent?.tooltip).toBe(empty?.tooltip)
+  })
+
   test('more than one door: id is qualified, and detail names the door', () => {
     const mapped = mapModels(models, DOOR, 2)
     const sonnet = mapped.find((m) => m.row.routeId === '@/claude/sonnet-5')
