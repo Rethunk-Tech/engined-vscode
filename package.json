@@ -2,7 +2,7 @@
   "name": "engined-vscode",
   "displayName": "engined",
   "description": "VS Code language model provider for engined, a local inference door.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "publisher": "rethunk-tech",
   "license": "MIT",
   "private": true,
