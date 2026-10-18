@@ -6,9 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Fixed
-
-- The status-bar quick pick's log action is labeled "Show log".
+## [0.1.5] - 2026-10-18
 
 ### Added
 
@@ -17,6 +15,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `engined_generateImage` shows an inline preview at `<outputPath>.preview.jpeg` or `<outputPath>.preview.png` while the picture renders, and removes it when the final image is written.
 - `engined_speak` uploads a workspace-relative `voice` file to `/engined/v1/audio/voices` and sends the returned handle. A bare voice name or an existing `vc_` handle is sent unchanged.
 - A chain in the model picker shows the hops it was written with, including `@/<chain-id>`. A row with no declared hops keeps its existing tooltip.
+
+### Fixed
+
+- The status-bar quick pick's log action is labeled "Show log".
+- Tool paths reject NUL bytes and realpath escapes, and relative paths resolve against each workspace folder.
+- Door names that contain a slash are dropped; door fetches never follow HTTP redirects; hung usage and Engines GETs time out; engine ids in resource URLs are encoded; Retry-After is parsed as HTTP-date.
+- Chat and engine-events SSE readers flush a last data line with no trailing newline and leftover frames.
+- `engined_search` keeps cosine order when rerank returns no hits, and fails closed on missing rerank results.
+- Usage and status surfaces escape pipes, newlines, and HTML in door/route/table text.
+- Copy Fix is offered on failed Engines rows; resources are skipped only when every backing row is remote.
+- `engined: Use engined for All Chat Features` prefers egress-none tool-calling models.
+- `engined: Open Config UI` opens only a single parseable http(s) URL.
+- `engined_transcribe` refuses translate until a quality probe passes.
 
 ## [0.1.4] - 2026-10-18
 
