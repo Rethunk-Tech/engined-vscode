@@ -149,11 +149,36 @@ export function stateIcon(state: string): string {
 
 /**
  * `agentic-cli` never has a container to inspect; `unavailable` never runs
- * one right now; `remote` (a row this engine backs reports a non-local
- * egress) has no container this door can reach into either; only a running,
- * local container-kind engine has resources worth fetching.
+ * one right now; `remote` (every polled row this engine backs reports a
+ * non-local egress) has no container this door can reach into either; only a
+ * running, local container-kind engine has resources worth fetching.
  */
 type EngineCategory = 'agentic-cli' | 'remote' | 'unavailable' | 'idle' | 'running'
+
+/** Engine ids whose every backing model row is remote-egress. Mixed local+remote stays local. */
+export function onlyRemoteEngineIds(
+  rows: readonly { engine?: string; egress?: string }[],
+): ReadonlySet<string> {
+  const onlyRemote = new Map<string, boolean>()
+  for (const row of rows) {
+    if (row.engine === undefined) {
+      continue
+    }
+    const remote = row.egress !== undefined && row.egress !== 'none'
+    onlyRemote.set(row.engine, (onlyRemote.get(row.engine) ?? true) && remote)
+  }
+  return new Set([...onlyRemote].filter(([, remote]) => remote).map(([id]) => id))
+}
+
+function engineContextValue(engine: EngineRow): EngineNode['contextValue'] {
+  if (engine.state === 'unavailable') {
+    return 'engine-unavailable'
+  }
+  if (engine.state === 'failed' && engine.fix !== undefined && engine.fix !== '') {
+    return 'engine,engine-has-fix'
+  }
+  return 'engine'
+}
 
 function categorize(engine: EngineRow, remote: boolean): EngineCategory {
   if (engine.kind === 'agentic-cli') {
@@ -195,8 +220,8 @@ export interface EngineNode {
   label: string
   description: string
   tooltip: string
-  /** Drives the `view/item/context` `when` clauses in `package.json` -- `engine-unavailable` gets the "Copy fix command" action, `engine` gets the rest. */
-  contextValue: 'engine' | 'engine-unavailable'
+  /** Drives the `view/item/context` `when` clauses in `package.json` -- `engine-unavailable` gets Copy Fix only, `engine` gets warm/stop, `engine,engine-has-fix` gets both. */
+  contextValue: 'engine' | 'engine-unavailable' | 'engine,engine-has-fix'
   icon: string
   fix: string | undefined
   /** Only a running, local container-kind engine has anything a `resources` fetch could answer. */
@@ -424,7 +449,7 @@ export function releaseHoldIds(
  * `idle until <time>` the same way a hold appends its deadline; a past, equal,
  * or missing value adds nothing. A present `superseded` appends
  * `config stale <stop path>`; an absent field adds nothing. `isRemote`
- * answers, for one engine's raw id, whether any row it backs reports a
+ * answers, for one engine's raw id, whether every row it backs reports a
  * non-local egress -- `EngineStatus` itself carries no egress, so that has
  * to come from the model rows this extension already polled.
  */
@@ -468,7 +493,7 @@ export function toEngineNodes(
       label: engine.id,
       description,
       tooltip: engineTooltip(engine, description, discovery),
-      contextValue: engine.state === 'unavailable' ? 'engine-unavailable' : 'engine',
+      contextValue: engineContextValue(engine),
       icon: stateIcon(engine.state),
       fix: engine.fix,
       hasResources: category === 'running',

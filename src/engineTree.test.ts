@@ -8,6 +8,7 @@ import {
   type EnginesListResponse,
   enginesViewMessage,
   formatResourceLine,
+  onlyRemoteEngineIds,
   releaseHoldIds,
   stateIcon,
   toEngineNodes,
@@ -244,6 +245,34 @@ describe('release candidates', () => {
 describe('missing engines response', () => {
   test('missing response maps to no nodes', () => {
     expect(toEngineNodes(undefined, { heldIds: new Set(), door: DOOR, doorCount: 1 })).toEqual([])
+  })
+})
+
+describe('engine contextValue and remote ids', () => {
+  test('a failed engine with a non-empty fix offers Copy Fix without losing engine actions', () => {
+    const nodes = toEngineNodes(
+      {
+        engines: [
+          { id: 'llama', kind: 'openai-http', state: 'failed', fix: 'engined start llama' },
+          { id: 'whisper', kind: 'openai-http', state: 'failed' },
+          { id: 'comfy', kind: 'openai-http', state: 'running', fix: 'unused' },
+        ],
+      },
+      { heldIds: new Set(), door: DOOR, doorCount: 1 },
+    )
+    expect(nodes.find((n) => n.id === 'llama')?.contextValue).toBe('engine,engine-has-fix')
+    expect(nodes.find((n) => n.id === 'whisper')?.contextValue).toBe('engine')
+    expect(nodes.find((n) => n.id === 'comfy')?.contextValue).toBe('engine')
+  })
+
+  test('onlyRemoteEngineIds is true only when every backing row is remote', () => {
+    expect(
+      onlyRemoteEngineIds([
+        { engine: 'mixed', egress: 'none' },
+        { engine: 'mixed', egress: 'remote' },
+        { engine: 'cloud', egress: 'remote' },
+      ]),
+    ).toEqual(new Set(['cloud']))
   })
 })
 
