@@ -45,6 +45,10 @@ bun run package   # bunx @vscode/vsce package --no-dependencies -> engined-vscod
 
 The `.vsix` is not committed (`*.vsix` is gitignored); build it locally to verify or to install manually via "Extensions: Install from VSIX...".
 
+## Release
+
+Bump `version` in `package.json`, update `CHANGELOG.md`, then push a `v<version>` tag. `.github/workflows/release.yml` builds the `.vsix`, attaches it to the GitHub release and publishes it to the VS Code Marketplace. Publishing needs the repo secret `VSCE_PAT`: an Azure DevOps personal access token for the `rethunk-tech` publisher, organization "All accessible organizations", scope Marketplace > Manage.
+
 ## Usage
 
 - **Chat models** — an `engined` provider (`vendor: "engined"`) backed by engined's `GET /openai/v1/models` and `POST /openai/v1/chat/completions`. Polling internals: [docs/polling.md](docs/polling.md). engined's text-only routes (agent CLIs such as Claude or Cursor via engined, `tools: false`) don't show up here — VS Code only lists tool-calling models in the picker; reach those routes from another engined consumer. A text-only chat model that engined bridges to a vision route (its `vision_bridge` config key) reports image input here exactly like a real vision model, so attaching an image to it in Copilot Chat works: engined captions the image through the bridge before the text-only model ever sees the request.
