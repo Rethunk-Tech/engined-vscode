@@ -47,7 +47,7 @@ The `.vsix` is not committed (`*.vsix` is gitignored); build it locally to verif
 
 ## Release
 
-Bump `version` in `package.json`, update `CHANGELOG.md`, then push a `v<version>` tag. `.github/workflows/release.yml` builds the `.vsix`, attaches it to the GitHub release and publishes it to the VS Code Marketplace. Publishing needs the repo secret `VSCE_PAT`: an Azure DevOps personal access token for the `rethunk-tech` publisher, organization "All accessible organizations", scope Marketplace > Manage.
+Bump `version` in `package.json`, update `CHANGELOG.md`, then push a `v<version>` tag. `.github/workflows/release.yml` builds the `.vsix` and attaches it to the GitHub release. The Marketplace upload is manual: download that `.vsix` (`gh release download v<version> -p '*.vsix'`) and upload it at [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage/publishers/rethunk-tech) > engined-vscode > Update. CI cannot publish: global Azure DevOps PATs are retired, and the Entra ID route needs an Azure directory the publisher account does not have.
 
 ## Usage
 
