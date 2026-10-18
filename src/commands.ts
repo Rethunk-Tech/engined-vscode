@@ -187,7 +187,7 @@ export async function showUsageReport(): Promise<void> {
   await vscode.commands.executeCommand('markdown.showPreview', USAGE_REPORT_URI)
 }
 
-export const USAGE_REPORT_SCHEME = 'engined-usage'
+const USAGE_REPORT_SCHEME = 'engined-usage'
 const USAGE_REPORT_URI = vscode.Uri.from({ scheme: USAGE_REPORT_SCHEME, path: '/Usage report.md' })
 const usageReportChanged = new vscode.EventEmitter<vscode.Uri>()
 let usageReport = ''
