@@ -388,7 +388,10 @@ export async function postRerank(
   const data = (await postJson(baseUrl, '/openai/v1/rerank', request, signal)) as {
     results?: RerankResult[]
   }
-  return data.results ?? []
+  if (!Array.isArray(data.results)) {
+    throw new Error('rerank reply missing results')
+  }
+  return data.results
 }
 
 export interface UsageRow {
@@ -419,8 +422,11 @@ async function fetchUsage(door: Door, days: number, signal?: AbortSignal): Promi
     if (!res.ok) {
       return { door, status: 'unreachable' }
     }
-    const body = (await res.json()) as { data: UsageRow[] }
-    return { door, status: 'ok', rows: body.data }
+    const body = (await res.json()) as { data?: unknown }
+    if (!Array.isArray(body.data)) {
+      return { door, status: 'unreachable' }
+    }
+    return { door, status: 'ok', rows: body.data as UsageRow[] }
   } catch {
     return { door, status: 'unreachable' }
   }

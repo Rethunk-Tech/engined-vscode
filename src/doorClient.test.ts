@@ -4,9 +4,11 @@ import {
   DoorHttpError,
   doorErrorMessage,
   fetchAllDoors,
+  fetchAllUsage,
   fetchEngineLogs,
   postChatCompletion,
   postImage,
+  postRerank,
 } from './doorClient.ts'
 
 describe('doorErrorMessage', () => {
@@ -386,6 +388,48 @@ describe('postImage', () => {
       ).rejects.toMatchObject({ status: 400, message: 'empty prompt' })
     } finally {
       await server.stop(true)
+    }
+  })
+})
+
+describe('postRerank', () => {
+  test('a 200 with no results array is a failure, not an empty ranking', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        return Response.json({})
+      },
+    })
+    try {
+      await expect(
+        postRerank(`http://127.0.0.1:${server.port}`, {
+          model: 'r',
+          query: 'q',
+          documents: ['a'],
+        }),
+      ).rejects.toThrow('missing results')
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
+describe('fetchAllUsage', () => {
+  test('a 200 whose data is not an array is unreachable', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        return Response.json({ data: null })
+      },
+    })
+    try {
+      const [row] = await fetchAllUsage(
+        [{ name: 'local', url: `http://127.0.0.1:${server.port}` }],
+        1,
+      )
+      expect(row?.status).toBe('unreachable')
+    } finally {
+      server.stop(true)
     }
   })
 })
