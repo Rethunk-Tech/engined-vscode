@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-17
+
+### Fixed
+
+- A door that is up but refusing its config (a failed reload, or a config that never loaded) no longer shows as a green "reachable" or as unreachable: the status bar and popup show a warning with the config error.
+- The Engines view says why it is empty: the view message names a door it cannot reach or whose config did not load, instead of showing an empty tree.
+
 ## [0.1.2] - 2026-10-17
 
 ### Fixed
