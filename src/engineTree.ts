@@ -59,6 +59,8 @@ interface EngineRow {
    * a live role's `model` is a different field and stays on its own line.
    */
   capabilities?: EngineCapability[]
+  /** True when the door is missing this engine's image or artifact; Obtain uses that. */
+  missing?: boolean
 }
 
 interface DiscoveryFinding {
@@ -170,14 +172,15 @@ export function onlyRemoteEngineIds(
   return new Set([...onlyRemote].filter(([, remote]) => remote).map(([id]) => id))
 }
 
-function engineContextValue(engine: EngineRow): EngineNode['contextValue'] {
-  if (engine.state === 'unavailable') {
-    return 'engine-unavailable'
-  }
+function engineContextValue(engine: EngineRow): string {
+  const tokens: string[] = [engine.state === 'unavailable' ? 'engine-unavailable' : 'engine']
   if (engine.state === 'failed' && engine.fix !== undefined && engine.fix !== '') {
-    return 'engine,engine-has-fix'
+    tokens.push('engine-has-fix')
   }
-  return 'engine'
+  if (engine.missing === true) {
+    tokens.push('engine-can-obtain')
+  }
+  return tokens.join(',')
 }
 
 function categorize(engine: EngineRow, remote: boolean): EngineCategory {
@@ -220,8 +223,8 @@ export interface EngineNode {
   label: string
   description: string
   tooltip: string
-  /** Drives the `view/item/context` `when` clauses in `package.json` -- `engine-unavailable` gets Copy Fix only, `engine` gets warm/stop, `engine,engine-has-fix` gets both. */
-  contextValue: 'engine' | 'engine-unavailable' | 'engine,engine-has-fix'
+  /** Drives the `view/item/context` `when` clauses in `package.json` -- `engine-unavailable` gets Copy Fix only, `engine` gets warm/stop, `engine,engine-has-fix` gets both, and `engine-can-obtain` is appended when the image/artifact is missing. */
+  contextValue: string
   icon: string
   fix: string | undefined
   /** Only a running, local container-kind engine has anything a `resources` fetch could answer. */
@@ -432,6 +435,18 @@ export function releaseHoldIds(
 /** The door `fix` string to copy, or `undefined` when Copy Fix must not write the clipboard. */
 export function copyFixText(fix: string | undefined): string | undefined {
   return fix === undefined || fix === '' ? undefined : fix
+}
+
+/** Door obtain JSON `{message}` (or a bare string), or `undefined` when there is nothing to show. */
+export function obtainResultText(data: unknown): string | undefined {
+  if (typeof data === 'string') {
+    return data === '' ? undefined : data
+  }
+  if (data !== null && typeof data === 'object' && 'message' in data) {
+    const { message } = data as { message: unknown }
+    return typeof message === 'string' && message !== '' ? message : undefined
+  }
+  return undefined
 }
 
 /** Warm/Hold empty-state text, or `undefined` when the picker should open. */

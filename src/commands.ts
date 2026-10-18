@@ -285,6 +285,12 @@ export function registerEngineTreeCommands(s: Session): vscode.Disposable[] {
       }
       return
     }),
+    vscode.commands.registerCommand('engined.obtainEngine', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        return s.engineExplorer.obtain(item.node)
+      }
+      return
+    }),
   ]
 }
 

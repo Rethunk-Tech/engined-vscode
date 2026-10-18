@@ -210,6 +210,11 @@ export async function stopEngine(baseUrl: string, id: string, signal?: AbortSign
   await postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/stop`, {}, signal)
 }
 
+/** `POST /engined/v1/engines/<id>/obtain`: pull a missing image or artifact. */
+export function obtainEngine(baseUrl: string, id: string, signal?: AbortSignal): Promise<unknown> {
+  return postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/obtain`, {}, signal)
+}
+
 /** `POST /engined/v1/tokenize`: a vocab-only token count for a route that lists it in `serves`, no engine started. */
 export async function postTokenize(
   baseUrl: string,

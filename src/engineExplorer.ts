@@ -7,10 +7,17 @@
  */
 
 import * as vscode from 'vscode'
+import { cancellationSignal } from './cancellation.ts'
 import { DOOR_TIMEOUT_MS } from './constants.ts'
 import { describeError } from './describeError.ts'
 import type { Door, EnginedModelRow } from './door.ts'
-import { fetchEngineLogs, fetchEngineResources, fetchEngines, stopEngine } from './doorClient.ts'
+import {
+  fetchEngineLogs,
+  fetchEngineResources,
+  fetchEngines,
+  obtainEngine,
+  stopEngine,
+} from './doorClient.ts'
 import type {
   DoorGroupNote,
   DoorListOutcome,
@@ -22,6 +29,7 @@ import {
   doorGroupNote,
   enginesViewMessage,
   formatResourceLine,
+  obtainResultText,
   onlyRemoteEngineIds,
   toEngineNodes,
   truncateLogLines,
@@ -224,6 +232,27 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
       await stopEngine(node.door.url, node.rawId)
     } catch (error) {
       vscode.window.showErrorMessage(`engined: stop "${node.id}" failed: ${describeError(error)}`)
+    }
+    await this.refresh()
+  }
+
+  async obtain(node: EngineNode): Promise<void> {
+    try {
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `engined: obtaining "${node.id}"`,
+          cancellable: true,
+        },
+        async (_progress, token) => {
+          const text = obtainResultText(
+            await obtainEngine(node.door.url, node.rawId, cancellationSignal(token)),
+          )
+          vscode.window.showInformationMessage(text ?? `engined: obtained "${node.id}"`)
+        },
+      )
+    } catch (error) {
+      vscode.window.showErrorMessage(`engined: obtain "${node.id}" failed: ${describeError(error)}`)
     }
     await this.refresh()
   }

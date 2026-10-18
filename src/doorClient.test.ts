@@ -6,10 +6,12 @@ import {
   fetchAllDoors,
   fetchAllUsage,
   fetchEngineLogs,
+  obtainEngine,
   postChatCompletion,
   postImage,
   postRerank,
 } from './doorClient.ts'
+import { obtainResultText, toEngineNodes } from './engineTree.ts'
 
 describe('doorErrorMessage', () => {
   test('reads a flat string and an OpenAI error object', () => {
@@ -219,6 +221,59 @@ describe('fetchAllDoors', () => {
       expect(paths).toEqual(['/openai/v1/models'])
     } finally {
       await server.stop(true)
+    }
+  })
+})
+
+describe('obtainEngine', () => {
+  test('posts the encoded engine path and a missing row offers Obtain', async () => {
+    const door = { name: 'local', url: 'http://127.0.0.1:29200' }
+    const nodes = toEngineNodes(
+      {
+        engines: [
+          {
+            id: 'llama',
+            kind: 'openai-http',
+            state: 'unavailable',
+            missing: true,
+            fix: 'pull',
+          },
+          { id: 'whisper', kind: 'openai-http', state: 'installed', missing: true },
+          { id: 'comfy', kind: 'openai-http', state: 'failed', fix: 'start', missing: true },
+          { id: 'tts', kind: 'openai-http', state: 'unavailable', fix: 'enable' },
+        ],
+      },
+      { heldIds: new Set(), door, doorCount: 1 },
+    )
+    expect(nodes.find((n) => n.id === 'llama')?.contextValue).toBe(
+      'engine-unavailable,engine-can-obtain',
+    )
+    expect(nodes.find((n) => n.id === 'whisper')?.contextValue).toBe('engine,engine-can-obtain')
+    expect(nodes.find((n) => n.id === 'comfy')?.contextValue).toBe(
+      'engine,engine-has-fix,engine-can-obtain',
+    )
+    expect(nodes.find((n) => n.id === 'tts')?.contextValue).toBe('engine-unavailable')
+
+    let method = ''
+    let pathname = ''
+    let body = ''
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        method = req.method
+        pathname = new URL(req.url).pathname
+        body = await req.text()
+        return Response.json({ message: 'pulled a/b' })
+      },
+    })
+    try {
+      const data = await obtainEngine(`http://127.0.0.1:${server.port}`, 'a/b')
+      expect(method).toBe('POST')
+      expect(pathname).toBe(`/engined/v1/engines/${encodeURIComponent('a/b')}/obtain`)
+      expect(body).toBe('{}')
+      expect(obtainResultText(data)).toBe('pulled a/b')
+    } finally {
+      server.stop(true)
     }
   })
 })

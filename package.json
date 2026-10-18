@@ -391,6 +391,11 @@
         "title": "engined: Copy Fix Command"
       },
       {
+        "command": "engined.obtainEngine",
+        "title": "engined: Obtain",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "engined.refreshEngines",
         "title": "engined: Refresh Engines",
         "icon": "$(refresh)"
@@ -477,6 +482,16 @@
           "command": "engined.copyFixCommand",
           "when": "view == engined.engines && (viewItem == engine-unavailable || viewItem == engine-has-fix)",
           "group": "engined@1"
+        },
+        {
+          "command": "engined.obtainEngine",
+          "when": "view == engined.engines && viewItem == engine-can-obtain",
+          "group": "inline@1"
+        },
+        {
+          "command": "engined.obtainEngine",
+          "when": "view == engined.engines && viewItem == engine-can-obtain",
+          "group": "engined@0"
         }
       ],
       "view/title": [
@@ -518,6 +533,10 @@
         },
         {
           "command": "engined.copyFixCommand",
+          "when": "false"
+        },
+        {
+          "command": "engined.obtainEngine",
           "when": "false"
         }
       ]
