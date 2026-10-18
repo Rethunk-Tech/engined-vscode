@@ -59,6 +59,90 @@ Decided shape: a failing translation or rerank probe shows on the engine row bes
 - A row with no probe field, and a row whose probe passed, keeps the description and tooltip `toEngineNodes` already produces, including the cases in `src/engineTree.test.ts:291`.
 - `bun test` and `bun run ci` stay clean.
 
+## Copy Fix is missing on a failed engine that still carries `fix`
+
+`toEngineNodes` sets `contextValue` to `engine-unavailable` only when `state` is `unavailable` (`src/engineTree.ts:471`). Every other state, including `failed`, is `engine`. `package.json` offers `engined.copyFixCommand` only for `viewItem == engine-unavailable` (`:473`). A failed engine can still carry `fix` (`EngineRow.fix` at `src/engineTree.ts:36`) and `last_error` (shown while failed, `AGENTS.md` last_error invariant). The operator sees the error on the row and has no Copy Fix action, while an unavailable row with the same field does.
+
+Decided shape: a failed row whose `fix` is a non-empty string keeps the existing `engine` actions (warm/hold/release/stop/logs) and also offers Copy Fix. Unavailable stays `engine-unavailable` only — it must not gain warm/stop. A failed row with no `fix` stays `engine` and does not gain the action. Idle-until, hold, last_error, and resources stay as they are.
+
+Rejected: switching failed rows to `engine-unavailable`. That would hide warm/stop on an engine that can still be started. Rejected: offering Copy Fix on every `engine` item; a running row's `fix` is unused and copying empty text is the next gap.
+
+### Read
+
+1. `src/engineTree.ts:198` — `contextValue` union. `:471` is the binary assignment.
+2. `package.json:430` — `view/item/context` when clauses. Unavailable Copy Fix at `:472`. Engine actions at `:432`–`:470`.
+3. `src/engineTree.test.ts:38` — unavailable contextValue cases a failed+fix case must leave intact.
+4. `HUMANS.md:58` — documents Copy Fix for unavailable only; that sentence updates in the same commit if failed+fix is added.
+5. `src/commands.ts:284` — `engined.copyFixCommand` already copies `item.node.fix` for any engine tree item.
+
+### Traps
+
+- **VS Code `contextValue` can be comma-separated.** `engine,engine-has-fix` matches both `viewItem == engine` and `viewItem == engine-has-fix`. Unavailable must not include `engine`, or it would pick up warm/stop.
+- **`fix` on unavailable is the description.** Failed uses `lastErrorLabel` for the error text (`src/engineTree.ts:233`). Copy Fix copies `fix`, not `last_error`. Do not copy `last_error` as a stand-in.
+- **An absent or empty `fix` adds no action.** Same absent-field rule as `last_error`.
+
+### Acceptance
+
+- A `failed` engine with a non-empty `fix` has `contextValue` that still matches the existing engine actions and also matches a Copy Fix when clause.
+- An `unavailable` engine stays `engine-unavailable` and does not match `viewItem == engine`.
+- A `failed` engine with no `fix`, and a running engine, do not offer Copy Fix.
+- `src/engineTree.test.ts:38` unavailable cases stay as they are.
+- `bun test` and `bun run ci` stay clean.
+
+## Warm Model and Hold Model open an empty picker when nothing is listed
+
+`warmModel` (`src/commands.ts:20`) maps `s.poller.rows` into a quick pick. `holdModel` (`src/commands.ts:47`) maps `qualifiedEngineIds(s.poller.rows, ...)`. When that list is empty — door unreachable, or three failed polls emptied the poller (`src/polling.ts`) — VS Code still opens a picker with no items. The operator gets no sentence saying why, unlike `releaseHold` which already shows `engined: no engines are held` (`src/commands.ts:72`).
+
+Decided shape: if there is nothing to pick, show an information message and return without opening the picker. Warm names models; hold names engines. The wording stays parallel to the release-hold empty path. A non-empty list is unchanged.
+
+Rejected: auto-refreshing then picking. Refresh is a separate command. Rejected: an error message; this is an empty state, not a failed HTTP call.
+
+### Read
+
+1. `src/commands.ts:20` `warmModel` — the pick at `:22`. Empty `s.poller.rows` is the gap.
+2. `src/commands.ts:47` `holdModel` — `qualifiedEngineIds` at `:48`. Empty engines is the gap.
+3. `src/commands.ts:72` — the existing empty-state message to copy the `engined: …` prefix from.
+4. `src/polling.ts` — consecutive poll failures empty the list; that is a normal way to arrive here.
+
+### Traps
+
+- **Do not treat a cancelled pick as empty.** `showQuickPick` returning `undefined` is the user backing out of a non-empty list. The new message fires only when the list was empty before the pick.
+- **Warm lists model rows, hold lists engines.** A poller with rows but no `engine` id on those rows can still make hold empty. Guard each command on its own list, not on `poller.rows.length` for both.
+
+### Acceptance
+
+- With `s.poller.rows` empty, Warm Model shows an information message and does not open a quick pick.
+- With `qualifiedEngineIds` empty, Hold Model shows an information message and does not open a quick pick.
+- With at least one item, each command still opens the same picker it opens today.
+- Cancelling a non-empty pick still returns without a message.
+- `bun test` and `bun run ci` stay clean.
+
+## Copy Fix with no `fix` string writes an empty clipboard
+
+`copyFixCommand` (`src/engineExplorer.ts:235`) does `vscode.env.clipboard.writeText(fix ?? '')`. There is no toast when `fix` is undefined or empty. The command is wired only for `engine-unavailable` today, and the recorded unavailable engines have a `fix`, so this is silent. If Copy Fix is also offered on failed+fix (the section above), a race where the next poll dropped `fix` still copies nothing and looks like success.
+
+Decided shape: when `fix` is undefined or empty, show an error message and do not write the clipboard. When it is non-empty, write it exactly as today. Extract the empty-vs-text decision to a vscode-free function so `bun test` covers it.
+
+Rejected: copying `last_error` as a fallback. Copy Fix is the door's `fix` command string (`HUMANS.md:58`).
+
+### Read
+
+1. `src/engineExplorer.ts:235` `copyFixCommand` — the `?? ''` write.
+2. `src/commands.ts:284` — the tree-item wrapper that passes `item.node.fix`.
+3. `src/engineTree.ts:201` — `EngineNode.fix`.
+4. `src/engineTree.test.ts:38` — unavailable rows that carry `fix`.
+
+### Traps
+
+- **Do not write an empty string on the failure path.** A previous successful copy would stay in the clipboard, which is better than replacing it with nothing.
+- **The tree-item command still no-ops when `item.kind !== 'engine'`.** That guard stays in `commands.ts`; the empty-fix check is only for a real engine row.
+
+### Acceptance
+
+- A call with `fix` undefined or `''` does not write the clipboard and surfaces an error message.
+- A call with a non-empty `fix` writes that string and does not show the error.
+- `bun test` and `bun run ci` stay clean.
+
 <!--
 ## A sentence naming the problem, not the solution
 
