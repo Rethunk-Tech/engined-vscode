@@ -55,34 +55,6 @@ Rejected: reading `row.translate` as the probe. That flag means the translations
 - `refuseTranslate(true)` with no probe, and `refuseTranslate(true, { quality: false })`, still return `TRANSLATE_UNAVAILABLE`.
 - `bun test` and `bun run ci` stay clean.
 
-## Warm Model and Hold Model open an empty picker when nothing is listed
-
-`warmModel` (`src/commands.ts:20`) maps `s.poller.rows` into a quick pick. `holdModel` (`src/commands.ts:47`) maps `qualifiedEngineIds(s.poller.rows, ...)`. When that list is empty — door unreachable, or three failed polls emptied the poller (`src/polling.ts`) — VS Code still opens a picker with no items. The operator gets no sentence saying why, unlike `releaseHold` which already shows `engined: no engines are held` (`src/commands.ts:72`).
-
-Decided shape: if there is nothing to pick, show an information message and return without opening the picker. Warm names models; hold names engines. The wording stays parallel to the release-hold empty path. A non-empty list is unchanged.
-
-Rejected: auto-refreshing then picking. Refresh is a separate command. Rejected: an error message; this is an empty state, not a failed HTTP call.
-
-### Read
-
-1. `src/commands.ts:20` `warmModel` — the pick at `:22`. Empty `s.poller.rows` is the gap.
-2. `src/commands.ts:47` `holdModel` — `qualifiedEngineIds` at `:48`. Empty engines is the gap.
-3. `src/commands.ts:72` — the existing empty-state message to copy the `engined: …` prefix from.
-4. `src/polling.ts` — consecutive poll failures empty the list; that is a normal way to arrive here.
-
-### Traps
-
-- **Do not treat a cancelled pick as empty.** `showQuickPick` returning `undefined` is the user backing out of a non-empty list. The new message fires only when the list was empty before the pick.
-- **Warm lists model rows, hold lists engines.** A poller with rows but no `engine` id on those rows can still make hold empty. Guard each command on its own list, not on `poller.rows.length` for both.
-
-### Acceptance
-
-- With `s.poller.rows` empty, Warm Model shows an information message and does not open a quick pick.
-- With `qualifiedEngineIds` empty, Hold Model shows an information message and does not open a quick pick.
-- With at least one item, each command still opens the same picker it opens today.
-- Cancelling a non-empty pick still returns without a message.
-- `bun test` and `bun run ci` stay clean.
-
 <!--
 ## A sentence naming the problem, not the solution
 

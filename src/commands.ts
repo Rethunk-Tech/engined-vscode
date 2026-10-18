@@ -11,13 +11,18 @@ import { doorByName, qualifiedEngineIds, REASONING_LEVELS, splitQualifiedId } fr
 import { fetchAllUsage, holdEngine, startModel, unholdEngine } from './doorClient.ts'
 import type { EngineTreeItem } from './engineExplorer.ts'
 import { copyFixCommand } from './engineExplorer.ts'
-import { releaseHoldIds } from './engineTree.ts'
+import { emptyListedMessage, releaseHoldIds } from './engineTree.ts'
 import type { Session } from './session.ts'
 import { renderStatusBar } from './statusBar.ts'
 import { buildUsageReport } from './usageReport.ts'
 
 /** `engined: Warm Model`: pick any answerable row and `POST /engined/v1/start` it against the door that owns it. */
 export async function warmModel(s: Session): Promise<void> {
+  const empty = emptyListedMessage('models', s.poller.rows.length)
+  if (empty !== undefined) {
+    vscode.window.showInformationMessage(empty)
+    return
+  }
   const multiDoor = getDoors().length > 1
   const pick = await vscode.window.showQuickPick(
     s.poller.rows.map((row) => ({
@@ -46,6 +51,11 @@ export async function warmModel(s: Session): Promise<void> {
 /** `engined: Hold Model`: stop an engine and keep it stopped so another process can load the same weights. */
 export async function holdModel(s: Session): Promise<void> {
   const engines = qualifiedEngineIds(s.poller.rows, getDoors().length)
+  const empty = emptyListedMessage('engines', engines.length)
+  if (empty !== undefined) {
+    vscode.window.showInformationMessage(empty)
+    return
+  }
   const id = await vscode.window.showQuickPick(
     engines.map((e) => e.id),
     {

@@ -434,6 +434,11 @@ export function copyFixText(fix: string | undefined): string | undefined {
   return fix === undefined || fix === '' ? undefined : fix
 }
 
+/** Warm/Hold empty-state text, or `undefined` when the picker should open. */
+export function emptyListedMessage(kind: 'models' | 'engines', count: number): string | undefined {
+  return count === 0 ? `engined: no ${kind} are listed` : undefined
+}
+
 /**
  * `GET /engined/v1/engines`'s rows -> what the tree shows. A row is held when
  * `held_until` is still in the future, or when this session placed the hold

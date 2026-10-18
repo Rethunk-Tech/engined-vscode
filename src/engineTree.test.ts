@@ -7,6 +7,7 @@ import {
   copyFixText,
   doorGroupNote,
   type EnginesListResponse,
+  emptyListedMessage,
   enginesViewMessage,
   formatResourceLine,
   onlyRemoteEngineIds,
@@ -240,6 +241,15 @@ describe('release candidates', () => {
       'whisper',
     ])
     expect(releaseHoldIds(new Set(), [])).toEqual([])
+  })
+})
+
+describe('emptyListedMessage', () => {
+  test('empty lists name models or engines; a non-empty list opens the picker', () => {
+    expect(emptyListedMessage('models', 0)).toBe('engined: no models are listed')
+    expect(emptyListedMessage('engines', 0)).toBe('engined: no engines are listed')
+    expect(emptyListedMessage('models', 1)).toBeUndefined()
+    expect(emptyListedMessage('engines', 3)).toBeUndefined()
   })
 })
 
