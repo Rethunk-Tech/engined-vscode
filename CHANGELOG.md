@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-18
+
 ### Fixed
 
 - The Engines view refreshes whenever it is shown, and an empty view offers Refresh and Open Config UI links instead of a blank panel.
