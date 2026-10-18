@@ -346,6 +346,10 @@
         "title": "engined: Usage Report"
       },
       {
+        "command": "engined.countSelectionTokens",
+        "title": "engined: Count Selection Tokens"
+      },
+      {
         "command": "engined.warmModel",
         "title": "engined: Warm Model"
       },

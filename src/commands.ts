@@ -1,14 +1,14 @@
-/** The command-palette and Engines-view commands: warm, hold, release, effort, default models and the usage report. */
+/** The command-palette and Engines-view commands: warm, hold, release, effort, default models, usage report, and selection token count. */
 
 import * as vscode from 'vscode'
 import { getDoors, setDefaultModel, setReasoningEffort } from './config.ts'
 import { ENABLE_CONFIGSVC_COMMAND, resolveConfigUi, runEnginedConfigsvcUrl } from './configUi.ts'
-import { STATUS_QUICK_PICK } from './constants.ts'
+import { DOOR_TIMEOUT_MS, STATUS_QUICK_PICK } from './constants.ts'
 import { DEFAULT_MODEL_ROLES, qualifyingRows } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { ReasoningLevel } from './door.ts'
 import { doorByName, qualifiedEngineIds, REASONING_LEVELS, splitQualifiedId } from './door.ts'
-import { fetchAllUsage, holdEngine, startModel, unholdEngine } from './doorClient.ts'
+import { fetchAllUsage, holdEngine, postTokenize, startModel, unholdEngine } from './doorClient.ts'
 import type { EngineTreeItem } from './engineExplorer.ts'
 import { copyFixCommand } from './engineExplorer.ts'
 import { emptyListedMessage, releaseHoldIds } from './engineTree.ts'
@@ -286,6 +286,46 @@ export function registerEngineTreeCommands(s: Session): vscode.Disposable[] {
       return
     }),
   ]
+}
+
+/** `engined: Count Selection Tokens`: vocab-only count of the selection (or the whole document) via the chat-picker model. */
+export async function countSelectionTokens(s: Session, bar: vscode.StatusBarItem): Promise<void> {
+  const editor = vscode.window.activeTextEditor
+  if (editor === undefined) {
+    vscode.window.showInformationMessage('engined: no active editor')
+    return
+  }
+  const scoped = !editor.selection.isEmpty
+  const content = scoped ? editor.document.getText(editor.selection) : editor.document.getText()
+  const lastRoute = s.lastChatCall?.route
+  const listed = s.poller.models
+  const picked =
+    (lastRoute !== undefined
+      ? listed.find((m) => m.id === lastRoute || m.row.id === lastRoute)
+      : undefined) ?? listed[0]
+  if (picked === undefined) {
+    vscode.window.showErrorMessage('engined: no chat model is available to tokenize against')
+    return
+  }
+  const row = picked.row
+  try {
+    const tokens = await postTokenize(
+      row.door.url,
+      row.routeId,
+      content,
+      AbortSignal.timeout(DOOR_TIMEOUT_MS),
+    )
+    const message = `${tokens} tokens (${scoped ? 'selection' : 'document'}, ${row.id})`
+    bar.text = `$(symbol-numeric) ${tokens}`
+    bar.tooltip = `engined: ${message}`
+    bar.command = 'engined.countSelectionTokens'
+    bar.show()
+    vscode.window.showInformationMessage(`engined: ${message}`)
+  } catch (error) {
+    const message = `tokenize failed: ${describeError(error)}`
+    s.log(message)
+    vscode.window.showErrorMessage(`engined: ${message}`)
+  }
 }
 
 /** `engined: Open Config UI`: opens the URL (with its one-time token) `engined --configsvc-url` prints; the URL is never logged. */

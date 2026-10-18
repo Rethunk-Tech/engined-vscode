@@ -14,6 +14,7 @@ import {
 } from './chatSettings.ts'
 import {
   chooseDefaultModels,
+  countSelectionTokens,
   holdModel,
   openConfigUi,
   registerEngineTreeCommands,
@@ -152,9 +153,14 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   })
   const watcher = vscode.workspace.createFileSystemWatcher('**/*')
+  const selectionTokenBar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    STATUS_BAR_PRIORITY - 1,
+  )
   context.subscriptions.push(
     s.output,
     s.statusBarItem,
+    selectionTokenBar,
     s.engineExplorer,
     s.modelsChanged,
     vscode.window.onDidChangeActiveColorTheme(() => renderStatusBar(s)),
@@ -181,6 +187,9 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('engined.showQuickPick', () => showQuickPick(s)),
     vscode.commands.registerCommand('engined.chooseDefaultModels', () => chooseDefaultModels(s)),
     vscode.commands.registerCommand('engined.showUsageReport', () => showUsageReport()),
+    vscode.commands.registerCommand('engined.countSelectionTokens', () =>
+      countSelectionTokens(s, selectionTokenBar),
+    ),
     vscode.commands.registerCommand('engined.warmModel', () => warmModel(s)),
     vscode.commands.registerCommand('engined.useForAllChatFeatures', () =>
       useForAllChatFeatures(s),

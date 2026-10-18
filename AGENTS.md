@@ -31,6 +31,8 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 | `src/engineEvents.ts` | SSE frame parsing for `GET /engined/v1/engines/events` and the reconnect-backoff sequence. No `vscode` import -- `pollDriver.ts` owns the reader loop. |
 | `src/engineTree.ts` | `GET /engined/v1/engines` JSON -> the plain tree-item rows the Engines view renders (door-qualified, category-based description, resource-fetch eligibility), and `GET .../resources` JSON -> its one-line display. No `vscode` import. |
 | `src/tokenCount.ts` | `provideTokenCount`'s cache-then-door-then-estimate decision, and the small LRU keyed by (model, content hash) behind it. No `vscode` import. |
+| `src/tokenizeRequest.ts` | `POST /engined/v1/tokenize` request body and `tokens` reply parse. No `vscode` import. |
+| `src/tokenizeRequest.ts` | `POST /engined/v1/tokenize` request body and `tokens` reply parse. No `vscode` import. |
 | `src/chatSettingsPlan.ts` | The settings `engined.useForAllChatFeatures` writes and how to restore them. No `vscode` import. |
 | `src/promptFingerprint.ts` | Content-free hashes/offsets locating where a chat request first differs from the previous one (prompt-cache diagnostics). No `vscode` import. |
 | `src/promptSplit.ts` | Splits long prompt text at structural boundaries so hybrid models can resume a cached prompt at more points. No `vscode` import. |

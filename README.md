@@ -33,6 +33,7 @@ Then open Copilot Chat's model picker and choose an `engined` model. Full runboo
 - A usage report (per-day/per-route requests, tokens, cost, and local/remote split) across every configured door
 - Image attachments work on a text-only engined model that engined bridges to a vision route
 - Copilot's Context Window meter shows the token usage engined reports for each reply
+- Count Selection Tokens reports the exact token count of the current selection (or the whole document) via `POST /engined/v1/tokenize`
 
 ## Screenshots
 

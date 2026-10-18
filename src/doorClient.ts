@@ -10,6 +10,7 @@ import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from '
 import { mapAnswerableRows, mapModels } from './door.ts'
 import { type ImagePreviewFrame, readImageEvents } from './imageStream.ts'
 import type { RerankResult } from './search.ts'
+import { parseTokenizeReply, tokenizeRequestBody } from './tokenizeRequest.ts'
 
 const EVENT_STREAM = 'text/event-stream'
 const RETRY_AFTER_SECONDS = /^\d+(\.\d+)?$/
@@ -216,10 +217,9 @@ export async function postTokenize(
   content: string,
   signal?: AbortSignal,
 ): Promise<number> {
-  const data = (await postJson(baseUrl, '/engined/v1/tokenize', { model, content }, signal)) as {
-    tokens: number
-  }
-  return data.tokens
+  return parseTokenizeReply(
+    await postJson(baseUrl, '/engined/v1/tokenize', tokenizeRequestBody(model, content), signal),
+  )
 }
 
 export interface StartRow {
