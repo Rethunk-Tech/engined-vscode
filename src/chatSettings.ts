@@ -1,13 +1,14 @@
 /** `engined.useForAllChatFeatures` / `engined.restoreChatSettings`: route every chat default to an engined model and put the previous values back. */
 
 import * as vscode from 'vscode'
-import type { SettingWrite } from './chatSettingsPlan.ts'
 import {
   buildChatSettingsPlan,
   buildRestorePlan,
+  compareChatFeatureModels,
   describePlan,
   readSavedSettings,
   SAVED_CHAT_SETTINGS_KEY,
+  type SettingWrite,
 } from './chatSettingsPlan.ts'
 import { CHAT_SETTINGS_ROUTED_CONTEXT } from './constants.ts'
 import type { Session } from './session.ts'
@@ -36,11 +37,7 @@ export async function useForAllChatFeatures(s: Session): Promise<void> {
     )
     return
   }
-  const candidates = [...s.poller.models].sort(
-    (a, b) =>
-      Number(b.row.egress === 'local' && b.row.tools) -
-      Number(a.row.egress === 'local' && a.row.tools),
-  )
+  const candidates = [...s.poller.models].sort((a, b) => compareChatFeatureModels(a.row, b.row))
   const pick = await vscode.window.showQuickPick(
     candidates.map((m) => ({
       label: m.name,

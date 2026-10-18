@@ -6,6 +6,8 @@
  * keys store `vendor/id`, and the agent defaults store the qualified display name.
  */
 
+import { isLocalEgress } from './status.ts'
+
 export interface SettingWrite {
   readonly key: string
   readonly value: unknown
@@ -20,6 +22,14 @@ export interface SavedSetting {
 export interface PlanModel {
   readonly id: string
   readonly name: string
+}
+
+/** Local (`egress: none`) tool-calling rows first in the all-features picker. */
+export function compareChatFeatureModels(
+  a: { egress?: string; tools: boolean },
+  b: { egress?: string; tools: boolean },
+): number {
+  return Number(isLocalEgress(b.egress) && b.tools) - Number(isLocalEgress(a.egress) && a.tools)
 }
 
 export function buildChatSettingsPlan(model: PlanModel): SettingWrite[] {

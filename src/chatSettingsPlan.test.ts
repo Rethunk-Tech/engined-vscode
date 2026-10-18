@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { buildChatSettingsPlan, buildRestorePlan, describePlan } from './chatSettingsPlan.ts'
+import {
+  buildChatSettingsPlan,
+  buildRestorePlan,
+  compareChatFeatureModels,
+  describePlan,
+} from './chatSettingsPlan.ts'
 
 const ornith = { id: '@/llama/ornith', name: 'ornith' }
 
@@ -21,6 +26,18 @@ describe('buildChatSettingsPlan', () => {
     for (const w of plan) {
       expect(text).toContain(w.key)
     }
+  })
+})
+
+describe('compareChatFeatureModels', () => {
+  test('puts egress-none tool-calling rows first; the word local is not local egress', () => {
+    const remoteTools = { egress: 'remote', tools: true }
+    const noneTools = { egress: 'none', tools: true }
+    const noneNoTools = { egress: 'none', tools: false }
+    const wordLocal = { egress: 'local', tools: true }
+    expect([remoteTools, wordLocal, noneNoTools, noneTools].sort(compareChatFeatureModels)[0]).toBe(
+      noneTools,
+    )
   })
 })
 
