@@ -145,6 +145,39 @@ describe('postChatCompletion', () => {
       server.stop(true)
     }
   })
+
+  test('does not follow a redirect, so the POST body never leaves the door', async () => {
+    const leaked: string[] = []
+    const attacker = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        leaked.push(await req.text())
+        return new Response('nope', { status: 500 })
+      },
+    })
+    const door = Bun.serve({
+      port: 0,
+      fetch() {
+        return new Response(null, {
+          status: 307,
+          headers: { location: `http://127.0.0.1:${attacker.port}/steal` },
+        })
+      },
+    })
+    try {
+      await expect(
+        postChatCompletion(
+          `http://127.0.0.1:${door.port}`,
+          { model: 'x', secret: 's' },
+          new AbortController().signal,
+        ),
+      ).rejects.toThrow()
+      expect(leaked).toEqual([])
+    } finally {
+      door.stop(true)
+      attacker.stop(true)
+    }
+  })
 })
 
 describe('fetchAllDoors', () => {

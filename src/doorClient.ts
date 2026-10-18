@@ -13,6 +13,11 @@ import { type ImagePreviewFrame, readImageEvents } from './imageStream.ts'
 const EVENT_STREAM = 'text/event-stream'
 const RETRY_AFTER_SECONDS = /^\d+(\.\d+)?$/
 
+/** Door HTTP: never follow redirects -- a 307 would replay a chat POST body to `Location`. */
+function doorFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(url, { ...init, redirect: 'error' })
+}
+
 /** OpenAI `{error:{message}}` or the older `{error:"..."}` string. */
 export function doorErrorMessage(error: unknown): string | undefined {
   if (typeof error === 'string') {
@@ -102,7 +107,7 @@ async function fetchModels(
   doorCount: number,
   signal?: AbortSignal,
 ): Promise<ModelsPoll> {
-  const res = await fetch(`${door.url}/openai/v1/models`, { signal })
+  const res = await doorFetch(`${door.url}/openai/v1/models`, { signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
@@ -142,7 +147,7 @@ export async function fetchAllDoors(
 
 /** `GET /engined/v1/engines`, unparsed beyond JSON -- `engineTree.ts` maps it to tree rows. */
 export async function fetchEngines(baseUrl: string, signal?: AbortSignal): Promise<unknown> {
-  const res = await fetch(`${baseUrl}/engined/v1/engines`, { signal })
+  const res = await doorFetch(`${baseUrl}/engined/v1/engines`, { signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
@@ -156,7 +161,7 @@ export async function fetchEngineLogs(
   tail: number,
   signal?: AbortSignal,
 ): Promise<string[]> {
-  const res = await fetch(
+  const res = await doorFetch(
     `${baseUrl}/engined/v1/engines/${encodeURIComponent(id)}/logs?tail=${tail}`,
     { signal },
   )
@@ -178,7 +183,7 @@ export async function fetchEngineResources(
   id: string,
   signal?: AbortSignal,
 ): Promise<EngineResources | { error: string }> {
-  const res = await fetch(`${baseUrl}/engined/v1/engines/${encodeURIComponent(id)}/resources`, {
+  const res = await doorFetch(`${baseUrl}/engined/v1/engines/${encodeURIComponent(id)}/resources`, {
     signal,
   })
   const raw = await res.text()
@@ -262,7 +267,7 @@ export async function openEngineEventsStream(
   baseUrl: string,
   signal: AbortSignal,
 ): Promise<ReadableStream<Uint8Array>> {
-  const res = await fetch(`${baseUrl}/engined/v1/engines/events`, {
+  const res = await doorFetch(`${baseUrl}/engined/v1/engines/events`, {
     signal,
     headers: { accept: EVENT_STREAM },
   })
@@ -291,7 +296,7 @@ export async function postChatCompletion(
   signal: AbortSignal,
 ): Promise<{ body: ReadableStream<Uint8Array>; headers: Headers }> {
   const send = (): Promise<Response> =>
-    fetch(`${baseUrl}/openai/v1/chat/completions`, {
+    doorFetch(`${baseUrl}/openai/v1/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
@@ -322,7 +327,7 @@ export async function postJsonWithHeaders(
   body: unknown,
   signal?: AbortSignal,
 ): Promise<DoorResponse<unknown>> {
-  const res = await fetch(`${baseUrl}${path}`, {
+  const res = await doorFetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
@@ -407,7 +412,7 @@ export type DoorUsage =
 /** `GET /engined/v1/usage?days=N` against one door. A 404 (this door predates the route) and any other failure are reported on the result, never thrown -- one door's gap must not blank out the usage report. */
 async function fetchUsage(door: Door, days: number, signal?: AbortSignal): Promise<DoorUsage> {
   try {
-    const res = await fetch(`${door.url}/engined/v1/usage?days=${days}`, { signal })
+    const res = await doorFetch(`${door.url}/engined/v1/usage?days=${days}`, { signal })
     if (res.status === HTTP_NOT_FOUND) {
       return { door, status: 'unsupported' }
     }
@@ -469,7 +474,7 @@ export async function postImage(
   if (!('form' in body)) {
     headers['content-type'] = 'application/json'
   }
-  const res = await fetch(`${baseUrl}${path}`, {
+  const res = await doorFetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers,
     body: 'form' in body ? body.form : JSON.stringify(body.json),
@@ -485,7 +490,7 @@ export async function postForm(
   form: FormData,
   signal?: AbortSignal,
 ): Promise<unknown> {
-  const res = await fetch(`${baseUrl}${path}`, { method: 'POST', body: form, signal })
+  const res = await doorFetch(`${baseUrl}${path}`, { method: 'POST', body: form, signal })
   if (!res.ok) {
     throw new DoorHttpError(res.status, await res.text())
   }
