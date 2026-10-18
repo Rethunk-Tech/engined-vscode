@@ -3,7 +3,7 @@
 import * as vscode from 'vscode'
 import { readSavedSettings } from './chatSettingsPlan.ts'
 import { getDefaultModel, getDoors } from './config.ts'
-import { LOADING_TICK_MS } from './constants.ts'
+import { DOOR_TIMEOUT_MS, LOADING_TICK_MS } from './constants.ts'
 import { DEFAULT_MODEL_ROLES, resolveDefaultModel } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { DoorReachability } from './door.ts'
@@ -77,7 +77,7 @@ function refreshTodayUsageIfStale(s: Session): void {
     return
   }
   s.todayUsageFetchInFlight = true
-  fetchAllUsage(getDoors(), 1)
+  fetchAllUsage(getDoors(), 1, AbortSignal.timeout(DOOR_TIMEOUT_MS))
     .then((usages) => {
       const rows = usages.filter((u) => u.status === 'ok').flatMap((u) => u.rows)
       const t = totalsFor(rows)

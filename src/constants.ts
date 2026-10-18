@@ -3,6 +3,9 @@ export const HTTP_TOO_MANY_REQUESTS = 429
 
 export const MS_PER_SECOND = 1000
 
+/** Door GETs that must not hang the poller, usage refresh, or Engines view. */
+export const DOOR_TIMEOUT_MS = 5000
+
 export const BYTES_PER_KIB = 1024
 
 /** Decimal thousand: the "k" in "30k tokens". */

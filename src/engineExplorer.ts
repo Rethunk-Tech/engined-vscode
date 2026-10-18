@@ -7,6 +7,7 @@
  */
 
 import * as vscode from 'vscode'
+import { DOOR_TIMEOUT_MS } from './constants.ts'
 import type { Door, EnginedModelRow } from './door.ts'
 import { fetchEngineLogs, fetchEngineResources, fetchEngines, stopEngine } from './doorClient.ts'
 import type {
@@ -84,7 +85,10 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     const results = await Promise.all(
       doors.map(async (door) => {
         try {
-          const response = (await fetchEngines(door.url)) as EnginesListResponse
+          const response = (await fetchEngines(
+            door.url,
+            AbortSignal.timeout(DOOR_TIMEOUT_MS),
+          )) as EnginesListResponse
           return {
             name: door.name,
             outcome: { name: door.name, url: door.url, configError: response.config_error },
@@ -165,7 +169,11 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
       return []
     }
     try {
-      const resources = await fetchEngineResources(element.node.door.url, element.node.rawId)
+      const resources = await fetchEngineResources(
+        element.node.door.url,
+        element.node.rawId,
+        AbortSignal.timeout(DOOR_TIMEOUT_MS),
+      )
       return [{ kind: 'resource' as const, text: formatResourceLine(resources) }]
     } catch (error) {
       return [{ kind: 'resource' as const, text: describe(error) }]
@@ -188,7 +196,14 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   async showLogs(node: EngineNode): Promise<void> {
     const channel = this.#channelFor(node.id)
     try {
-      const lines = truncateLogLines(await fetchEngineLogs(node.door.url, node.rawId, LOG_TAIL))
+      const lines = truncateLogLines(
+        await fetchEngineLogs(
+          node.door.url,
+          node.rawId,
+          LOG_TAIL,
+          AbortSignal.timeout(DOOR_TIMEOUT_MS),
+        ),
+      )
       channel.clear()
       for (const line of lines) {
         channel.appendLine(line)

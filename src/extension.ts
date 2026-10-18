@@ -26,6 +26,7 @@ import {
 import { EnginedInlineCompletionProvider, trackActiveEditor } from './completionProvider.ts'
 import { COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES } from './completions.ts'
 import { getDoors } from './config.ts'
+import { DOOR_TIMEOUT_MS } from './constants.ts'
 import { describeError } from './describeError.ts'
 import { fetchAllDoors } from './doorClient.ts'
 import { EngineExplorer, type EngineTreeItem } from './engineExplorer.ts'
@@ -41,9 +42,6 @@ import { registerTools } from './workspaceTools.ts'
 
 /** Right-aligned status bar items sort by priority; 100 sits among the language-status items. */
 const STATUS_BAR_PRIORITY = 100
-
-/** A door that has not answered a model listing in this long counts as unreachable for that poll. */
-const POLL_TIMEOUT_MS = 5000
 
 let session: Session | undefined
 
@@ -64,7 +62,7 @@ function createSession(context: vscode.ExtensionContext): Session {
 
   const poller = new ModelPoller(
     () =>
-      fetchAllDoors(getDoors(), AbortSignal.timeout(POLL_TIMEOUT_MS)).then((poll) => {
+      fetchAllDoors(getDoors(), AbortSignal.timeout(DOOR_TIMEOUT_MS)).then((poll) => {
         if (poll.doorStatus.length > 0 && poll.doorStatus.every((d) => !d.reachable)) {
           log('poll failed: no configured door is reachable')
           maybeShowUnreachableNotice(created)
