@@ -77,4 +77,4 @@ Onboarding for this extension. Operators: [HUMANS.md](HUMANS.md). What it does: 
 
 ## Gate budget
 
-`.gate.toml` adds the one CI step detection missed: `bun run ci` ends with `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build.
+`.gate.toml` adds the one CI step detection missed: `bunx @vscode/vsce ls --no-dependencies`, which catches a manifest or `.vscodeignore` that would fail packaging, so it runs after the build. GitHub CI, `package.json` `ci`, and pre-push run `gate` (including `workflows` / actionlint).

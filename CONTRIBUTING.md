@@ -10,7 +10,7 @@ bun run setup-hooks   # lefthook install
 ## Workflow
 
 1. Make a change under `src/`.
-2. `bun run ci` locally before opening a PR (lint, typecheck, test, build, `vsce ls`).
+2. `bun run ci` locally before opening a PR (`gate`: lint, typecheck, test, build, workflows, `vsce ls`).
 3. Conventional Commits (`feat:`, `fix:`, `chore:`, ...).
 4. Open a PR against `main` using the PR template.
 

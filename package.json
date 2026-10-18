@@ -126,19 +126,15 @@
         "displayName": "Transcribe Audio (engined)",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "enginedTranscribe",
-        "userDescription": "Transcribe or translate audio via engined.",
+        "userDescription": "Transcribe audio via engined.",
         "icon": "$(mic)",
-        "modelDescription": "Transcribe (or translate to English) an audio file via engined's local speech-to-text route.",
+        "modelDescription": "Transcribe an audio file via engined's local speech-to-text route. Do not request translation; transcribe and translate the text with a chat model.",
         "inputSchema": {
           "type": "object",
           "properties": {
             "path": {
               "type": "string",
               "description": "Workspace-relative path to the audio file."
-            },
-            "translate": {
-              "type": "boolean",
-              "description": "Render as English rather than the spoken language."
             }
           },
           "required": [
@@ -296,7 +292,7 @@
         "engined.defaultModels.transcription": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Model id for `engined_transcribe` (needs `/openai/v1/audio/transcriptions`, and also used to translate when that row serves `/openai/v1/audio/translations`). Empty is automatic. `engined: Choose default models` lists valid ids."
+          "markdownDescription": "Model id for `engined_transcribe` (needs `/openai/v1/audio/transcriptions`). Empty is automatic. `engined: Choose default models` lists valid ids."
         },
         "engined.defaultModels.embedding": {
           "type": "string",
@@ -475,7 +471,7 @@
         },
         {
           "command": "engined.copyFixCommand",
-          "when": "view == engined.engines && viewItem == engine-unavailable",
+          "when": "view == engined.engines && (viewItem == engine-unavailable || viewItem == engine-has-fix)",
           "group": "engined@1"
         }
       ],
@@ -532,7 +528,7 @@
     "package": "bunx @vscode/vsce package --no-dependencies",
     "smoke": "node scripts/smoke.cjs",
     "setup-hooks": "lefthook install",
-    "ci": "bun run lint && bun run typecheck && bun run test && bun run build && bunx @vscode/vsce ls --no-dependencies >/dev/null"
+    "ci": "gate"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

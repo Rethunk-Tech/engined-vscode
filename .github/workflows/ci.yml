@@ -24,22 +24,6 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Lint
+      - name: Gate
         if: ${{ !cancelled() }}
-        run: bun run lint
-
-      - name: Typecheck
-        if: ${{ !cancelled() }}
-        run: bun run typecheck
-
-      - name: Test
-        if: ${{ !cancelled() }}
-        run: bun run test
-
-      - name: Build
-        if: ${{ !cancelled() }}
-        run: bun run build
-
-      - name: Package listing
-        if: ${{ !cancelled() }}
-        run: bunx @vscode/vsce ls --no-dependencies
+        run: gate
