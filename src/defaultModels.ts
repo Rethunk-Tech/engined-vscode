@@ -16,6 +16,7 @@ export type ModelRole =
   | 'speech'
   | 'transcription'
   | 'embedding'
+  | 'rerank'
 
 /** The door path each role needs. `image` also covers edits -- a caller building an edit passes that path explicitly. */
 export const ROLE_PATH: Record<ModelRole, string> = {
@@ -26,6 +27,7 @@ export const ROLE_PATH: Record<ModelRole, string> = {
   speech: '/openai/v1/audio/speech',
   transcription: '/openai/v1/audio/transcriptions',
   embedding: '/openai/v1/embeddings',
+  rerank: '/openai/v1/rerank',
 }
 
 export interface DefaultModelRoleInfo {
@@ -49,6 +51,7 @@ export const DEFAULT_MODEL_ROLES: readonly DefaultModelRoleInfo[] = [
   { role: 'speech', chooserLabel: 'Text-to-speech', popupLabel: 'Speech' },
   { role: 'transcription', chooserLabel: 'Audio transcription', popupLabel: 'Transcription' },
   { role: 'embedding', chooserLabel: 'Embedding', popupLabel: 'Embedding' },
+  { role: 'rerank', chooserLabel: 'Search rerank', popupLabel: 'Rerank' },
 ]
 
 /** A configured id matches a row by its qualified `id` or its bare `routeId` -- a setting written before a second door existed keeps working. */

@@ -18,7 +18,8 @@ Every `engined.*` setting. Configure through VS Code's Settings UI (search "engi
 | `engined.defaultModels.completion` | `""` | Model id for inline completions. Empty is automatic. |
 | `engined.defaultModels.speech` | `""` | Model id for `engined_speak`. Empty is automatic. |
 | `engined.defaultModels.transcription` | `""` | Model id for `engined_transcribe`. Empty is automatic. |
-| `engined.defaultModels.embedding` | `""` | Model id for `engined_search`. Empty is automatic. |
+| `engined.defaultModels.embedding` | `""` | Model id for `engined_search` embeddings. Empty is automatic. |
+| `engined.defaultModels.rerank` | `""` | Model id for `engined_search` rerank. Empty is automatic. |
 | `engined.search.allowRemote` | `false` | Allow `engined_search` to embed/rerank through a non-local route. |
 | `engined.search.maxChunks` | `20000` | Cap on the search index's chunk count. |
 

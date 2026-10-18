@@ -303,6 +303,11 @@
           "default": "",
           "markdownDescription": "Model id for `engined_search` (needs `/openai/v1/embeddings`). Empty is automatic. `engined: Choose default models` lists valid ids."
         },
+        "engined.defaultModels.rerank": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Model id for `engined_search` rerank (needs `/openai/v1/rerank`). Empty is automatic. `engined: Choose default models` lists valid ids."
+        },
         "engined.search.allowRemote": {
           "type": "boolean",
           "default": false,

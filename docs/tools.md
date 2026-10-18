@@ -49,7 +49,7 @@ Route: `/openai/v1/audio/transcriptions`, or `/openai/v1/audio/translations` whe
 | `query` | string | required |
 | `maxResults` | number | maximum snippets returned; defaults to 6 |
 
-Semantic search over the open workspace: file chunks are embedded through `/openai/v1/embeddings` (`engined.defaultModels.embedding`) into an index kept in extension storage, and the nearest chunks are optionally reranked through `/openai/v1/rerank`. Both routes must keep content local unless `engined.search.allowRemote` is set. Returns `path:startLine-endLine` plus the snippet for each hit.
+Semantic search over the open workspace: file chunks are embedded through `/openai/v1/embeddings` (`engined.defaultModels.embedding`) into an index kept in extension storage, and the nearest chunks are optionally reranked through `/openai/v1/rerank` (`engined.defaultModels.rerank`). Both routes must keep content local unless `engined.search.allowRemote` is set. Returns `path:startLine-endLine` plus the snippet for each hit.
 
 ## `engined_speak`
 

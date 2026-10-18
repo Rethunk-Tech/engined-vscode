@@ -115,6 +115,39 @@ describe('resolveDefaultModel: completion', () => {
   })
 })
 
+describe('resolveDefaultModel: rerank', () => {
+  const rerankRows: EnginedModelRow[] = [
+    {
+      id: '@/llama/first',
+      routeId: '@/llama/first',
+      door: DOOR,
+      tools: false,
+      serves: ['/openai/v1/rerank'],
+      state: 'installed',
+      capabilities: {},
+    },
+    {
+      id: '@/llama/second',
+      routeId: '@/llama/second',
+      door: DOOR,
+      tools: false,
+      serves: ['/openai/v1/rerank'],
+      state: 'installed',
+      capabilities: {},
+    },
+  ]
+
+  test('empty setting picks the first rerank-serving row', () => {
+    expect(resolveDefaultModel(rerankRows, 'rerank', '').row?.id).toBe('@/llama/first')
+  })
+
+  test('configured id wins when it serves rerank', () => {
+    expect(resolveDefaultModel(rerankRows, 'rerank', '@/llama/second').row?.id).toBe(
+      '@/llama/second',
+    )
+  })
+})
+
 describe('DEFAULT_MODEL_ROLES', () => {
   test('covers every ModelRole exactly once', () => {
     const roles: string[] = DEFAULT_MODEL_ROLES.map((r) => r.role)

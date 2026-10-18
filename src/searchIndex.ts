@@ -126,11 +126,13 @@ export class SearchIndex {
     ).row
   }
 
-  /** The first row that reranks and, unless `engined.search.allowRemote` is set, keeps content local. */
+  /** The configured rerank row, or the first that reranks, unless `engined.search.allowRemote` is unset and the row is not local. */
   #rerankRow(): EnginedModelRow | undefined {
-    return searchableRows(this.#rowsProvider(), this.#host.allowRemote()).find(
-      (row) => row.state !== 'unavailable' && row.serves.includes('/openai/v1/rerank'),
-    )
+    return resolveDefaultModel(
+      searchableRows(this.#rowsProvider(), this.#host.allowRemote()),
+      'rerank',
+      this.#host.defaultModel('rerank'),
+    ).row
   }
 
   #excludeGlob(): string {

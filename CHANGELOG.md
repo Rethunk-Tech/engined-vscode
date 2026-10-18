@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `engined.defaultModels.rerank` picks the `engined_search` rerank route the same way `engined.defaultModels.embedding` picks embeddings; empty is still the first qualifying row.
 - `engined_generateImage` reports sampler progress while the picture renders, on generations and edits.
 - `engined_generateImage` shows an inline preview at `<outputPath>.preview.jpeg` or `<outputPath>.preview.png` while the picture renders, and removes it when the final image is written.
 - `engined_speak` uploads a workspace-relative `voice` file to `/engined/v1/audio/voices` and sends the returned handle. A bare voice name or an existing `vc_` handle is sent unchanged.

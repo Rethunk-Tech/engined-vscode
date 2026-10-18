@@ -199,6 +199,37 @@ describe('SearchIndex.search cancellation', () => {
     await expect(index.search('hello', 5, controller.signal)).rejects.toThrow('aborted')
   })
 
+  test('a configured rerank id wins over the first qualifying row', async () => {
+    const first = {
+      ...ROW,
+      id: '@/llama/a',
+      routeId: '@/llama/a',
+      serves: ['/openai/v1/embeddings', '/openai/v1/rerank'],
+    } as EnginedModelRow
+    const second = {
+      ...ROW,
+      id: '@/llama/b',
+      routeId: '@/llama/b',
+      serves: ['/openai/v1/rerank'],
+    } as EnginedModelRow
+    let rerankModel = ''
+    const { host } = fakeHost({
+      defaultModel: (role) => (role === 'rerank' ? '@/llama/b' : ''),
+      rerank: (_url, request, signal) => {
+        rerankModel = request.model
+        return rerankImpl(signal)
+      },
+    })
+    const index = new SearchIndex(
+      uri('/storage'),
+      () => [first, second],
+      () => undefined,
+      host,
+    )
+    await index.search('hello', 5)
+    expect(rerankModel).toBe('@/llama/b')
+  })
+
   test('a rerank failure without cancellation falls back to cosine order', async () => {
     const rerankRow = { ...ROW, serves: ['/openai/v1/embeddings', '/openai/v1/rerank'] }
     const { host } = fakeHost()
