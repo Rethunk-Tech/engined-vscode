@@ -5,7 +5,7 @@
  * `onPreview`. A larger frame has `bytes` and no `image`, and changes nothing.
  */
 
-import { parseSseChunk } from './engineEvents.ts'
+import { flushSseRest, parseSseChunk } from './engineEvents.ts'
 
 /** One sampler line the chat can show: `Rendering 2/8 node 4`, or `Rendering` when the frame names nothing. */
 function imageProgressLine(data: unknown): string {
@@ -61,7 +61,7 @@ function imagePreviewFrame(data: unknown): ImagePreviewFrame | undefined {
 }
 
 /** `<outputPath>.preview.jpeg` or `<outputPath>.preview.png`. */
-export function imagePreviewPath(outputPath: string, format: ImagePreviewFrame['format']): string {
+function imagePreviewPath(outputPath: string, format: ImagePreviewFrame['format']): string {
   return `${outputPath}.preview.${format}`
 }
 
@@ -151,10 +151,8 @@ export async function readImageEvents(
       await takeImageEvents(parsed.frames, onProgress, onPreview, image)
     }
     buffer += decoder.decode()
-    if (buffer.trim() !== '') {
-      const flushed = parseSseChunk(buffer.endsWith('\n\n') ? buffer : `${buffer}\n\n`)
-      await takeImageEvents(flushed.frames, onProgress, onPreview, image)
-    }
+    const flushed = flushSseRest(buffer)
+    await takeImageEvents(flushed.frames, onProgress, onPreview, image)
   } finally {
     try {
       reader.releaseLock()
