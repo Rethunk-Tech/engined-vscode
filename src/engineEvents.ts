@@ -1,7 +1,7 @@
 /**
  * Pure logic for `GET /engined/v1/engines/events`: splitting a decoded SSE
  * byte stream into `event`/`data` frames, and the reconnect-backoff
- * sequence. No `vscode` import -- `engineExplorer.ts` owns the actual
+ * sequence. No `vscode` import -- `pollDriver.ts` owns the actual
  * `fetch`/reader loop and reconnect timer.
  */
 
@@ -60,6 +60,14 @@ export function parseSseChunk(buffer: string): SseParseResult {
     }
   }
   return { frames, rest }
+}
+
+/** `parseSseChunk` of a stream's leftover `rest`, treating EOF as a frame boundary. */
+export function flushSseRest(rest: string): SseParseResult {
+  if (rest.trim() === '') {
+    return { frames: [], rest: '' }
+  }
+  return parseSseChunk(rest.endsWith('\n\n') ? rest : `${rest}\n\n`)
 }
 
 const DEFAULT_BASE_MS = 1000

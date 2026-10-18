@@ -5,7 +5,7 @@ import { MS_PER_SECOND } from './constants.ts'
 import { describeError } from './describeError.ts'
 import type { Door } from './door.ts'
 import { openEngineEventsStream } from './doorClient.ts'
-import { backoffMs, parseSseChunk } from './engineEvents.ts'
+import { backoffMs, flushSseRest, parseSseChunk } from './engineEvents.ts'
 import { effectivePollSeconds } from './polling.ts'
 import type { DoorSseState, Session } from './session.ts'
 
@@ -91,21 +91,34 @@ async function connectEngineEvents(s: Session, door: Door): Promise<void> {
   const decoder = new TextDecoder()
   let buffer = ''
   try {
-    for (;;) {
-      const { done, value } = await reader.read()
-      if (done) {
-        break
+    try {
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) {
+          break
+        }
+        buffer += decoder.decode(value, { stream: true })
+        const parsed = parseSseChunk(buffer)
+        buffer = parsed.rest
+        if (parsed.frames.length > 0) {
+          scheduleSseRefresh(s)
+        }
       }
-      buffer += decoder.decode(value, { stream: true })
-      const parsed = parseSseChunk(buffer)
-      buffer = parsed.rest
-      if (parsed.frames.length > 0) {
+      buffer += decoder.decode()
+      const flushed = flushSseRest(buffer)
+      if (flushed.frames.length > 0) {
         scheduleSseRefresh(s)
       }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        s.log(`engine events stream error (${door.name}): ${describeError(error)}`)
+      }
     }
-  } catch (error) {
-    if (!controller.signal.aborted) {
-      s.log(`engine events stream error (${door.name}): ${describeError(error)}`)
+  } finally {
+    try {
+      reader.releaseLock()
+    } catch {
+      // The stream was already cancelled.
     }
   }
   state.connected = false

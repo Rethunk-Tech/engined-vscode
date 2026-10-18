@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { backoffMs, parseSseChunk } from './engineEvents.ts'
+import { backoffMs, flushSseRest, parseSseChunk } from './engineEvents.ts'
 
 describe('parseSseChunk', () => {
   test('parses one complete frame with a JSON payload', () => {
@@ -39,6 +39,14 @@ describe('parseSseChunk', () => {
   test('a frame with no data line at all is dropped', () => {
     const { frames } = parseSseChunk('event: ping\n\n')
     expect(frames).toEqual([])
+  })
+})
+
+describe('flushSseRest', () => {
+  test('parses a last frame that never got a trailing blank line', () => {
+    const { frames, rest } = flushSseRest('event: engine\ndata: {"id":"x"}')
+    expect(frames).toEqual([{ event: 'engine', data: { id: 'x' } }])
+    expect(rest).toBe('')
   })
 })
 
