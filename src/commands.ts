@@ -224,6 +224,11 @@ export function registerEngineTreeCommands(s: Session): vscode.Disposable[] {
       }
       return
     }),
+    vscode.commands.registerCommand('engined.followEngineLogs', (item: EngineTreeItem) => {
+      if (item.kind === 'engine') {
+        s.engineExplorer.followLogs(item.node)
+      }
+    }),
     vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
       if (item.kind === 'engine') {
         return s.engineExplorer.stop(item.node)

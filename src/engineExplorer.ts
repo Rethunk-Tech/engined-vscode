@@ -7,9 +7,10 @@
  */
 
 import * as vscode from 'vscode'
+import { runInBackground } from './background.ts'
 import { cancellationSignal } from './cancellation.ts'
 import type { CompletionEngineContention } from './completions.ts'
-import { DOOR_TIMEOUT_MS } from './constants.ts'
+import { DOOR_TIMEOUT_MS, MS_PER_SECOND } from './constants.ts'
 import { describeError } from './describeError.ts'
 import type { Door, EnginedModelRow } from './door.ts'
 import {
@@ -35,6 +36,7 @@ import {
   toEngineNodes,
   truncateLogLines,
 } from './engineTree.ts'
+import { pollLogFollow } from './logFollow.ts'
 
 const LOG_TAIL = 500
 const NO_NOTE: DoorGroupNote = {}
@@ -53,6 +55,8 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   readonly #heldIds: ReadonlySet<string>
   readonly #log: (line: string) => void
   readonly #logChannels = new Map<string, vscode.OutputChannel>()
+  readonly #logFollows = new Map<string, AbortController>()
+  #viewVisible = true
   readonly #getDoors: () => Door[]
   readonly #getRows: () => readonly EnginedModelRow[]
   readonly #setMessage: (text: string | undefined) => void
@@ -85,8 +89,19 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   }
 
   dispose(): void {
+    this.setViewVisible(false)
     for (const channel of this.#logChannels.values()) {
       channel.dispose()
+    }
+  }
+
+  /** Follow-logs polls only while the Engines view is shown; hiding or closing it aborts every follow. */
+  setViewVisible(visible: boolean): void {
+    this.#viewVisible = visible
+    if (!visible) {
+      for (const controller of this.#logFollows.values()) {
+        controller.abort()
+      }
     }
   }
 
@@ -238,6 +253,62 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     }
   }
 
+  followLogs(node: EngineNode): void {
+    const existing = this.#logFollows.get(node.id)
+    if (existing !== undefined && !existing.signal.aborted) {
+      this.#channelFor(node.id).show()
+      return
+    }
+    const ac = new AbortController()
+    this.#logFollows.set(node.id, ac)
+    const channel = this.#channelFor(node.id)
+    channel.clear()
+    channel.show()
+    runInBackground(this.#runLogFollow(node, channel, ac), (error) => {
+      this.#log(`engined: follow logs for "${node.id}" failed: ${describeError(error)}`)
+    })
+  }
+
+  async #runLogFollow(
+    node: EngineNode,
+    channel: vscode.OutputChannel,
+    ac: AbortController,
+  ): Promise<void> {
+    try {
+      await pollLogFollow({
+        fetch: () =>
+          fetchEngineLogs(
+            node.door.url,
+            node.rawId,
+            LOG_TAIL,
+            AbortSignal.any([ac.signal, AbortSignal.timeout(DOOR_TIMEOUT_MS)]),
+          ),
+        onLines: (lines) => {
+          if (ac.signal.aborted) {
+            return
+          }
+          for (const line of lines) {
+            channel.appendLine(line)
+          }
+        },
+        wait: (ms) => waitUntilAborted(ms, ac.signal),
+        isActive: () => this.#viewVisible && !ac.signal.aborted,
+        intervalMs: MS_PER_SECOND,
+      })
+    } catch (error) {
+      if (ac.signal.aborted) {
+        return
+      }
+      vscode.window.showErrorMessage(
+        `engined: follow logs for "${node.id}" failed: ${describeError(error)}`,
+      )
+    } finally {
+      if (this.#logFollows.get(node.id) === ac) {
+        this.#logFollows.delete(node.id)
+      }
+    }
+  }
+
   async stop(node: EngineNode): Promise<void> {
     const confirmed = await vscode.window.showWarningMessage(
       `Stop engine "${node.id}"?`,
@@ -275,6 +346,24 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     }
     await this.refresh()
   }
+}
+
+function waitUntilAborted(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal.aborted) {
+      resolve()
+      return
+    }
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    const onAbort = () => {
+      clearTimeout(timer)
+      resolve()
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+  })
 }
 
 export function copyFixCommand(fix: string | undefined): Thenable<void> {

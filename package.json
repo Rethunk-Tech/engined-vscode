@@ -385,6 +385,11 @@
         "icon": "$(output)"
       },
       {
+        "command": "engined.followEngineLogs",
+        "title": "engined: Follow Logs",
+        "icon": "$(eye)"
+      },
+      {
         "command": "engined.stopEngine",
         "title": "engined: Stop Engine",
         "icon": "$(debug-stop)"
@@ -462,6 +467,11 @@
           "group": "inline@1"
         },
         {
+          "command": "engined.followEngineLogs",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "inline@1.5"
+        },
+        {
           "command": "engined.warmEngine",
           "when": "view == engined.engines && viewItem == engine",
           "group": "inline@2"
@@ -475,6 +485,11 @@
           "command": "engined.showEngineLogs",
           "when": "view == engined.engines && viewItem == engine",
           "group": "engined@1"
+        },
+        {
+          "command": "engined.followEngineLogs",
+          "when": "view == engined.engines && viewItem == engine",
+          "group": "engined@1.5"
         },
         {
           "command": "engined.warmEngine",
@@ -531,6 +546,10 @@
         },
         {
           "command": "engined.showEngineLogs",
+          "when": "false"
+        },
+        {
+          "command": "engined.followEngineLogs",
           "when": "false"
         },
         {

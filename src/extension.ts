@@ -148,7 +148,9 @@ export function activate(context: vscode.ExtensionContext): void {
   })
   // A view opened long after activation would otherwise show whatever the last
   // refresh found, which is nothing when engined was down at activation.
+  s.engineExplorer.setViewVisible(enginesView.visible)
   enginesView.onDidChangeVisibility((e) => {
+    s.engineExplorer.setViewVisible(e.visible)
     if (e.visible) {
       s.background(s.engineExplorer.refresh())
     }
