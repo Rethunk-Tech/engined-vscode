@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { type CliRun, resolveConfigUi } from './configUi.ts'
+import { homedir } from 'node:os'
+import { allowedEnginedBinary, type CliRun, resolveConfigUi } from './configUi.ts'
 
 const run = (r: Partial<CliRun>) => async (): Promise<CliRun> => ({
   stdout: '',
@@ -34,5 +35,21 @@ describe('resolveConfigUi', () => {
     expect(
       await resolveConfigUi(run({ stdout: 'http://127.0.0.1:29300/?token=abc extra\n' })),
     ).toEqual({ message: 'engined printed no config UI URL' })
+  })
+
+  test('a non-loopback URL is not opened even when it is a single http(s) line', async () => {
+    expect(await resolveConfigUi(run({ stdout: 'https://evil.example/?token=abc\n' }))).toEqual({
+      message: 'engined printed no config UI URL',
+    })
+  })
+})
+
+describe('allowedEnginedBinary', () => {
+  test('accepts only realpaths under expected install prefixes', () => {
+    expect(allowedEnginedBinary('/usr/bin/engined')).toBe(true)
+    expect(allowedEnginedBinary('/usr/local/bin/engined')).toBe(true)
+    expect(allowedEnginedBinary(`${homedir()}/.local/bin/engined`)).toBe(true)
+    expect(allowedEnginedBinary('/tmp/engined')).toBe(false)
+    expect(allowedEnginedBinary('/usr/bin/not-engined')).toBe(false)
   })
 })
