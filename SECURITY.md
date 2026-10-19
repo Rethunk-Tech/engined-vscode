@@ -12,7 +12,7 @@ Only the latest release receives security fixes.
 
 ## Risk profile
 
-- **No authentication on the door** — engined's door is loopback-only with no auth. No `engined.doors` entry should point at a non-loopback address unless that connection is separately secured (e.g. SSH via Remote-SSH); this extension authenticates nothing.
+- **No authentication on the door** — engined's door has no auth, and this extension authenticates nothing: an `engined.doors` URL (any `http(s)` host) is trusted as configured, and workspace or folder values apply only after the user confirms them.
 - **Filesystem writes from a language model** — `engined_generateImage` and `engined_speak` write at a path the model chooses. Every path crosses `src/pathGuard.ts` and is rejected outside an open workspace folder; there is no other sandbox. Rule: [AGENTS.md](AGENTS.md).
 - **Egress from tool confirmations** — the confirmation names the route and states when `egress` is not local (prompt or file content leaves this machine). Review it before approving.
 - **No prompt/response logging** — the "engined" output channel never logs request or response content; do not add such logging in a PR.
