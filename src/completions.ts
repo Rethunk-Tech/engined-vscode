@@ -146,6 +146,74 @@ export function completionWaitingBehind(
   return waiting > 0 && !weAreActive
 }
 
+const COMMON_LINE_COMMENT_PREFIXES = ['//', '--', '#', ';'] as const
+
+/** Line and block tokens from a VS Code language configuration, when the host found one. */
+export interface CompletionCommentTokens {
+  lineComment?: string
+  blockComment?: readonly [string, string]
+}
+
+function linePrefixBefore(text: string, offset: number): string {
+  const from = text.lastIndexOf('\n', offset - 1) + 1
+  return text.slice(from, offset)
+}
+
+function cursorInComment(
+  text: string,
+  offset: number,
+  commentTokens: CompletionCommentTokens | undefined,
+): boolean {
+  const line = linePrefixBefore(text, offset)
+  const trimmed = line.trimStart()
+  const configured =
+    commentTokens !== undefined &&
+    (commentTokens.lineComment !== undefined || commentTokens.blockComment !== undefined)
+  if (configured) {
+    if (
+      commentTokens.lineComment !== undefined &&
+      commentTokens.lineComment !== '' &&
+      trimmed.startsWith(commentTokens.lineComment)
+    ) {
+      return true
+    }
+    const pair = commentTokens.blockComment
+    if (pair !== undefined) {
+      const [start, end] = pair
+      if (start !== '' && end !== '') {
+        const before = text.slice(0, offset)
+        const lastStart = before.lastIndexOf(start)
+        if (lastStart >= 0 && before.lastIndexOf(end) < lastStart) {
+          return true
+        }
+      }
+    }
+    return false
+  }
+  return COMMON_LINE_COMMENT_PREFIXES.some((prefix) => trimmed.startsWith(prefix))
+}
+
+/**
+ * Whether an inline-completion request may go to the door: skip disabled
+ * language ids, and when `inComments` is off, skip a cursor inside a comment.
+ */
+export function completionRequestAllowed(input: {
+  languageId: string
+  disabledLanguages: readonly string[]
+  inComments: boolean
+  text: string
+  offset: number
+  commentTokens?: CompletionCommentTokens
+}): boolean {
+  if (input.disabledLanguages.includes(input.languageId)) {
+    return false
+  }
+  if (input.inComments) {
+    return true
+  }
+  return !cursorInComment(input.text, input.offset, input.commentTokens)
+}
+
 /** `usage.{prompt_tokens,completion_tokens}` from a completions reply, when it carried one. */
 export function extractCompletionUsage(reply: unknown): CompletionUsage | undefined {
   const usage = (reply as { usage?: unknown } | undefined)?.usage

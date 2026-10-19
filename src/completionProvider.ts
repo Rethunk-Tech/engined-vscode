@@ -1,16 +1,21 @@
 /** The inline-completion (ghost text) provider and the open-document tracking its neighbour context draws on. */
 
+import { readFileSync } from 'node:fs'
 import * as vscode from 'vscode'
 import {
   buildCompletionsRequestBody,
   COMPLETIONS_PATH,
+  type CompletionCommentTokens,
+  completionRequestAllowed,
   completionWaitingBehind,
   extractCompletionText,
   extractCompletionUsage,
   sliceContext,
 } from './completions.ts'
 import {
+  getCompletionsDisabledLanguages,
   getCompletionsEnabled,
+  getCompletionsInComments,
   getCompletionsPauseOnContention,
   getDefaultModel,
   getNeighbourContextEnabled,
@@ -26,6 +31,64 @@ import { isLocalEgress } from './status.ts'
 import { renderStatusBar } from './statusBar.ts'
 
 const RECENT_DOCUMENTS_CAP = 10
+
+const commentTokensByLanguage = new Map<string, CompletionCommentTokens | undefined>()
+const LINE_COMMENT_TOKEN = /"lineComment"\s*:\s*"((?:\\.|[^"\\])*)"/
+const BLOCK_COMMENT_TOKEN =
+  /"blockComment"\s*:\s*\[\s*"((?:\\.|[^"\\])*)"\s*,\s*"((?:\\.|[^"\\])*)"\s*\]/
+
+function parseCommentTokens(jsonc: string): CompletionCommentTokens | undefined {
+  const line = LINE_COMMENT_TOKEN.exec(jsonc)
+  const block = BLOCK_COMMENT_TOKEN.exec(jsonc)
+  if (line === null && block === null) {
+    return undefined
+  }
+  const tokens: CompletionCommentTokens = {}
+  if (line?.[1] !== undefined) {
+    tokens.lineComment = JSON.parse(`"${line[1]}"`) as string
+  }
+  if (block !== null) {
+    tokens.blockComment = [
+      JSON.parse(`"${block[1]}"`) as string,
+      JSON.parse(`"${block[2]}"`) as string,
+    ]
+  }
+  return tokens
+}
+
+/** Comment tokens from the language's VS Code configuration JSON, cached per language id. */
+function commentTokensForLanguage(languageId: string): CompletionCommentTokens | undefined {
+  if (commentTokensByLanguage.has(languageId)) {
+    return commentTokensByLanguage.get(languageId)
+  }
+  let tokens: CompletionCommentTokens | undefined
+  for (const ext of vscode.extensions.all) {
+    const langs = (ext.packageJSON as { contributes?: { languages?: unknown } } | undefined)
+      ?.contributes?.languages
+    if (!Array.isArray(langs)) {
+      continue
+    }
+    for (const lang of langs) {
+      const row = lang as { id?: unknown; configuration?: unknown }
+      if (row.id !== languageId || typeof row.configuration !== 'string') {
+        continue
+      }
+      try {
+        tokens = parseCommentTokens(
+          readFileSync(vscode.Uri.joinPath(ext.extensionUri, row.configuration).fsPath, 'utf8'),
+        )
+      } catch {
+        tokens = undefined
+      }
+      break
+    }
+    if (tokens !== undefined) {
+      break
+    }
+  }
+  commentTokensByLanguage.set(languageId, tokens)
+  return tokens
+}
 
 // --- inline completions (ghost text) ---------------------------------------
 
@@ -56,6 +119,18 @@ export class EnginedInlineCompletionProvider implements vscode.InlineCompletionI
   ): Promise<vscode.InlineCompletionItem[] | undefined> {
     const s = this.#s
     if (!getCompletionsEnabled()) {
+      return undefined
+    }
+    if (
+      !completionRequestAllowed({
+        languageId: document.languageId,
+        disabledLanguages: getCompletionsDisabledLanguages(),
+        inComments: getCompletionsInComments(),
+        text: document.getText(),
+        offset: document.offsetAt(position),
+        commentTokens: commentTokensForLanguage(document.languageId),
+      })
+    ) {
       return undefined
     }
     if (vscode.window.activeTextEditor?.selection.isEmpty === false) {

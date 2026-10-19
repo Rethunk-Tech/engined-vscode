@@ -269,6 +269,19 @@
           "default": true,
           "description": "Skip inline completion requests while the engines list shows the completion model waiting behind another job. The status bar shows a waiting hint until the queue clears."
         },
+        "engined.completions.disabledLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "VS Code language ids that skip inline completions (ghost text)."
+        },
+        "engined.completions.inComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer inline completions when the cursor is inside a comment. When false, skip the request using the language's comment tokens from VS Code language configuration where available, otherwise a line-prefix check for common comment starters."
+        },
         "engined.defaultModels.image": {
           "type": "string",
           "default": "",

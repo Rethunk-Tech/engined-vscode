@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   buildCompletionsRequestBody,
   COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES,
+  completionRequestAllowed,
   completionWaitingBehind,
   extractCompletionText,
   extractCompletionUsage,
@@ -159,6 +160,116 @@ describe('completionWaitingBehind', () => {
     ]
     for (const c of cases) {
       expect(completionWaitingBehind(c.engines, c.completion), c.name).toBe(c.want)
+    }
+  })
+})
+
+describe('completionRequestAllowed', () => {
+  const js = { lineComment: '//', blockComment: ['/*', '*/'] as const }
+  test('gates disabled languages and comments', () => {
+    const cases: {
+      name: string
+      languageId?: string
+      disabledLanguages?: string[]
+      inComments?: boolean
+      text: string
+      offset?: number
+      commentTokens?: { lineComment?: string; blockComment?: readonly [string, string] }
+      want: boolean
+    }[] = [
+      {
+        name: 'allowed language, comments on',
+        text: 'const x = 1',
+        want: true,
+      },
+      {
+        name: 'disabled language id',
+        languageId: 'markdown',
+        disabledLanguages: ['markdown', 'plaintext'],
+        text: 'hello',
+        want: false,
+      },
+      {
+        name: 'comments on, cursor in a line comment',
+        text: '// todo',
+        offset: 4,
+        commentTokens: js,
+        want: true,
+      },
+      {
+        name: 'comments off, line comment from language config',
+        inComments: false,
+        text: '  // todo',
+        offset: 8,
+        commentTokens: js,
+        want: false,
+      },
+      {
+        name: 'comments off, code line with language config',
+        inComments: false,
+        text: 'const x = 1',
+        offset: 6,
+        commentTokens: js,
+        want: true,
+      },
+      {
+        name: 'comments off, inside a block comment',
+        inComments: false,
+        text: 'const x = 1 /* n */',
+        offset: 15,
+        commentTokens: js,
+        want: false,
+      },
+      {
+        name: 'comments off, after a closed block comment',
+        inComments: false,
+        text: 'const x = 1 /* n */ y',
+        offset: 21,
+        commentTokens: js,
+        want: true,
+      },
+      {
+        name: 'comments off, no config, common // prefix',
+        inComments: false,
+        text: '// hint',
+        offset: 4,
+        want: false,
+      },
+      {
+        name: 'comments off, no config, common # prefix',
+        inComments: false,
+        text: '# hint',
+        offset: 3,
+        want: false,
+      },
+      {
+        name: 'comments off, no config, code is not a comment prefix',
+        inComments: false,
+        text: 'print(1)',
+        offset: 5,
+        want: true,
+      },
+      {
+        name: 'comments off, language config present does not use fallback prefixes',
+        inComments: false,
+        text: '# not python',
+        offset: 4,
+        commentTokens: js,
+        want: true,
+      },
+    ]
+    for (const c of cases) {
+      expect(
+        completionRequestAllowed({
+          languageId: c.languageId ?? 'typescript',
+          disabledLanguages: c.disabledLanguages ?? [],
+          inComments: c.inComments ?? true,
+          text: c.text,
+          offset: c.offset ?? c.text.length,
+          commentTokens: c.commentTokens,
+        }),
+        c.name,
+      ).toBe(c.want)
     }
   })
 })
