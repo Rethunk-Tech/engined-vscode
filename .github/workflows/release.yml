@@ -48,6 +48,10 @@ jobs:
         with:
           node-version: "24"
 
+      # dist/ is not committed; this job's checkout has none until it builds.
+      - name: Build
+        run: bun run build
+
       - name: Package extension
         run: bunx @vscode/vsce package --no-dependencies
 
