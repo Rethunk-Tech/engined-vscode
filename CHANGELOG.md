@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-10-18
+
+### Added
+
+- `engined.completions.disabledLanguages` and `engined.completions.inComments` gate inline completions by language and by whether the cursor sits in a comment.
+- Engines rows follow live engine logs.
+
+### Fixed
+
+- Plain `http` doors on any host (LAN and remote) are kept, and each door's advertised egress is used as is.
+- A workspace or folder `engined.doors` value is used only after a confirmation.
+- Copy Fix copies only a single-line `engined` command, and Engines commands act only on a live, configured door's engine.
+
 ## [0.1.7] - 2026-10-18
 
 - fix(release): install gate before the release check
