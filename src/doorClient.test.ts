@@ -36,10 +36,10 @@ describe('doorErrorMessage', () => {
 })
 
 describe('postChatCompletion', () => {
-  test('refuses a cleartext non-loopback door URL without fetching', async () => {
+  test('refuses a non-http(s) door URL without fetching', async () => {
     await expect(
       postChatCompletion(
-        'http://10.0.0.5:29200',
+        'file:///etc/passwd',
         { model: 'x', messages: [] },
         new AbortController().signal,
       ),

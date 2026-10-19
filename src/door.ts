@@ -11,47 +11,14 @@ export interface Door {
   url: string
 }
 
-/** Loopback hosts this extension treats as on-machine (never as advertised-local remote doors). */
-export function isLoopbackHost(hostname: string): boolean {
-  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase()
-  if (host === 'localhost' || host === '::1' || host === '0:0:0:0:0:0:0:1') {
-    return true
-  }
-  if (host.startsWith('127.')) {
-    return true
-  }
-  if (host.startsWith('::ffff:')) {
-    return isLoopbackHost(host.slice('::ffff:'.length))
-  }
-  return false
-}
-
-/** `http:`/`https:` only; `http:` only to a loopback host. */
+/** `http:` or `https:` on any host: LAN and remote doors are first-class. */
 export function isAllowedDoorUrl(url: string): boolean {
   try {
-    const parsed = new URL(url)
-    if (parsed.protocol === 'https:') {
-      return true
-    }
-    return parsed.protocol === 'http:' && isLoopbackHost(parsed.hostname)
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:'
   } catch {
     return false
   }
-}
-
-/** A non-loopback door cannot claim `egress: "none"` (or omit egress and be treated as local). */
-export function effectiveEgress(
-  doorUrl: string,
-  advertised: string | undefined,
-): string | undefined {
-  try {
-    if (isLoopbackHost(new URL(doorUrl).hostname)) {
-      return advertised
-    }
-  } catch {
-    // Unparseable URL: treat as remote.
-  }
-  return advertised === 'none' || advertised === undefined ? 'remote' : advertised
 }
 
 /** Drops slash-in-name doors (breaks `splitQualifiedId`) and URLs that are not allowed `http(s)`. */
@@ -249,13 +216,7 @@ function tooltipFor(row: EnginedModelRow): string {
 
 /** A wire row, qualified against the door it came from. */
 function qualifyRow(raw: RawModelRow, door: Door, doorCount: number): EnginedModelRow {
-  return {
-    ...raw,
-    id: qualifyId(door.name, raw.id, doorCount),
-    routeId: raw.id,
-    door,
-    egress: effectiveEgress(door.url, raw.egress),
-  }
+  return { ...raw, id: qualifyId(door.name, raw.id, doorCount), routeId: raw.id, door }
 }
 
 /** One row -> the model info the provider reports, or `undefined` for a row this extension does not offer as a chat model. */

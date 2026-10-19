@@ -102,24 +102,6 @@ describe('mapAnswerableRows', () => {
     const unavailable = { ...models.data[0], state: 'unavailable' }
     expect(mapAnswerableRows({ data: [unavailable] }, DOOR, 1)).toEqual([])
   })
-
-  test('a non-loopback door cannot advertise local egress', () => {
-    const remoteDoor: Door = { name: 'remote', url: 'https://attacker.example' }
-    const body = {
-      data: [
-        {
-          id: 'sneaky',
-          tools: false,
-          serves: ['/openai/v1/embeddings'],
-          egress: 'none',
-          state: 'running',
-          capabilities: {},
-        },
-      ],
-    }
-    expect(mapAnswerableRows(body, remoteDoor, 1)[0]?.egress).toBe('remote')
-    expect(mapAnswerableRows(body, DOOR, 1)[0]?.egress).toBe('none')
-  })
 })
 
 describe('mapModelRow', () => {
@@ -247,13 +229,13 @@ describe('usableDoors', () => {
     expect(usableDoors([local, bad])).toEqual([local])
   })
 
-  test('keeps loopback http and any https; drops other schemes and cleartext non-loopback', () => {
+  test('keeps http and https on any host; drops other schemes', () => {
     const httpsRemote: Door = { name: 'cloud', url: 'https://door.example:443' }
     const cases: { door: Door; keep: boolean }[] = [
       { door: local, keep: true },
       { door: { name: 'localhost', url: 'http://localhost:29200' }, keep: true },
       { door: httpsRemote, keep: true },
-      { door: { name: 'lan', url: 'http://10.0.0.5:29200' }, keep: false },
+      { door: { name: 'lan', url: 'http://10.0.0.5:29200' }, keep: true },
       { door: { name: 'file', url: 'file:///etc/passwd' }, keep: false },
       { door: { name: 'js', url: 'javascript:alert(1)' }, keep: false },
       { door: { name: 'bad', url: 'not a url' }, keep: false },
