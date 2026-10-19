@@ -8,6 +8,7 @@
 import type { EnginedModelRow } from './door.ts'
 import { postForm, postJson } from './doorClient.ts'
 import { resolveWorkspacePath } from './pathGuard.ts'
+import { isLocalEgress } from './status.ts'
 
 const IMAGE_SIDE_MIN = 64
 const IMAGE_SIDE_MAX = 4096
@@ -254,4 +255,17 @@ export function confirmationMessage(
   const pathNote = target === undefined ? '' : ` Path: ${target.path}.`
   const overwriteNote = target?.overwrites === true ? ' This overwrites an existing file.' : ''
   return `${action} via ${row.id}.${pathNote}${overwriteNote}${egressNote}`
+}
+
+/** Confirmation `engined_search` shows: the query, the calling chat route, and a warning when that route is not local. */
+export function searchConfirmationMessage(
+  query: string,
+  chat: { route?: string; egress?: string } | undefined,
+): string {
+  const route = chat?.route ?? 'the calling chat model'
+  const local = isLocalEgress(chat?.egress)
+  const egressNote = local
+    ? ''
+    : ' Snippets will be returned to that model and may leave this machine.'
+  return `Search the workspace for "${query}". Results go to ${route}.${egressNote}`
 }

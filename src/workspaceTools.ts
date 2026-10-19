@@ -24,6 +24,7 @@ import {
   confirmationMessage,
   refuseTranslate,
   requestSpeech,
+  searchConfirmationMessage,
   ToolRouteError,
 } from './toolRequests.ts'
 
@@ -32,6 +33,8 @@ export interface ToolHost {
   log: (line: string) => void
   resolveRoleRow: (role: ModelRole, path?: string) => EnginedModelRow
   searchIndex: () => SearchIndex
+  /** The chat turn that invoked a tool, when this extension served it; Copilot or an unknown caller has no local egress. */
+  callingChat: () => { route?: string; egress?: string } | undefined
 }
 
 let toolHost: ToolHost | undefined
@@ -443,6 +446,14 @@ const searchTool: vscode.LanguageModelTool<SearchInput> = {
       return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(text)])
     } catch (error) {
       return toolError(error)
+    }
+  },
+  prepareInvocation(options) {
+    return {
+      confirmationMessages: {
+        title: 'Search workspace',
+        message: searchConfirmationMessage(options.input.query, host().callingChat()),
+      },
     }
   },
 }

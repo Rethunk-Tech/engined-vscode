@@ -12,7 +12,7 @@ import { cancellationSignal } from './cancellation.ts'
 import type { CompletionEngineContention } from './completions.ts'
 import { DOOR_TIMEOUT_MS, MS_PER_SECOND } from './constants.ts'
 import { describeError } from './describeError.ts'
-import type { Door, EnginedModelRow } from './door.ts'
+import { copyFixText, type Door, type EnginedModelRow } from './door.ts'
 import {
   fetchEngineLogs,
   fetchEngineResources,
@@ -27,7 +27,6 @@ import type {
   EnginesListResponse,
 } from './engineTree.ts'
 import {
-  copyFixText,
   doorGroupNote,
   enginesViewMessage,
   formatResourceLine,

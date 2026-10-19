@@ -36,6 +36,16 @@ describe('doorErrorMessage', () => {
 })
 
 describe('postChatCompletion', () => {
+  test('refuses a cleartext non-loopback door URL without fetching', async () => {
+    await expect(
+      postChatCompletion(
+        'http://10.0.0.5:29200',
+        { model: 'x', messages: [] },
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow('door URL is not allowed')
+  })
+
   test('retries a 429 once when Retry-After is at most 10 s, then reads the 200', async () => {
     let hits = 0
     const server = Bun.serve({

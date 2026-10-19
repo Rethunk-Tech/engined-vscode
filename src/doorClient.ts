@@ -7,7 +7,7 @@
 
 import { HTTP_NOT_FOUND, HTTP_TOO_MANY_REQUESTS, MS_PER_SECOND } from './constants.ts'
 import type { Door, DoorReachability, EnginedModelInfo, EnginedModelRow } from './door.ts'
-import { mapAnswerableRows, mapModels } from './door.ts'
+import { isAllowedDoorUrl, mapAnswerableRows, mapModels } from './door.ts'
 import { type ImagePreviewFrame, readImageEvents } from './imageStream.ts'
 import type { RerankResult } from './search.ts'
 import { parseTokenizeReply, tokenizeRequestBody } from './tokenizeRequest.ts'
@@ -17,6 +17,9 @@ const RETRY_AFTER_SECONDS = /^\d+(\.\d+)?$/
 
 /** Door HTTP: never follow redirects -- a 307 would replay a chat POST body to `Location`. */
 function doorFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  if (!isAllowedDoorUrl(url)) {
+    return Promise.reject(new Error('door URL is not allowed'))
+  }
   return fetch(url, { ...init, redirect: 'error' })
 }
 

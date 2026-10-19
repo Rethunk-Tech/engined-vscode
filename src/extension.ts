@@ -26,7 +26,7 @@ import {
 } from './commands.ts'
 import { EnginedInlineCompletionProvider, trackActiveEditor } from './completionProvider.ts'
 import { COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES } from './completions.ts'
-import { getDoors } from './config.ts'
+import { confirmWorkspaceDoors, getDoors } from './config.ts'
 import { DOOR_TIMEOUT_MS } from './constants.ts'
 import { describeError } from './describeError.ts'
 import { fetchAllDoors } from './doorClient.ts'
@@ -178,6 +178,7 @@ export function activate(context: vscode.ExtensionContext): void {
       log: s.log,
       resolveRoleRow: (role, path) => resolveRoleRow(s, role, path),
       searchIndex: () => s.searchIndex,
+      callingChat: () => s.lastChatCall,
     }),
     watcher,
     watcher.onDidChange((uri) => s.searchIndex.onFileChanged(uri, 'change')),
@@ -210,9 +211,13 @@ export function activate(context: vscode.ExtensionContext): void {
         restartPollTimer(s)
       }
       if (e.affectsConfiguration('engined.doors')) {
-        stopEngineEvents(s)
-        restartPollTimer(s)
-        s.background(connectAllEngineEvents(s))
+        s.background(
+          confirmWorkspaceDoors().then(() => {
+            stopEngineEvents(s)
+            restartPollTimer(s)
+            s.background(connectAllEngineEvents(s))
+          }),
+        )
       }
       if (e.affectsConfiguration('engined.defaultModels')) {
         renderStatusBar(s)
@@ -224,6 +229,17 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   )
   s.background(connectAllEngineEvents(s))
+  s.background(
+    confirmWorkspaceDoors().then((used) => {
+      if (!used) {
+        return
+      }
+      stopEngineEvents(s)
+      restartPollTimer(s)
+      s.background(connectAllEngineEvents(s))
+      s.background(s.engineExplorer.refresh())
+    }),
+  )
 }
 
 export function deactivate(): void {

@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 import type { ModelRole } from './defaultModels.ts'
 import type { Door, ReasoningLevel } from './door.ts'
-import { REASONING_LEVELS, usableDoors } from './door.ts'
+import { doorsFromInspect, REASONING_LEVELS } from './door.ts'
 import type { SplitOptions } from './promptSplit.ts'
 import { DEFAULT_SPLIT } from './promptSplit.ts'
 
@@ -14,14 +14,46 @@ const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
 const DEFAULT_POLL_SECONDS = 30
 const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
 
+let workspaceDoorsConfirmed = false
+
 function config(): vscode.WorkspaceConfiguration {
   return vscode.workspace.getConfiguration('engined')
 }
 
-/** `engined.doors`, or the single local default when unset/empty. */
+/**
+ * When the workspace (or a folder) sets `engined.doors`, ask before those
+ * URLs are used — `.vscode/settings.json` can otherwise point every request
+ * at an attacker after the folder is trusted.
+ */
+export async function confirmWorkspaceDoors(): Promise<boolean> {
+  const inspected = config().inspect<Door[]>('doors')
+  const workspace = inspected?.workspaceValue ?? inspected?.workspaceFolderValue
+  if (workspace === undefined) {
+    workspaceDoorsConfirmed = false
+    return false
+  }
+  const pick = await vscode.window.showWarningMessage(
+    'This workspace sets engined.doors. Using it lets this folder choose which server chat, completions, and search talk to.',
+    { modal: true },
+    'Use workspace doors',
+  )
+  workspaceDoorsConfirmed = pick === 'Use workspace doors'
+  return workspaceDoorsConfirmed
+}
+
+/** `engined.doors`, or the single local default when unset/empty. Workspace/folder values need `confirmWorkspaceDoors`. */
 export function getDoors(): Door[] {
-  const doors = usableDoors(config().get<Door[]>('doors', DEFAULT_DOORS))
-  return doors.length > 0 ? doors : DEFAULT_DOORS
+  const inspected = config().inspect<Door[]>('doors')
+  return doorsFromInspect(
+    {
+      globalValue: inspected?.globalValue,
+      workspaceValue: inspected?.workspaceValue,
+      workspaceFolderValue: inspected?.workspaceFolderValue,
+      defaultValue: inspected?.defaultValue,
+    },
+    workspaceDoorsConfirmed,
+    DEFAULT_DOORS,
+  )
 }
 
 export function getPollSeconds(): number {

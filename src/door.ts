@@ -11,9 +11,102 @@ export interface Door {
   url: string
 }
 
-/** Drops door names that contain `/`, which would break `splitQualifiedId`. */
+/** Loopback hosts this extension treats as on-machine (never as advertised-local remote doors). */
+export function isLoopbackHost(hostname: string): boolean {
+  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  if (host === 'localhost' || host === '::1' || host === '0:0:0:0:0:0:0:1') {
+    return true
+  }
+  if (host.startsWith('127.')) {
+    return true
+  }
+  if (host.startsWith('::ffff:')) {
+    return isLoopbackHost(host.slice('::ffff:'.length))
+  }
+  return false
+}
+
+/** `http:`/`https:` only; `http:` only to a loopback host. */
+export function isAllowedDoorUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol === 'https:') {
+      return true
+    }
+    return parsed.protocol === 'http:' && isLoopbackHost(parsed.hostname)
+  } catch {
+    return false
+  }
+}
+
+/** A non-loopback door cannot claim `egress: "none"` (or omit egress and be treated as local). */
+export function effectiveEgress(
+  doorUrl: string,
+  advertised: string | undefined,
+): string | undefined {
+  try {
+    if (isLoopbackHost(new URL(doorUrl).hostname)) {
+      return advertised
+    }
+  } catch {
+    // Unparseable URL: treat as remote.
+  }
+  return advertised === 'none' || advertised === undefined ? 'remote' : advertised
+}
+
+/** Drops slash-in-name doors (breaks `splitQualifiedId`) and URLs that are not allowed `http(s)`. */
 export function usableDoors(doors: readonly Door[]): Door[] {
-  return doors.filter((d) => !d.name.includes('/'))
+  return doors.filter((d) => !d.name.includes('/') && isAllowedDoorUrl(d.url))
+}
+
+/** `engined.doors` from VS Code `inspect`: workspace/folder values are used only after the user confirms. */
+export function doorsFromInspect(
+  inspected: {
+    globalValue?: Door[]
+    workspaceValue?: Door[]
+    workspaceFolderValue?: Door[]
+    defaultValue?: Door[]
+  },
+  allowWorkspace: boolean,
+  fallback: readonly Door[],
+): Door[] {
+  const workspace = inspected.workspaceValue ?? inspected.workspaceFolderValue
+  const chosen =
+    workspace !== undefined && allowWorkspace
+      ? workspace
+      : (inspected.globalValue ?? inspected.defaultValue ?? fallback)
+  const doors = usableDoors(chosen)
+  return doors.length > 0 ? doors : [...fallback]
+}
+
+const ASCII_C0_MAX = 0x1f
+const ASCII_DEL = 0x7f
+
+/** The door `fix` string to copy, or `undefined` when Copy Fix must not write the clipboard. */
+export function copyFixText(fix: string | undefined): string | undefined {
+  if (fix === undefined || fix === '') {
+    return undefined
+  }
+  for (const ch of fix) {
+    const code = ch.charCodeAt(0)
+    if (code <= ASCII_C0_MAX || code === ASCII_DEL) {
+      return undefined
+    }
+  }
+  const line = fix.trim()
+  return line.startsWith('engined ') ? line : undefined
+}
+
+/** Live Engines-view node for a command argument: configured doors, never the caller's `url`. */
+export function trustedEngineNode<T extends { id: string; door: Door }>(
+  item: { kind: string; node?: { id: string } },
+  live: T | undefined,
+  doors: readonly Door[],
+): T | undefined {
+  if (item.kind !== 'engine' || live === undefined || item.node?.id !== live.id) {
+    return undefined
+  }
+  return doors.some((d) => d.name === live.door.name && d.url === live.door.url) ? live : undefined
 }
 
 /** `rawId` unqualified with one door (existing single-door settings keep working); `<door name>/<rawId>` with more than one. */
@@ -156,7 +249,13 @@ function tooltipFor(row: EnginedModelRow): string {
 
 /** A wire row, qualified against the door it came from. */
 function qualifyRow(raw: RawModelRow, door: Door, doorCount: number): EnginedModelRow {
-  return { ...raw, id: qualifyId(door.name, raw.id, doorCount), routeId: raw.id, door }
+  return {
+    ...raw,
+    id: qualifyId(door.name, raw.id, doorCount),
+    routeId: raw.id,
+    door,
+    egress: effectiveEgress(door.url, raw.egress),
+  }
 }
 
 /** One row -> the model info the provider reports, or `undefined` for a row this extension does not offer as a chat model. */

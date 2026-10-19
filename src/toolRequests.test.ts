@@ -10,6 +10,7 @@ import {
   confirmationMessage,
   refuseTranslate,
   requestSpeech,
+  searchConfirmationMessage,
   ToolRouteError,
   TRANSLATE_UNAVAILABLE,
 } from './toolRequests.ts'
@@ -298,5 +299,17 @@ describe('confirmationMessage', () => {
       capabilities: {},
     }
     expect(confirmationMessage(remoteRow, 'Describe image')).toContain('leaves this machine')
+  })
+})
+
+describe('searchConfirmationMessage', () => {
+  test('warns when the calling chat route is missing or not local', () => {
+    expect(searchConfirmationMessage('secrets', { route: '@/llama/ornith', egress: 'none' })).toBe(
+      'Search the workspace for "secrets". Results go to @/llama/ornith.',
+    )
+    expect(searchConfirmationMessage('secrets', { route: 'copilot', egress: 'remote' })).toContain(
+      'leave this machine',
+    )
+    expect(searchConfirmationMessage('secrets', undefined)).toContain('leave this machine')
   })
 })

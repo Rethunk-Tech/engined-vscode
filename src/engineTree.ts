@@ -432,11 +432,6 @@ export function releaseHoldIds(
   return [...new Set([...sessionHeld, ...listedHeld])].sort()
 }
 
-/** The door `fix` string to copy, or `undefined` when Copy Fix must not write the clipboard. */
-export function copyFixText(fix: string | undefined): string | undefined {
-  return fix === undefined || fix === '' ? undefined : fix
-}
-
 /** Door obtain JSON `{message}` (or a bare string), or `undefined` when there is nothing to show. */
 export function obtainResultText(data: unknown): string | undefined {
   if (typeof data === 'string') {

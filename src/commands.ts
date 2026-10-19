@@ -6,12 +6,18 @@ import { ENABLE_CONFIGSVC_COMMAND, resolveConfigUi, runEnginedConfigsvcUrl } fro
 import { DOOR_TIMEOUT_MS, STATUS_QUICK_PICK } from './constants.ts'
 import { DEFAULT_MODEL_ROLES, qualifyingRows } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
-import type { ReasoningLevel } from './door.ts'
-import { doorByName, qualifiedEngineIds, REASONING_LEVELS, splitQualifiedId } from './door.ts'
+import {
+  doorByName,
+  qualifiedEngineIds,
+  REASONING_LEVELS,
+  type ReasoningLevel,
+  splitQualifiedId,
+  trustedEngineNode,
+} from './door.ts'
 import { fetchAllUsage, holdEngine, postTokenize, startModel, unholdEngine } from './doorClient.ts'
 import type { EngineTreeItem } from './engineExplorer.ts'
 import { copyFixCommand } from './engineExplorer.ts'
-import { emptyListedMessage, releaseHoldIds } from './engineTree.ts'
+import { type EngineNode, emptyListedMessage, releaseHoldIds } from './engineTree.ts'
 import type { Session } from './session.ts'
 import { renderStatusBar } from './statusBar.ts'
 import { buildUsageReport } from './usageReport.ts'
@@ -215,35 +221,46 @@ export function registerUsageReportProvider(): vscode.Disposable[] {
 
 // --- activation ---------------------------------------------------------
 
+function engineFromTreeArg(s: Session, item: EngineTreeItem | undefined): EngineNode | undefined {
+  if (item === undefined || item.kind !== 'engine') {
+    return undefined
+  }
+  return trustedEngineNode(item, s.engineExplorer.nodeFor(item.node.id), getDoors())
+}
+
 /** The tree-item commands: each gets the clicked `EngineTreeItem` and ignores anything that is not an engine row. */
 export function registerEngineTreeCommands(s: Session): vscode.Disposable[] {
   return [
     vscode.commands.registerCommand('engined.showEngineLogs', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return s.engineExplorer.showLogs(item.node)
+      const node = engineFromTreeArg(s, item)
+      if (node !== undefined) {
+        return s.engineExplorer.showLogs(node)
       }
       return
     }),
     vscode.commands.registerCommand('engined.followEngineLogs', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        s.engineExplorer.followLogs(item.node)
+      const node = engineFromTreeArg(s, item)
+      if (node !== undefined) {
+        s.engineExplorer.followLogs(node)
       }
     }),
     vscode.commands.registerCommand('engined.stopEngine', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return s.engineExplorer.stop(item.node)
+      const node = engineFromTreeArg(s, item)
+      if (node !== undefined) {
+        return s.engineExplorer.stop(node)
       }
       return
     }),
     vscode.commands.registerCommand('engined.warmEngine', async (item: EngineTreeItem) => {
-      if (item.kind !== 'engine') {
+      const node = engineFromTreeArg(s, item)
+      if (node === undefined) {
         return
       }
       const row = s.poller.rows.find(
-        (r) => r.engine === item.node.rawId && r.door.name === item.node.door.name,
+        (r) => r.engine === node.rawId && r.door.name === node.door.name,
       )
       if (row === undefined) {
-        vscode.window.showErrorMessage(`engined: no known model route for engine "${item.node.id}"`)
+        vscode.window.showErrorMessage(`engined: no known model route for engine "${node.id}"`)
         return
       }
       try {
@@ -255,44 +272,46 @@ export function registerEngineTreeCommands(s: Session): vscode.Disposable[] {
       await s.engineExplorer.refresh()
     }),
     vscode.commands.registerCommand('engined.holdEngine', async (item: EngineTreeItem) => {
-      if (item.kind !== 'engine') {
+      const node = engineFromTreeArg(s, item)
+      if (node === undefined) {
         return
       }
       try {
-        await holdEngine(item.node.door.url, item.node.rawId)
-        s.heldEngineIds.add(item.node.id)
+        await holdEngine(node.door.url, node.rawId)
+        s.heldEngineIds.add(node.id)
         renderStatusBar(s)
       } catch (error) {
-        vscode.window.showErrorMessage(
-          `engined: hold "${item.node.id}" failed: ${describeError(error)}`,
-        )
+        vscode.window.showErrorMessage(`engined: hold "${node.id}" failed: ${describeError(error)}`)
       }
       await s.engineExplorer.refresh()
     }),
     vscode.commands.registerCommand('engined.releaseHoldEngine', async (item: EngineTreeItem) => {
-      if (item.kind !== 'engine') {
+      const node = engineFromTreeArg(s, item)
+      if (node === undefined) {
         return
       }
       try {
-        await unholdEngine(item.node.door.url, item.node.rawId)
-        s.heldEngineIds.delete(item.node.id)
+        await unholdEngine(node.door.url, node.rawId)
+        s.heldEngineIds.delete(node.id)
         renderStatusBar(s)
       } catch (error) {
         vscode.window.showErrorMessage(
-          `engined: release hold "${item.node.id}" failed: ${describeError(error)}`,
+          `engined: release hold "${node.id}" failed: ${describeError(error)}`,
         )
       }
       await s.engineExplorer.refresh()
     }),
     vscode.commands.registerCommand('engined.copyFixCommand', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return copyFixCommand(item.node.fix)
+      const node = engineFromTreeArg(s, item)
+      if (node !== undefined) {
+        return copyFixCommand(node.fix)
       }
       return
     }),
     vscode.commands.registerCommand('engined.obtainEngine', (item: EngineTreeItem) => {
-      if (item.kind === 'engine') {
-        return s.engineExplorer.obtain(item.node)
+      const node = engineFromTreeArg(s, item)
+      if (node !== undefined) {
+        return s.engineExplorer.obtain(node)
       }
       return
     }),
