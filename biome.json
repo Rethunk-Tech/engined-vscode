@@ -1,5 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
+  "markdown": { "formatter": { "enabled": false } },
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -111,11 +112,14 @@
         "useImportExtensions": "on",
         "noUnresolvedImports": "off",
         "noSolidDestructuredProps": "off",
-        "useQwikValidLexicalScope": "off"
+        "useQwikValidLexicalScope": "off",
+        "noReactNativeRawText": "off"
       },
       "suspicious": {
         "noExplicitAny": "error",
         "noReactSpecificProps": "off",
+        "useBaseline": "off",
+        "noLoopFunc": "off",
         "noUnnecessaryConditions": "error"
       },
       "security": {
