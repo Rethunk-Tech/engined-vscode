@@ -116,7 +116,8 @@ describe('ModelPoller failures', () => {
   })
 
   test('a failure after a successful poll keeps the last lists until the 3rd failure', async () => {
-    let succeed = true
+    let succeed: boolean
+    succeed = true
     let fires = 0
     const poller = new ModelPoller(
       () =>
@@ -142,7 +143,8 @@ describe('ModelPoller failures', () => {
   })
 
   test('reachable flips false only on the 3rd consecutive failure', async () => {
-    let succeed = true
+    let succeed: boolean
+    succeed = true
     const poller = new ModelPoller(
       () => (succeed ? Promise.resolve(poll([model('a')])) : Promise.reject(new Error('down'))),
       () => undefined,

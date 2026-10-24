@@ -55,7 +55,7 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
   readonly #log: (line: string) => void
   readonly #logChannels = new Map<string, vscode.OutputChannel>()
   readonly #logFollows = new Map<string, AbortController>()
-  #viewVisible = true
+  #viewVisible: boolean
   readonly #getDoors: () => Door[]
   readonly #getRows: () => readonly EnginedModelRow[]
   readonly #setMessage: (text: string | undefined) => void
@@ -69,6 +69,7 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
     setMessage: (text: string | undefined) => void
     onRefreshed?: () => void
   }) {
+    this.#viewVisible = true
     this.#heldIds = deps.heldIds
     this.#log = deps.log
     this.#getDoors = deps.getDoors

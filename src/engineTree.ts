@@ -82,7 +82,7 @@ interface DiscoveryStatus {
 }
 
 export interface EnginesListResponse {
-  engines: EngineRow[]
+  engines?: EngineRow[]
   /**
    * Parse error from the most recent failed config reload. The previous
    * config keeps serving, so this is the only signal the edit did not take.

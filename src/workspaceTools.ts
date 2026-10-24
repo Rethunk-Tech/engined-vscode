@@ -355,6 +355,7 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       const result = (await postForm(row.door.url, req.path, form, cancellationSignal(token))) as
         | { text?: string }
         | ArrayBuffer
+        | null
       const text =
         typeof result === 'object' && result !== null && 'text' in result
           ? (result.text ?? '')

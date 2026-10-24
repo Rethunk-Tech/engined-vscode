@@ -126,7 +126,8 @@ describe('SearchIndex refresh', () => {
 
   test('events during a running refresh fold into one follow-up, never two at once', async () => {
     let release: () => void = () => undefined
-    let gated = false
+    let gated: boolean
+    gated = false
     const { host, counts } = fakeHost()
     const realFind = host.findFiles
     const slowHost: SearchHost = {

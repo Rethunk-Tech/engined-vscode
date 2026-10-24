@@ -26,8 +26,8 @@ const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
 describe('toEngineNodes', () => {
   test('maps every recorded engine, one node per id, unqualified with one door', () => {
     const nodes = toEngineNodes(engines, { heldIds: new Set(), door: DOOR, doorCount: 1 })
-    expect(nodes.length).toBe(engines.engines.length)
-    expect(nodes.map((n) => n.id)).toEqual(engines.engines.map((e) => e.id))
+    expect(nodes.length).toBe((engines.engines ?? []).length)
+    expect(nodes.map((n) => n.id)).toEqual((engines.engines ?? []).map((e) => e.id))
   })
 
   test('more than one door qualifies every id and carries the door through', () => {

@@ -65,11 +65,11 @@ export class SearchIndex {
   readonly #rowsProvider: () => readonly EnginedModelRow[]
   readonly #log: (line: string) => void
   #index: StoredIndex = emptyIndex()
-  #loaded = false
+  #loaded: boolean
   #saveTimer: ReturnType<typeof setTimeout> | undefined
   #refreshTimer: ReturnType<typeof setTimeout> | undefined
-  #refreshing = false
-  #refreshAgain = false
+  #refreshing: boolean
+  #refreshAgain: boolean
 
   constructor(
     storageUri: HostUri,
@@ -77,6 +77,9 @@ export class SearchIndex {
     log: (line: string) => void,
     host: SearchHost,
   ) {
+    this.#loaded = false
+    this.#refreshing = false
+    this.#refreshAgain = false
     this.#host = host
     this.#storageUri = storageUri
     this.#rowsProvider = rowsProvider
