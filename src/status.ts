@@ -297,17 +297,15 @@ function multiDoorHeaderChip(doors: readonly DoorLine[]): string {
 }
 
 function doorRow(d: DoorLine): string {
-  const degraded = d.reachable && d.configError !== undefined
-  const glyph = d.reachable
-    ? degraded
-      ? chip('$(warning)', COLOR_WARN)
-      : chip('$(pass-filled)', COLOR_OK)
-    : chip('$(error)', COLOR_ERROR)
-  const suffix = d.reachable
-    ? d.configError === undefined
-      ? ''
-      : ` ${muted(`config not loaded: ${escapeHtml(d.configError)}`)}`
-    : ` ${muted('unreachable')}`
+  let glyph = chip('$(error)', COLOR_ERROR)
+  let suffix = ` ${muted('unreachable')}`
+  if (d.reachable && d.configError === undefined) {
+    glyph = chip('$(pass-filled)', COLOR_OK)
+    suffix = ''
+  } else if (d.reachable && d.configError !== undefined) {
+    glyph = chip('$(warning)', COLOR_WARN)
+    suffix = ` ${muted(`config not loaded: ${escapeHtml(d.configError)}`)}`
+  }
   return row(escapeHtml(d.name), `${glyph} ${escapeHtml(d.url)}${suffix}`)
 }
 
