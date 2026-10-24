@@ -116,7 +116,7 @@
       "suspicious": {
         "noExplicitAny": "error",
         "noReactSpecificProps": "off",
-        "noUnnecessaryConditions": "off"
+        "noUnnecessaryConditions": "error"
       },
       "security": {
         "noSecrets": {
