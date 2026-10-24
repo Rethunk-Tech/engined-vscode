@@ -135,6 +135,7 @@
         "noMisusedPromises": "error"
       },
       "performance": {
+        "useDomNodeTextContent": "off",
         "noAwaitInLoops": "off",
         "noImgElement": "off",
         "noJsxPropsBind": "off",
