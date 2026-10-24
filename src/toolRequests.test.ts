@@ -146,6 +146,7 @@ describe('request builders', () => {
   test('a workspace voice file is uploaded, then spoken with the returned handle', async () => {
     const reference = new Uint8Array([1, 2, 3, 4])
     const paths: string[] = []
+    const uploads: { name: string; bytes: Uint8Array }[] = []
     const server = Bun.serve({
       port: 0,
       async fetch(req) {
@@ -157,8 +158,7 @@ describe('request builders', () => {
           if (!(file instanceof File)) {
             return new Response('expected file', { status: 400 })
           }
-          expect(file.name).toBe('me.wav')
-          expect(new Uint8Array(await file.arrayBuffer())).toEqual(reference)
+          uploads.push({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) })
           return Response.json({ voice: 'vc_cef8305b2eb7c0bf8766de6b1f5d0fab.wav', bytes: 4 })
         }
         expect(await req.json()).toEqual({
@@ -189,6 +189,7 @@ describe('request builders', () => {
       )
       expect(paths).toEqual(['/engined/v1/audio/voices', '/openai/v1/audio/speech'])
       expect(new Uint8Array(audio)).toEqual(Uint8Array.from([9, 8, 7]))
+      expect(uploads).toEqual([{ name: 'me.wav', bytes: reference }])
     } finally {
       await server.stop(true)
     }

@@ -12,12 +12,14 @@ describe('tokenize request', () => {
       { data: { tokens: Number.NaN } },
       { data: null },
     ]
-    for (const row of cases) {
-      if (row.tokens === undefined) {
-        expect(() => parseTokenizeReply(row.data)).toThrow('tokenize reply missing tokens')
-      } else {
-        expect(parseTokenizeReply(row.data)).toBe(row.tokens)
-      }
+    for (const row of cases.filter((c) => c.tokens === undefined)) {
+      expect(() => parseTokenizeReply(row.data)).toThrow('tokenize reply missing tokens')
+    }
+    const parsed = cases.flatMap((c) =>
+      c.tokens === undefined ? [] : [{ data: c.data, tokens: c.tokens }],
+    )
+    for (const row of parsed) {
+      expect(parseTokenizeReply(row.data)).toBe(row.tokens)
     }
   })
 })

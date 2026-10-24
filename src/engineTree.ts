@@ -429,7 +429,7 @@ export function releaseHoldIds(
   sessionHeld: ReadonlySet<string>,
   listedHeld: readonly string[],
 ): string[] {
-  return [...new Set([...sessionHeld, ...listedHeld])].sort()
+  return [...new Set([...sessionHeld, ...listedHeld])].sort((a, b) => Number(a > b) - Number(a < b))
 }
 
 /** Door obtain JSON `{message}` (or a bare string), or `undefined` when there is nothing to show. */
