@@ -33,11 +33,11 @@
 
     "@azure/logger": ["@azure/logger@1.4.0", "", { "dependencies": { "@typespec/ts-http-runtime": "^0.3.0", "tslib": "^2.6.2" } }, "sha512-rbAE25KUfjU/s3XHUdJgceoCP5dEOpMx85J04kF+QMdta73XkuG9JGHHinch+XIoKpBdqljin+KqURpJriSzLA=="],
 
-    "@azure/msal-browser": ["@azure/msal-browser@5.27.0", "", { "dependencies": { "@azure/msal-common": "16.15.0" } }, "sha512-i2CKKyuCuOZEBZJiAoFK/viYZAP6CRaqqlkeHl3ViteDHOUE/tkI/Slq1cdGnwhkIB+k1OE0g00QGl9O0gAFNQ=="],
+    "@azure/msal-browser": ["@azure/msal-browser@5.28.0", "", { "dependencies": { "@azure/msal-common": "16.16.0" } }, "sha512-f3yY518Z++x3ZogCbcLK6vnABgpxc8rAKGKtQibcUJKAVU9gamgh5mNAPJIRwduzXQvO2xtHx/gtmPz8iuZ8+w=="],
 
-    "@azure/msal-common": ["@azure/msal-common@16.15.0", "", {}, "sha512-lwdLb1B9Q5nEhPLVIKe78XH5wFMN15fCiDkY7ylPDSWZuWcD93G3jpJajrKhO3CQld8SLKz0sHiOi24mxdvtsg=="],
+    "@azure/msal-common": ["@azure/msal-common@16.16.0", "", {}, "sha512-EZgd8h5nczsdRAQAgXA0A0pC5L/zj43n1jePXvUMgdwXMbH2zhb7b7Hp+Oe7ZOODK/sch2x+soD6FOrtgUbx/w=="],
 
-    "@azure/msal-node": ["@azure/msal-node@7.1.2", "", { "dependencies": { "@azure/msal-common": "16.15.0", "jsonwebtoken": "^9.0.0" } }, "sha512-52hKQLGpEQzwNufIXG1SPVU+wQ3RIe7Rp2+g+VdAmZojCAZ6yCdGEffzQEQ6RnBZGBEs40nl14rWBmfJpCoHsg=="],
+    "@azure/msal-node": ["@azure/msal-node@7.2.0", "", { "dependencies": { "@azure/msal-common": "16.16.0", "jsonwebtoken": "^9.0.0" } }, "sha512-Y87VJsMWF4jiqLqq8XYLb1o+rGc/HacwS3Zydi3bDtaVm5Sa8FlB7YrKrBFKRIYj27RJXAaDkErImMAqtM10Pg=="],
 
     "@biomejs/biome": ["@biomejs/biome@2.6.5", "", { "optionalDependencies": { "@biomejs/cli-android-arm64": "2.6.5", "@biomejs/cli-android-x64": "2.6.5", "@biomejs/cli-darwin-arm64": "2.6.5", "@biomejs/cli-darwin-x64": "2.6.5", "@biomejs/cli-linux-arm64": "2.6.5", "@biomejs/cli-linux-arm64-musl": "2.6.5", "@biomejs/cli-linux-x64": "2.6.5", "@biomejs/cli-linux-x64-musl": "2.6.5", "@biomejs/cli-win32-arm64": "2.6.5", "@biomejs/cli-win32-x64": "2.6.5" }, "bin": { "biome": "bin/biome" } }, "sha512-n0sp74QbSVEkWXlH659TKv4oJNylwAvDeZ8K8vt/PbcF1xneuNWe57z/G0Bxfh00cufhWXF6DiStLM8+jcLUpg=="],
 
@@ -359,6 +359,6 @@
 
     "yazl": ["yazl@2.5.1", "", { "dependencies": { "buffer-crc32": "~0.2.3" } }, "sha512-phENi2PLiHnHb6QBVot+dJnaAZ0xosj7p3fWl+znIjBDlnMI2PsZCJZ306BPTFOaHf5qdDEI8x5qFrSOBN5vrw=="],
 
-    "bun-types/undici-types": ["undici-types@8.12.3", "", {}, "sha512-EXE4ydL3S76dFb27UFjNVZHTyv/TLdATj/KUe29ptdcg6qXL48J2tZ3126E5kICj5jn781OR+XlVH1N6Mz8jbA=="],
+    "bun-types/undici-types": ["undici-types@8.12.4", "", {}, "sha512-GNCQH3MbVGB8OAVAoTiLH8pu4wx5Ni3DWKpnBzGj3WDsi8EwmK0aOVBooNEt+g5YL1eHPxcS9XUTouwFU6j1kQ=="],
   }
 }
