@@ -46,17 +46,17 @@ Then open Copilot Chat's model picker and choose an `engined` model. Full runboo
 
 ## Documentation
 
-| Doc | Covers |
-| --- | --- |
-| [HUMANS.md](HUMANS.md) | Build, run, use, and configure the extension |
-| [AGENTS.md](AGENTS.md) | Contributor map and invariants |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Commit conventions and test steps |
-| [SECURITY.md](SECURITY.md) | Vulnerability disclosure |
-| [CHANGELOG.md](CHANGELOG.md) | Release notes |
-| [docs/tools.md](docs/tools.md) | Agent tool parameters |
-| [docs/polling.md](docs/polling.md) | Model-list polling internals |
-| [docs/reasoning-effort.md](docs/reasoning-effort.md) | Reasoning-effort mapping |
-| [docs/settings.md](docs/settings.md) | Every `engined.*` setting |
+| Doc                                                  | Covers                                       |
+| ---------------------------------------------------- | -------------------------------------------- |
+| [HUMANS.md](HUMANS.md)                               | Build, run, use, and configure the extension |
+| [AGENTS.md](AGENTS.md)                               | Contributor map and invariants               |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                   | Commit conventions and test steps            |
+| [SECURITY.md](SECURITY.md)                           | Vulnerability disclosure                     |
+| [CHANGELOG.md](CHANGELOG.md)                         | Release notes                                |
+| [docs/tools.md](docs/tools.md)                       | Agent tool parameters                        |
+| [docs/polling.md](docs/polling.md)                   | Model-list polling internals                 |
+| [docs/reasoning-effort.md](docs/reasoning-effort.md) | Reasoning-effort mapping                     |
+| [docs/settings.md](docs/settings.md)                 | Every `engined.*` setting                    |
 
 ## License
 

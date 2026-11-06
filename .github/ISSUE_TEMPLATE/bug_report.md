@@ -1,9 +1,9 @@
 ---
 name: Bug report
 about: Report incorrect extension behaviour
-title: '[BUG] '
+title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 ## To reproduce
