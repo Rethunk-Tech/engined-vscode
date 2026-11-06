@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Engines rows show a failing translation or rerank probe (`probes`); `engined_transcribe` passes the models row's `probe` to the translate refusal.
+
 ## [0.1.8] - 2026-10-18
 
 ### Added

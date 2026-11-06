@@ -354,6 +354,46 @@ describe('idle deadline', () => {
   })
 })
 
+describe('probe verdicts', () => {
+  test('a failing probe shows beside last_error on any state; a passing or absent one changes nothing', () => {
+    const at = '2026-11-05T10:00:00.000Z'
+    const failing = {
+      address: 'a:1',
+      kind: 'rerank' as const,
+      quality: false,
+      detail: 'order wrong',
+      at,
+    }
+    const response: EnginesListResponse = {
+      engines: [
+        { id: 'run', kind: 'openai-http', state: 'running', probes: [failing] },
+        {
+          id: 'bad',
+          kind: 'openai-http',
+          state: 'failed',
+          last_error: 'boom',
+          probes: [failing, { ...failing, address: 'a:2' }],
+        },
+        {
+          id: 'ok',
+          kind: 'openai-http',
+          state: 'running',
+          probes: [{ ...failing, quality: true }],
+        },
+        { id: 'none', kind: 'openai-http', state: 'running' },
+      ],
+    }
+    const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
+    const by = (id: string) => nodes.find((n) => n.id === id)
+    expect(by('run')?.description).toBe('openai-http · running · rerank probe failed')
+    expect(by('run')?.tooltip).toContain(`rerank probe failed at a:1: order wrong (${at})`)
+    expect(by('bad')?.description).toBe('openai-http · failed · boom · rerank probe failed')
+    expect(by('bad')?.tooltip.match(/probe failed at/g)?.length).toBe(2)
+    expect(by('ok')?.description).toBe(by('none')?.description)
+    expect(by('ok')?.tooltip).toBe(by('none')?.tooltip)
+  })
+})
+
 describe('last error', () => {
   test('a failed engine shows last_error; a running engine without the field does not', () => {
     const response: EnginesListResponse = {

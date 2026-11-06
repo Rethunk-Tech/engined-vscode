@@ -340,12 +340,12 @@ interface TranscribeInput {
 const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
   async invoke(options, token) {
     try {
-      const refused = refuseTranslate(options.input.translate)
+      const row = host().resolveRoleRow('transcription', '/openai/v1/audio/transcriptions')
+      const refused = refuseTranslate(options.input.translate, row.probe)
       if (refused !== undefined) {
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(refused)])
       }
       const bytes = await readWorkspaceFile(options.input.path)
-      const row = host().resolveRoleRow('transcription', '/openai/v1/audio/transcriptions')
       const req = buildTranscribeRequest(row, {
         audio: new Blob([bytes]),
       })

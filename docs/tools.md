@@ -37,7 +37,7 @@ Route: `/openai/v1/chat/completions` against a vision row. `mode: "ocr"` needs a
 | ------ | ------ | ---------------------------- |
 | `path` | string | required, workspace-relative |
 
-Route: `/openai/v1/audio/transcriptions`. Route selection: `engined.defaultModels.transcription`. Speech translation is not offered until a quality probe passes; a `translate` request is refused in the tool result. Transcribe the file and translate the text with a chat model.
+Route: `/openai/v1/audio/transcriptions`. Route selection: `engined.defaultModels.transcription`. Speech translation is offered only when the route's `/openai/v1/models` row carries a `probe` with `quality: true`; otherwise (no probe, or a failing one) a `translate` request is refused in the tool result. Transcribe the file and translate the text with a chat model.
 
 ## `engined_search`
 

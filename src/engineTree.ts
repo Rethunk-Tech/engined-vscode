@@ -9,6 +9,7 @@ import { BYTES_PER_KIB } from './constants.ts'
 import type { Door } from './door.ts'
 import { qualifyId } from './door.ts'
 import { doorErrorMessage } from './doorClient.ts'
+import { type EngineProbe, probeLabels, probeLines } from './engineProbes.ts'
 import { unreachable } from './unreachable.ts'
 
 /**
@@ -59,6 +60,12 @@ interface EngineRow {
    * a live role's `model` is a different field and stays on its own line.
    */
   capabilities?: EngineCapability[]
+  /**
+   * Latest translation or rerank probe verdicts. Absent when none is recorded.
+   * Only entries with `quality: false` show; they sit beside `last_error` and
+   * show on any state, because a running engine can fail a probe.
+   */
+  probes?: EngineProbe[]
   /** True when the door is missing this engine's image or artifact; Obtain uses that. */
   missing?: boolean
 }
@@ -415,6 +422,7 @@ function engineTooltip(
   const text = baseTooltip(engine, description)
   const extra = [
     capabilitySummary(engine.capabilities),
+    ...probeLines(engine),
     ...discoveryLines(engine, discovery),
   ].filter((line): line is string => line !== undefined)
   return extra.length === 0 ? text : `${text}\n${extra.join('\n')}`
@@ -459,7 +467,9 @@ export function emptyListedMessage(kind: 'models' | 'engines', count: number): s
  * is active yet, the same id is also appended on the description (the queue
  * head). An absent `model` adds nothing. A `last_error` on a `failed` or
  * `unavailable` engine is appended; an absent field, or the same field on any
- * other state, adds nothing. When `capabilities` names declared models, the
+ * other state, adds nothing. A `probes` entry with `quality: false` appends
+ * `<kind> probe failed` on any state and its address, detail and time on the
+ * tooltip; passing or absent probes add nothing. When `capabilities` names declared models, the
  * tooltip appends a compact summary of those ids; an absent field adds
  * nothing, and that summary is not the live role model. An agentic-cli row
  * appends its `discovery` entry's `last_error` and `fetched_at` on the tooltip
@@ -503,6 +513,7 @@ export function toEngineNodes(
       waiting > 0 ? `${waiting} waiting` : undefined,
       ...queueHeadModels(engine.roles),
       lastErrorLabel(engine),
+      ...probeLabels(engine),
     ]
       .filter((part): part is string => part !== undefined)
       .join(' · ')
