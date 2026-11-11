@@ -23,7 +23,7 @@ function isInside(candidate: string, root: string): boolean {
 function realpathExistingPrefix(p: string): string {
   let current = p
   const missing: string[] = []
-  for (;;) {
+  while (true) {
     try {
       const real = realpathSync(current)
       return missing.length === 0 ? real : resolve(real, ...missing.slice().reverse())

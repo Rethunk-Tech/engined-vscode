@@ -92,7 +92,7 @@ async function connectEngineEvents(s: Session, door: Door): Promise<void> {
   let buffer = ''
   try {
     try {
-      for (;;) {
+      while (true) {
         const { done, value } = await reader.read()
         if (done) {
           break

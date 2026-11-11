@@ -166,7 +166,7 @@ export async function readChatStream(
   const usage: ChatUsage = {}
   let buffer = ''
   try {
-    for (;;) {
+    while (true) {
       const { done, value } = await reader.read()
       if (done) {
         break

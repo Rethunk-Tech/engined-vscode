@@ -140,7 +140,7 @@ export async function readImageEvents(
   let buffer = ''
   const image: { value: unknown } = { value: undefined }
   try {
-    for (;;) {
+    while (true) {
       const { done, value } = await reader.read()
       if (done) {
         break
