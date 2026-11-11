@@ -166,12 +166,8 @@ export async function readChatStream(
   const usage: ChatUsage = {}
   let buffer = ''
   try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) {
-        break
-      }
-      buffer += decoder.decode(value, { stream: true })
+    for (let r = await reader.read(); !r.done; r = await reader.read()) {
+      buffer += decoder.decode(r.value, { stream: true })
       const [lines, rest] = splitLines(buffer)
       buffer = rest
       for (const line of lines) {

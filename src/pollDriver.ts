@@ -92,12 +92,8 @@ async function connectEngineEvents(s: Session, door: Door): Promise<void> {
   let buffer = ''
   try {
     try {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          break
-        }
-        buffer += decoder.decode(value, { stream: true })
+      for (let r = await reader.read(); !r.done; r = await reader.read()) {
+        buffer += decoder.decode(r.value, { stream: true })
         const parsed = parseSseChunk(buffer)
         buffer = parsed.rest
         if (parsed.frames.length > 0) {

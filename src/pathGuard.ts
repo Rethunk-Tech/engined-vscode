@@ -23,19 +23,22 @@ function isInside(candidate: string, root: string): boolean {
 function realpathExistingPrefix(p: string): string {
   let current = p
   const missing: string[] = []
-  while (true) {
+  let reachedRoot = false
+  while (!reachedRoot) {
     try {
       const real = realpathSync(current)
       return missing.length === 0 ? real : resolve(real, ...missing.slice().reverse())
     } catch {
       const parent = dirname(current)
       if (parent === current) {
-        return p
+        reachedRoot = true
+      } else {
+        missing.push(basename(current))
+        current = parent
       }
-      missing.push(basename(current))
-      current = parent
     }
   }
+  return p
 }
 
 function containedIn(candidate: string, roots: readonly string[]): boolean {
