@@ -598,5 +598,8 @@
     "@vscode/vsce": "^4.1.0",
     "typescript": "^7.0.2"
   },
+  "overrides": {
+    "minimatch": "11.0.8"
+  },
   "icon": "media/icon.png"
 }
