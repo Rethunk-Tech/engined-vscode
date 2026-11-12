@@ -330,9 +330,9 @@ export async function countSelectionTokens(s: Session, bar: vscode.StatusBarItem
   const lastRoute = s.lastChatCall?.route
   const listed = s.poller.models
   const picked =
-    (lastRoute !== undefined
-      ? listed.find((m) => m.id === lastRoute || m.row.id === lastRoute)
-      : undefined) ?? listed[0]
+    (lastRoute === undefined
+      ? undefined
+      : listed.find((m) => m.id === lastRoute || m.row.id === lastRoute)) ?? listed[0]
   if (picked === undefined) {
     vscode.window.showErrorMessage('engined: no chat model is available to tokenize against')
     return

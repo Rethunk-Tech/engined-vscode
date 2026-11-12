@@ -191,11 +191,7 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
       costUsd: usage?.costUsd ?? costUsdHeader(headers),
       promptTokenMax: model.maxInputTokens,
     }
-    if (hadTools) {
-      s.lastChatCall = record
-    } else {
-      s.lastBackgroundCall = record
-    }
+    s[hadTools ? 'lastChatCall' : 'lastBackgroundCall'] = record
     renderStatusBar(s)
     for (const call of toolCalls) {
       if (call.arguments === undefined) {
