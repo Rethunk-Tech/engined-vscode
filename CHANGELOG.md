@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The extension now requires VS Code 1.145 or newer.
 
+### Fixed
+
+- Search warns when results may leave the machine after a stale local chat, serializes index refreshes, retries files with missing embeddings, and skips binary files after one read.
+- Chat skips tool calls with unparseable arguments, keeps the first in-flight chat's status when a second ends, and keeps today's usage when every door is unreachable.
+
 ## [0.1.9] - 2026-11-08
 
 ### Added
