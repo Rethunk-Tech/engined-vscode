@@ -6,7 +6,7 @@
  */
 
 import type { DoorUsage, UsageRow } from './doorClient.ts'
-import { abbreviateTokenCount, formatSeconds, isLocalEgress } from './status.ts'
+import { abbreviateTokenCount, formatSeconds, isLocalEgress, type TodayUsage } from './status.ts'
 
 const COST_DECIMALS = 4
 const PERCENT = 100
@@ -38,6 +38,21 @@ function emptyTotals(): UsageTotals {
     localRequests: 0,
     remoteRequests: 0,
     unknownEgressRequests: 0,
+  }
+}
+
+/** Today's status-bar totals. `undefined` means do not replace the cache (no door returned ok). */
+export function todayUsageFromFetch(usages: readonly DoorUsage[]): TodayUsage | undefined {
+  const ok = usages.filter((u) => u.status === 'ok')
+  if (ok.length === 0) {
+    return undefined
+  }
+  const t = totalsFor(ok.flatMap((u) => u.rows))
+  return {
+    requests: t.requests,
+    promptTokens: t.promptTokens,
+    completionTokens: t.completionTokens,
+    costUsd: t.costUsd,
   }
 }
 

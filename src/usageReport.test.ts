@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import type { DoorUsage, UsageRow } from './doorClient.ts'
-import { buildUsageReport, formatTotalsLine, totalsFor } from './usageReport.ts'
+import {
+  buildUsageReport,
+  formatTotalsLine,
+  todayUsageFromFetch,
+  totalsFor,
+} from './usageReport.ts'
 
 function row(over: Partial<UsageRow> = {}): UsageRow {
   return {
@@ -13,6 +18,13 @@ function row(over: Partial<UsageRow> = {}): UsageRow {
     ...over,
   }
 }
+
+describe('todayUsageFromFetch', () => {
+  test('all-unreachable usages do not replace the cache with zeros', () => {
+    const door = { name: 'local', url: 'http://127.0.0.1:29200' }
+    expect(todayUsageFromFetch([{ door, status: 'unreachable' }])).toBeUndefined()
+  })
+})
 
 describe('totalsFor', () => {
   test('sums requests/ok/failed/duration across rows', () => {

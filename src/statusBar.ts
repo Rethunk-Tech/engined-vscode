@@ -24,7 +24,7 @@ import {
   stopLoadingFlight,
   TOOLTIP_COMMANDS,
 } from './status.ts'
-import { totalsFor } from './usageReport.ts'
+import { todayUsageFromFetch } from './usageReport.ts'
 
 const TODAY_USAGE_REFRESH_MS = 60_000
 
@@ -104,15 +104,13 @@ function refreshTodayUsageIfStale(s: Session): void {
   s.todayUsageFetchInFlight = true
   fetchAllUsage(getDoors(), 1, AbortSignal.timeout(DOOR_TIMEOUT_MS))
     .then((usages) => {
-      const rows = usages.filter((u) => u.status === 'ok').flatMap((u) => u.rows)
-      const t = totalsFor(rows)
-      s.todayUsageCache = {
-        requests: t.requests,
-        promptTokens: t.promptTokens,
-        completionTokens: t.completionTokens,
-        costUsd: t.costUsd,
-      }
+      const next = todayUsageFromFetch(usages)
+      // Stamp the attempt even when no door was ok, so a down door is not polled on every render.
       s.todayUsageFetchedAt = Date.now()
+      if (next === undefined) {
+        return
+      }
+      s.todayUsageCache = next
       renderStatusBar(s)
     })
     .catch((error: unknown) => s.log(`today usage: ${describeError(error)}`))
