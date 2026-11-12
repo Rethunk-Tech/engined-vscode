@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 import fc from 'fast-check'
-import { copyFixText, isAllowedDoorUrl } from './door'
+import { copyFixText, isAllowedDoorUrl } from './door.ts'
 
 const ASCII_C0_MAX = 0x1f
 const ASCII_DEL = 0x7f
@@ -16,6 +16,14 @@ function hasCtl(s: string): boolean {
     }
   }
   return false
+}
+
+function copyFixRef(fix: string | undefined): string | undefined {
+  if (fix === undefined || fix === '' || hasCtl(fix)) {
+    return undefined
+  }
+  const line = fix.trim()
+  return line.startsWith('engined ') ? line : undefined
 }
 
 test('isAllowedDoorUrl never throws and agrees with URL parse', () => {
@@ -41,17 +49,12 @@ test('isAllowedDoorUrl accepts http(s) web URLs', () => {
   )
 })
 
-test('copyFixText never throws and is idempotent on a defined result', () => {
+test('copyFixText agrees with the C0-stripped engined-prefix rule and is idempotent', () => {
   fc.assert(
     fc.property(fc.option(fc.string(), { nil: undefined }), (fix) => {
       const out = copyFixText(fix)
-      if (out === undefined) {
-        return
-      }
-      expect(out.startsWith('engined ')).toBe(true)
-      expect(hasCtl(out)).toBe(false)
-      expect(out).toBe(fix!.trim())
-      expect(copyFixText(out)).toBe(out)
+      expect(out).toBe(copyFixRef(fix))
+      expect(copyFixText(out ?? '')).toBe(out)
     }),
   )
 })
