@@ -313,4 +313,13 @@ describe('searchConfirmationMessage', () => {
     )
     expect(searchConfirmationMessage('secrets', undefined)).toContain('leave this machine')
   })
+
+  test('stale callingChat yields the may-leave-this-machine warning', () => {
+    const chat: { route?: string; egress?: string; at?: number } = {
+      route: '@/llama/ornith',
+      egress: 'none',
+      at: Date.now() - 10_000,
+    }
+    expect(searchConfirmationMessage('secrets', chat)).toContain('leave this machine')
+  })
 })

@@ -39,6 +39,7 @@ import { SearchIndex } from './searchIndex.ts'
 import type { Session } from './session.ts'
 import { maybeShowUnreachableNotice, renderStatusBar, stopLoadingTimer } from './statusBar.ts'
 import { TokenCountCache } from './tokenCount.ts'
+import { callingChatForSearch } from './toolRequests.ts'
 import { registerTools } from './workspaceTools.ts'
 
 /** Right-aligned status bar items sort by priority; 100 sits among the language-status items. */
@@ -178,7 +179,7 @@ export function activate(context: vscode.ExtensionContext): void {
       log: s.log,
       resolveRoleRow: (role, path) => resolveRoleRow(s, role, path),
       searchIndex: () => s.searchIndex,
-      callingChat: () => s.lastChatCall,
+      callingChat: () => callingChatForSearch(s.lastChatCall),
     }),
     watcher,
     watcher.onDidChange((uri) => s.searchIndex.onFileChanged(uri, 'change')),

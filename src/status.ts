@@ -70,6 +70,8 @@ export function resolveRoute(
 export interface CallRecord {
   route: string
   egress: string | undefined
+  /** When this call finished; `searchConfirmationMessage` treats a stale lastChatCall as unknown. */
+  at?: number
   promptTokens?: number
   completionTokens?: number
   wallMs: number

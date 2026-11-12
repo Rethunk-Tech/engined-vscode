@@ -182,6 +182,7 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
     const record: CallRecord = {
       route: resolved.route,
       egress: resolved.egress,
+      at: Date.now(),
       promptTokens: usage?.promptTokens,
       completionTokens: usage?.completionTokens,
       wallMs: Date.now() - startedAt,

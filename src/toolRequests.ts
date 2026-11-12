@@ -257,13 +257,28 @@ export function confirmationMessage(
   return `${action} via ${row.id}.${pathNote}${overwriteNote}${egressNote}`
 }
 
+/** Tool-call confirmation follows the chat stream within seconds; an older lastChatCall is a previous caller. */
+const SEARCH_CALLING_CHAT_MS = 5_000
+
+/** `undefined` when `chat` is older than the tool-invocation window, so the search warning shows. */
+export function callingChatForSearch(
+  chat: { route?: string; egress?: string; at?: number } | undefined,
+  now = Date.now(),
+): { route?: string; egress?: string; at?: number } | undefined {
+  if (chat?.at !== undefined && now - chat.at > SEARCH_CALLING_CHAT_MS) {
+    return undefined
+  }
+  return chat
+}
+
 /** Confirmation `engined_search` shows: the query, the calling chat route, and a warning when that route is not local. */
 export function searchConfirmationMessage(
   query: string,
-  chat: { route?: string; egress?: string } | undefined,
+  chat: { route?: string; egress?: string; at?: number } | undefined,
 ): string {
-  const route = chat?.route ?? 'the calling chat model'
-  const local = isLocalEgress(chat?.egress)
+  const active = callingChatForSearch(chat)
+  const route = active?.route ?? 'the calling chat model'
+  const local = isLocalEgress(active?.egress)
   const egressNote = local
     ? ''
     : ' Snippets will be returned to that model and may leave this machine.'
