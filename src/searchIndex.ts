@@ -251,11 +251,15 @@ export class SearchIndex {
     try {
       const bytes = await this.#host.readFile(uri)
       if (looksBinary(bytes)) {
+        this.#removeFile(path)
+        this.#index.files[path] = mtime
         return true
       }
       content = Buffer.from(bytes).toString('utf8')
     } catch (error) {
       this.#log(`search: skipping ${path}: ${describeError(error)}`)
+      this.#removeFile(path)
+      this.#index.files[path] = mtime
       return true
     }
     const chunks = chunkFile(path, content)

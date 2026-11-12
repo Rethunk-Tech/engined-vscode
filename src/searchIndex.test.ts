@@ -205,6 +205,23 @@ describe('SearchIndex refresh', () => {
     expect(keys).toEqual([...new Set(keys)])
   })
 
+  test('a binary file is read once across two ensureBuilt calls', async () => {
+    let reads = 0
+    const { host } = fakeHost({
+      readFile: (u) => {
+        if (u.fsPath.endsWith('search-index.json')) {
+          return Promise.reject(new Error('no index yet'))
+        }
+        reads += 1
+        return Promise.resolve(new Uint8Array([0x00, 0x01, 0x02]))
+      },
+    })
+    const { index } = await built(host)
+    expect(reads).toBe(1)
+    await index.ensureBuilt()
+    expect(reads).toBe(1)
+  })
+
   test('a partial embeddings reply is retried on the next refresh', async () => {
     let calls = 0
     const { host } = fakeHost({
