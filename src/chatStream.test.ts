@@ -26,6 +26,15 @@ describe('readChatStream', () => {
     expect(calls[0]?.id).toBe('Op4N4KrFSABiXPlhFM0Z642YsDktQ9Ec')
   })
 
+  test('truncated tool-call arguments yield no tool call', async () => {
+    const stream = streamFromText(
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","function":{"name":"engined_write_file","arguments":"{\\"path\\":\\"/tmp/x\\""}}]}}]}\n\n' +
+        'data: [DONE]\n\n',
+    )
+    const calls = await readChatStream(stream, { text: () => undefined })
+    expect(calls).toEqual([])
+  })
+
   test('ignores malformed data lines and ends cleanly', async () => {
     const stream = streamFromText('data: not json\n\ndata: [DONE]\n\n')
     const calls = await readChatStream(stream, { text: () => undefined })

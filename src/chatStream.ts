@@ -32,7 +32,7 @@ interface ChatChunk {
 export interface StitchedToolCall {
   id: string
   name: string
-  /** Parsed from the stitched JSON string; `undefined` when it never parsed as an object. */
+  /** Parsed from the stitched JSON string; `{}` when the stream sent no arguments. Invalid JSON is dropped, not returned. */
   arguments: Record<string, unknown> | undefined
 }
 
@@ -48,6 +48,8 @@ export interface StreamSink {
   text: (delta: string) => void
   /** The final chunk's `usage` (from `stream_options.include_usage`), when the stream carried one. */
   usage?: (usage: ChatUsage) => void
+  /** A named tool call whose arguments JSON never parsed -- dropped rather than reported as `{}`. */
+  invalidToolCall?: (name: string) => void
 }
 
 interface ToolCallSlot {
@@ -187,9 +189,12 @@ export async function readChatStream(
   }
   return calls
     .filter((c) => c.name.length > 0)
-    .map((c, i) => ({
-      id: c.id || `call_${i}`,
-      name: c.name,
-      arguments: parseArgs(c.args),
-    }))
+    .flatMap((c, i) => {
+      const parsed = c.args === '' ? {} : parseArgs(c.args)
+      if (parsed === undefined) {
+        sink.invalidToolCall?.(c.name)
+        return []
+      }
+      return [{ id: c.id || `call_${i}`, name: c.name, arguments: parsed }]
+    })
 }

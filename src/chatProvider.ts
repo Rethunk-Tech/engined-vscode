@@ -165,6 +165,9 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
         usage: (u) => {
           usage = u
         },
+        invalidToolCall: (name) => {
+          s.log(`chat: skipped tool call ${name}: arguments did not parse`)
+        },
       })
     } finally {
       stopLoadingTimer(s)
@@ -196,9 +199,10 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
     }
     renderStatusBar(s)
     for (const call of toolCalls) {
-      progress.report(
-        new vscode.LanguageModelToolCallPart(call.id, call.name, call.arguments ?? {}),
-      )
+      if (call.arguments === undefined) {
+        continue
+      }
+      progress.report(new vscode.LanguageModelToolCallPart(call.id, call.name, call.arguments))
     }
   }
 
