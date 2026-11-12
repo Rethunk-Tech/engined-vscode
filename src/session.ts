@@ -21,7 +21,7 @@ export interface DoorSseState {
   reconnectTimer?: ReturnType<typeof setTimeout>
 }
 
-interface InFlightChat {
+export interface InFlightChat {
   modelId: string
   startedAt: number
   promptTokenEstimate: number
@@ -64,4 +64,19 @@ export interface Session {
   doorReachable: boolean
   /** Shown once per session, on the first failed poll -- never repeated even if the door stays down. */
   unreachableNoticeShown: boolean
+}
+
+/** Drop the loading ticker only when `flight` is the one currently shown. Omit `flight` to clear unconditionally. */
+export function stopLoadingFlight<T>(
+  s: { inFlightChat: T | undefined; loadingTimer: ReturnType<typeof setInterval> | undefined },
+  flight?: T,
+): void {
+  if (flight !== undefined && s.inFlightChat !== flight) {
+    return
+  }
+  if (s.loadingTimer !== undefined) {
+    clearInterval(s.loadingTimer)
+    s.loadingTimer = undefined
+  }
+  s.inFlightChat = undefined
 }

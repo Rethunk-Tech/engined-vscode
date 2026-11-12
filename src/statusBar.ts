@@ -14,14 +14,13 @@ import { DEFAULT_MODEL_ROLES, resolveDefaultModel } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { DoorReachability } from './door.ts'
 import { fetchAllUsage } from './doorClient.ts'
-import type { Session } from './session.ts'
+import { type Session, stopLoadingFlight } from './session.ts'
 import type { ThemeKind } from './status.ts'
 import {
   buildTooltip,
   formatCallLine,
   formatWaitingText,
   hasExceededLoadingThreshold,
-  stopLoadingFlight,
   TOOLTIP_COMMANDS,
 } from './status.ts'
 import { todayUsageFromFetch } from './usageReport.ts'

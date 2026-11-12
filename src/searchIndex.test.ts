@@ -170,7 +170,8 @@ describe('SearchIndex refresh', () => {
     let maxRunning = 0
     let mtime = 1
     let release: () => void = () => undefined
-    let gated = false
+    let gated: boolean
+    gated = false
     const { host } = fakeHost({
       stat: () => Promise.resolve({ isFile: true, size: 12, mtime }),
       embed: async (_url, _model, texts) => {

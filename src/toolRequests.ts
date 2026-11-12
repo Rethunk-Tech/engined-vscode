@@ -258,7 +258,7 @@ export function confirmationMessage(
 }
 
 /** Tool-call confirmation follows the chat stream within seconds; an older lastChatCall is a previous caller. */
-const SEARCH_CALLING_CHAT_MS = 5_000
+const SEARCH_CALLING_CHAT_MS = 5000
 
 /** `undefined` when `chat` is older than the tool-invocation window, so the search warning shows. */
 export function callingChatForSearch(

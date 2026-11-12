@@ -16,7 +16,7 @@ import {
   plainMessageContent,
 } from './requestBuilder.ts'
 import { costUsdHeader, routeFromHeaders } from './routeHeaders.ts'
-import type { Session } from './session.ts'
+import type { InFlightChat, Session } from './session.ts'
 import type { CallRecord } from './status.ts'
 import { renderStatusBar, startLoadingTimer, stopLoadingTimer } from './statusBar.ts'
 import { resolveTokenCount } from './tokenCount.ts'
@@ -115,7 +115,7 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
       (sum, m) => sum + estimateMessageTokenCount(m),
       0,
     )
-    const flight = { modelId: model.id, startedAt, promptTokenEstimate }
+    const flight: InFlightChat = { modelId: model.id, startedAt, promptTokenEstimate }
     s.inFlightChat ??= flight
     startLoadingTimer(s)
     renderStatusBar(s)
@@ -165,9 +165,8 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
         usage: (u) => {
           usage = u
         },
-        invalidToolCall: (name) => {
-          s.log(`chat: skipped tool call ${name}: arguments did not parse`)
-        },
+        invalidToolCall: (name) =>
+          s.log(`chat: skipped tool call ${name}: arguments did not parse`),
       })
     } finally {
       stopLoadingTimer(s, flight)

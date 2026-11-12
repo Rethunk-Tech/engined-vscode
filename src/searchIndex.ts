@@ -342,10 +342,11 @@ export class SearchIndex {
       unlock = resolve
     })
     try {
+      let withProgress = showProgress
       do {
         this.#refreshAgain = false
-        await this.#refresh(showProgress)
-        showProgress = false
+        await this.#refresh(withProgress)
+        withProgress = false
       } while (this.#refreshAgain)
     } catch (error) {
       this.#log(`search: background refresh failed: ${describeError(error)}`)

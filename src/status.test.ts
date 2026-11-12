@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { STATUS_QUICK_PICK } from './constants.ts'
+import { stopLoadingFlight } from './session.ts'
 import {
   abbreviateTokenCount,
   buildTooltip,
@@ -13,7 +14,6 @@ import {
   meterDataUri,
   resolveRoute,
   shortModelName,
-  stopLoadingFlight,
   TOOLTIP_COMMANDS,
 } from './status.ts'
 
