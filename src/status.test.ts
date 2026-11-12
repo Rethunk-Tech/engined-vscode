@@ -13,6 +13,7 @@ import {
   meterDataUri,
   resolveRoute,
   shortModelName,
+  stopLoadingFlight,
   TOOLTIP_COMMANDS,
 } from './status.ts'
 
@@ -550,6 +551,29 @@ describe('meterDataUri', () => {
     expect(light).not.toContain('var(')
     expect(dark).not.toContain('var(')
     expect(light).not.toBe(dark)
+  })
+})
+
+describe('stopLoadingFlight', () => {
+  test('finishing the second flight leaves the first inFlightChat intact', () => {
+    const first = { modelId: 'user', startedAt: 1, promptTokenEstimate: 10 }
+    const second = { modelId: 'title', startedAt: 2, promptTokenEstimate: 2 }
+    const s: {
+      inFlightChat: typeof first | undefined
+      loadingTimer: ReturnType<typeof setInterval> | undefined
+    } = {
+      inFlightChat: first,
+      loadingTimer: setInterval(() => undefined, 1 << 30),
+    }
+    try {
+      stopLoadingFlight(s, second)
+      expect(s.inFlightChat).toBe(first)
+      expect(s.loadingTimer).toBeDefined()
+    } finally {
+      if (s.loadingTimer !== undefined) {
+        clearInterval(s.loadingTimer)
+      }
+    }
   })
 })
 

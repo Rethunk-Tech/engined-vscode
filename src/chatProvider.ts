@@ -116,7 +116,7 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
       0,
     )
     const flight = { modelId: model.id, startedAt, promptTokenEstimate }
-    s.inFlightChat = flight
+    s.inFlightChat ??= flight
     startLoadingTimer(s)
     renderStatusBar(s)
     if (servesTokenize(model.row)) {
@@ -141,7 +141,7 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
       ;({ body: stream, headers } = res)
     } catch (error) {
       s.log(`chat completion failed for ${model.id}: ${describeError(error)}`)
-      stopLoadingTimer(s)
+      stopLoadingTimer(s, flight)
       renderStatusBar(s)
       throw asError(error)
     }
@@ -157,8 +157,8 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
     try {
       toolCalls = await readChatStream(stream, {
         text: (delta) => {
-          if (s.inFlightChat?.firstTokenAt === undefined && s.inFlightChat !== undefined) {
-            s.inFlightChat.firstTokenAt = Date.now()
+          if (s.inFlightChat === flight && flight.firstTokenAt === undefined) {
+            flight.firstTokenAt = Date.now()
           }
           progress.report(new vscode.LanguageModelTextPart(delta))
         },
@@ -170,7 +170,7 @@ export class EnginedChatProvider implements vscode.LanguageModelChatProvider<Eng
         },
       })
     } finally {
-      stopLoadingTimer(s)
+      stopLoadingTimer(s, flight)
     }
     const copilotUsage = usage === undefined ? undefined : buildCopilotUsage(usage)
     if (copilotUsage !== undefined) {

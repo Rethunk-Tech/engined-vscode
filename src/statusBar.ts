@@ -21,6 +21,7 @@ import {
   formatCallLine,
   formatWaitingText,
   hasExceededLoadingThreshold,
+  stopLoadingFlight,
   TOOLTIP_COMMANDS,
 } from './status.ts'
 import { totalsFor } from './usageReport.ts'
@@ -197,10 +198,6 @@ export function startLoadingTimer(s: Session): void {
   s.loadingTimer = setInterval(() => renderStatusBar(s), LOADING_TICK_MS)
 }
 
-export function stopLoadingTimer(s: Session): void {
-  if (s.loadingTimer !== undefined) {
-    clearInterval(s.loadingTimer)
-    s.loadingTimer = undefined
-  }
-  s.inFlightChat = undefined
+export function stopLoadingTimer(s: Session, flight?: Session['inFlightChat']): void {
+  stopLoadingFlight(s, flight)
 }

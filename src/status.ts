@@ -123,6 +123,21 @@ export function formatWaitingText(
 }
 
 /** The 1.5s "no first token yet" rule, as a pure function of two timestamps. */
+/** Drop the loading ticker only when `flight` is the one currently shown. Omit `flight` to clear unconditionally. */
+export function stopLoadingFlight<T>(
+  s: { inFlightChat: T | undefined; loadingTimer: ReturnType<typeof setInterval> | undefined },
+  flight?: T,
+): void {
+  if (flight !== undefined && s.inFlightChat !== flight) {
+    return
+  }
+  if (s.loadingTimer !== undefined) {
+    clearInterval(s.loadingTimer)
+    s.loadingTimer = undefined
+  }
+  s.inFlightChat = undefined
+}
+
 export function hasExceededLoadingThreshold(
   startedAtMs: number,
   nowMs: number,
