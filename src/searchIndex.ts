@@ -269,14 +269,19 @@ export class SearchIndex {
       toEmbed.map((c) => c.text),
     )
     this.#removeFile(path)
+    let complete = true
     for (let i = 0; i < toEmbed.length; i += 1) {
       const chunk = toEmbed[i]
       const vector = vectors[i]
       if (chunk !== undefined && vector !== undefined) {
         this.#index.entries.push({ ...chunk, vector })
+      } else {
+        complete = false
       }
     }
-    this.#index.files[path] = mtime
+    if (complete) {
+      this.#index.files[path] = mtime
+    }
     return toEmbed.length === chunks.length
   }
 

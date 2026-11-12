@@ -205,6 +205,23 @@ describe('SearchIndex refresh', () => {
     expect(keys).toEqual([...new Set(keys)])
   })
 
+  test('a partial embeddings reply is retried on the next refresh', async () => {
+    let calls = 0
+    const { host } = fakeHost({
+      embed: (_url, _model, texts) => {
+        calls += 1
+        if (calls === 1) {
+          return Promise.resolve(texts.map(() => undefined))
+        }
+        return Promise.resolve(texts.map(() => [1, 0]))
+      },
+    })
+    const { index } = await built(host)
+    expect(calls).toBe(1)
+    await index.ensureBuilt()
+    expect(calls).toBe(2)
+  })
+
   test('a delete applies at once and schedules a debounced save', async () => {
     const { host, counts } = fakeHost()
     const { index } = await built(host)
