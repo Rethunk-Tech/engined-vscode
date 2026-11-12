@@ -70,6 +70,7 @@ export class SearchIndex {
   #refreshTimer: ReturnType<typeof setTimeout> | undefined
   #refreshing: boolean
   #refreshAgain: boolean
+  #refreshLock: Promise<void> | undefined
 
   constructor(
     storageUri: HostUri,
@@ -80,6 +81,7 @@ export class SearchIndex {
     this.#loaded = false
     this.#refreshing = false
     this.#refreshAgain = false
+    this.#refreshLock = undefined
     this.#host = host
     this.#storageUri = storageUri
     this.#rowsProvider = rowsProvider
@@ -159,7 +161,7 @@ export class SearchIndex {
     if (!this.#loaded) {
       await this.#load()
     }
-    await this.#refresh(true)
+    await this.#refreshSerialized(true)
   }
 
   async #refresh(showProgress: boolean): Promise<void> {
@@ -319,21 +321,29 @@ export class SearchIndex {
   }
 
   /** At most one refresh in flight; events arriving meanwhile fold into one follow-up run. */
-  async #refreshSerialized(): Promise<void> {
+  async #refreshSerialized(showProgress = false): Promise<void> {
     if (this.#refreshing) {
       this.#refreshAgain = true
+      await this.#refreshLock
       return
     }
     this.#refreshing = true
+    let unlock: () => void = () => undefined
+    this.#refreshLock = new Promise<void>((resolve) => {
+      unlock = resolve
+    })
     try {
       do {
         this.#refreshAgain = false
-        await this.#refresh(false)
+        await this.#refresh(showProgress)
+        showProgress = false
       } while (this.#refreshAgain)
     } catch (error) {
       this.#log(`search: background refresh failed: ${describeError(error)}`)
     } finally {
       this.#refreshing = false
+      this.#refreshLock = undefined
+      unlock()
     }
   }
 

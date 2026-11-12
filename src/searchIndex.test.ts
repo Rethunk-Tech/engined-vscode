@@ -165,6 +165,46 @@ describe('SearchIndex refresh', () => {
     expect(counts.maxRunning).toBe(1)
   })
 
+  test('ensureBuilt and a debounced refresh do not embed the same file at once', async () => {
+    let running = 0
+    let maxRunning = 0
+    let mtime = 1
+    let release: () => void = () => undefined
+    let gated = false
+    const { host } = fakeHost({
+      stat: () => Promise.resolve({ isFile: true, size: 12, mtime }),
+      embed: async (_url, _model, texts) => {
+        running += 1
+        maxRunning = Math.max(maxRunning, running)
+        if (gated) {
+          await new Promise<void>((resolve) => {
+            release = resolve
+          })
+        }
+        running -= 1
+        return texts.map(() => [1, 0])
+      },
+    })
+    const { index } = await built(host)
+    mtime = 2
+    maxRunning = 0
+    gated = true
+    index.onFileChanged(uri('/ws/a.txt'), 'change')
+    await tick()
+    jest.advanceTimersByTime(1000)
+    await tick()
+    const ensured = index.ensureBuilt()
+    await tick()
+    expect(maxRunning).toBe(1)
+    gated = false
+    release()
+    await ensured
+    await tick()
+    const hits = await index.search('hello', 20)
+    const keys = hits.map((h) => `${h.path}:${h.startLine}:${h.text}`)
+    expect(keys).toEqual([...new Set(keys)])
+  })
+
   test('a delete applies at once and schedules a debounced save', async () => {
     const { host, counts } = fakeHost()
     const { index } = await built(host)
