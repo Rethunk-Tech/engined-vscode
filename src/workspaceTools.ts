@@ -21,6 +21,7 @@ import {
   buildReadImageRequest,
   buildTranscribeRequest,
   type ConfirmationTarget,
+  checkToolReadSize,
   checkVoiceFile,
   confirmationMessage,
   refuseTranslate,
@@ -55,6 +56,7 @@ function workspaceRoots(): string[] {
 
 async function readWorkspaceFile(path: string): Promise<Uint8Array> {
   const resolved = resolveWorkspacePath(workspaceRoots(), path)
+  checkToolReadSize(await existingFileSize(resolved))
   return await vscode.workspace.fs.readFile(vscode.Uri.file(resolved))
 }
 

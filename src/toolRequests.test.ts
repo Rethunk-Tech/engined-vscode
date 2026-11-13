@@ -7,8 +7,10 @@ import {
   buildReadImageRequest,
   buildSpeakRequest,
   buildTranscribeRequest,
+  checkToolReadSize,
   checkVoiceFile,
   confirmationMessage,
+  MAX_TOOL_READ_BYTES,
   MAX_VOICE_BYTES,
   refuseTranslate,
   requestSpeech,
@@ -325,6 +327,14 @@ describe('speak voice files', () => {
     await expect(
       checkVoiceFile('/workspace/project/Me.OGG', async () => MAX_VOICE_BYTES),
     ).resolves.toBe(true)
+  })
+})
+
+describe('checkToolReadSize', () => {
+  test('refuses a file over 32 MiB and allows a missing or smaller one', () => {
+    expect(() => checkToolReadSize(MAX_TOOL_READ_BYTES + 1)).toThrow(ToolRouteError)
+    expect(() => checkToolReadSize(MAX_TOOL_READ_BYTES)).not.toThrow()
+    expect(() => checkToolReadSize(undefined)).not.toThrow()
   })
 })
 

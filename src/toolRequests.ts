@@ -157,6 +157,16 @@ const VOICE_UPLOAD_PATH = '/engined/v1/audio/voices'
 const MAX_VOICE_MIB = 20
 export const MAX_VOICE_BYTES = MAX_VOICE_MIB * BYTES_PER_KIB * BYTES_PER_KIB
 
+const MAX_TOOL_READ_MIB = 32
+export const MAX_TOOL_READ_BYTES = MAX_TOOL_READ_MIB * BYTES_PER_KIB * BYTES_PER_KIB
+
+/** Throws when a tool would read more than `MAX_TOOL_READ_BYTES`. `undefined` is not a file, so the caller’s read still surfaces the missing-path error. */
+export function checkToolReadSize(size: number | undefined): void {
+  if (size !== undefined && size > MAX_TOOL_READ_BYTES) {
+    throw new ToolRouteError(`file is over the ${MAX_TOOL_READ_MIB} MiB limit`)
+  }
+}
+
 const VOICE_EXTENSIONS = ['wav', 'mp3', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'webm']
 
 interface WorkspaceFiles {
