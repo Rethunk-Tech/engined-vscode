@@ -13,7 +13,7 @@ import {
   removePreviewFile,
   writePreviewFile,
 } from './imageStream.ts'
-import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
+import { displayWorkspacePath, PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 import { truncateSnippet } from './search.ts'
 import type { SearchIndex } from './searchIndex.ts'
 import {
@@ -146,7 +146,7 @@ async function confirmationTarget(path: string, writes: boolean): Promise<Confir
     // The invoke call refuses an escaping path; the dialog just shows what was asked for.
     return { path }
   }
-  const shown = vscode.workspace.asRelativePath(uri, false)
+  const shown = displayWorkspacePath(workspaceRoots(), uri.fsPath)
   if (!writes) {
     return { path: shown }
   }

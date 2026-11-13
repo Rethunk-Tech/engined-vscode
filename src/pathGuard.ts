@@ -5,7 +5,7 @@
  */
 
 import { lstatSync, realpathSync } from 'node:fs'
-import { basename, dirname, isAbsolute, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 export class PathEscapeError extends Error {}
 
@@ -83,4 +83,15 @@ export function resolveWorkspacePath(roots: readonly string[], requested: string
     return fallback
   }
   throw new PathEscapeError(`"${requested}" resolves outside every open workspace folder`)
+}
+
+/** Workspace-relative path as a confirmation dialog names it. With more than one folder, the folder name comes first so two `notes.md` files are not shown as the same path. */
+export function displayWorkspacePath(roots: readonly string[], absolute: string): string {
+  const normalizedRoots = roots.map((root) => resolve(root))
+  const root = normalizedRoots.find((candidate) => isInside(absolute, candidate))
+  if (root === undefined) {
+    return absolute
+  }
+  const rel = relative(root, absolute).split(sep).join('/')
+  return normalizedRoots.length > 1 ? `${basename(root)}/${rel}` : rel
 }

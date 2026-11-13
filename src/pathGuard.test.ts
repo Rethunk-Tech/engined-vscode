@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
+import { displayWorkspacePath, PathEscapeError, resolveWorkspacePath } from './pathGuard.ts'
 
 const ROOT = '/workspace/project'
 
@@ -84,5 +84,12 @@ describe('resolveWorkspacePath', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('displayWorkspacePath', () => {
+  test('a multi-root display path names the folder it resolved in', () => {
+    expect(displayWorkspacePath(['/ws/one', '/ws/two'], '/ws/two/notes.md')).toBe('two/notes.md')
+    expect(displayWorkspacePath(['/ws/one'], '/ws/one/notes.md')).toBe('notes.md')
   })
 })
