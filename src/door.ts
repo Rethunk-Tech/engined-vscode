@@ -34,12 +34,12 @@ export function doorsFromInspect(
     workspaceFolderValue?: Door[]
     defaultValue?: Door[]
   },
-  allowWorkspace: boolean,
+  confirmedWorkspace: string | undefined,
   fallback: readonly Door[],
 ): Door[] {
   const workspace = inspected.workspaceValue ?? inspected.workspaceFolderValue
   const chosen =
-    workspace !== undefined && allowWorkspace
+    workspace !== undefined && JSON.stringify(workspace) === confirmedWorkspace
       ? workspace
       : (inspected.globalValue ?? inspected.defaultValue ?? fallback)
   const doors = usableDoors(chosen)

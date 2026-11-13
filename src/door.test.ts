@@ -253,15 +253,21 @@ describe('doorsFromInspect', () => {
 
   test('ignores workspace and folder doors until allowed, then uses them', () => {
     const inspected = { workspaceValue: workspace, globalValue: global, defaultValue: fallback }
-    expect(doorsFromInspect(inspected, false, fallback)).toEqual(global)
-    expect(doorsFromInspect(inspected, true, fallback)).toEqual(workspace)
+    expect(doorsFromInspect(inspected, undefined, fallback)).toEqual(global)
+    expect(doorsFromInspect(inspected, JSON.stringify(workspace), fallback)).toEqual(workspace)
     expect(
       doorsFromInspect(
         { workspaceFolderValue: workspace, defaultValue: fallback },
-        false,
+        undefined,
         fallback,
       ),
     ).toEqual(fallback)
+  })
+
+  test('a confirmation covers only the door list that was confirmed', () => {
+    const confirmed = JSON.stringify([{ name: 'ws', url: 'http://10.0.0.5:29200' }])
+    const inspected = { workspaceValue: workspace, globalValue: global, defaultValue: fallback }
+    expect(doorsFromInspect(inspected, confirmed, fallback)).toEqual(global)
   })
 })
 

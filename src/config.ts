@@ -15,7 +15,8 @@ const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
 const DEFAULT_POLL_SECONDS = 30
 const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
 
-let workspaceDoorsConfirmed = false
+/** JSON of the workspace `engined.doors` value the user confirmed; an edited list needs asking again. */
+let confirmedWorkspaceDoors: string | undefined
 let workspaceAllowRemoteConfirmed = false
 
 function config(): vscode.WorkspaceConfiguration {
@@ -30,8 +31,11 @@ function config(): vscode.WorkspaceConfiguration {
 export async function confirmWorkspaceDoors(): Promise<boolean> {
   const inspected = config().inspect<Door[]>('doors')
   const workspace = inspected?.workspaceValue ?? inspected?.workspaceFolderValue
+  if (workspace !== undefined && JSON.stringify(workspace) === confirmedWorkspaceDoors) {
+    return true
+  }
+  confirmedWorkspaceDoors = undefined
   if (workspace === undefined) {
-    workspaceDoorsConfirmed = false
     return false
   }
   const pick = await vscode.window.showWarningMessage(
@@ -39,8 +43,11 @@ export async function confirmWorkspaceDoors(): Promise<boolean> {
     { modal: true },
     'Use workspace doors',
   )
-  workspaceDoorsConfirmed = pick === 'Use workspace doors'
-  return workspaceDoorsConfirmed
+  if (pick !== 'Use workspace doors') {
+    return false
+  }
+  confirmedWorkspaceDoors = JSON.stringify(workspace)
+  return true
 }
 
 /** Same gate as `confirmWorkspaceDoors`, for a workspace or folder `engined.search.allowRemote: true`. */
@@ -70,7 +77,7 @@ export function getDoors(): Door[] {
       workspaceFolderValue: inspected?.workspaceFolderValue,
       defaultValue: inspected?.defaultValue,
     },
-    workspaceDoorsConfirmed,
+    confirmedWorkspaceDoors,
     DEFAULT_DOORS,
   )
 }
