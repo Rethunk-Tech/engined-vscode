@@ -205,10 +205,19 @@ function uploadedHandle(uploaded: unknown): string {
 }
 
 /**
- * The `voice` to send. A file inside the workspace is uploaded and replaced
- * by the handle; a bare name or an existing handle is left as the caller wrote it.
- * An escaping path throws `PathEscapeError` before any request.
+ * Output and optional source paths for `engined_generateImage`, resolved
+ * before any read or door call so an escaping output cannot still spend a render.
  */
+export function generateImageWorkspacePaths(
+  roots: readonly string[],
+  input: { outputPath: string; sourcePath?: string },
+): { output: string; source?: string } {
+  const output = resolveWorkspacePath(roots, input.outputPath)
+  const source =
+    input.sourcePath === undefined ? undefined : resolveWorkspacePath(roots, input.sourcePath)
+  return { output, source }
+}
+
 /**
  * The absolute workspace path `voice` would be read from and uploaded, or
  * `undefined` for a handle, or a bare name with no folder open. Throws
@@ -279,10 +288,13 @@ async function voiceForSpeech(
 /** Speak `input.text`. A workspace voice file is cloned on `row.door` first; the speech POST then names the handle. */
 export async function requestSpeech(
   row: EnginedModelRow,
-  input: { text: string; voice?: string },
+  input: { text: string; voice?: string; outputPath?: string },
   workspace: WorkspaceFiles,
   signal?: AbortSignal,
 ): Promise<ArrayBuffer> {
+  if (input.outputPath !== undefined) {
+    resolveWorkspacePath(workspace.roots, input.outputPath)
+  }
   const voice = await voiceForSpeech(input.voice, workspace, (file) => {
     const form = new FormData()
     form.set('file', file)

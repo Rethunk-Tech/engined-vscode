@@ -24,6 +24,7 @@ import {
   checkToolReadSize,
   checkVoiceFile,
   confirmationMessage,
+  generateImageWorkspacePaths,
   refuseTranslate,
   requestSpeech,
   searchConfirmationMessage,
@@ -214,6 +215,7 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
   async invoke(options, token) {
     const preview: PreviewFile = { path: undefined }
     try {
+      generateImageWorkspacePaths(workspaceRoots(), options.input)
       const source =
         options.input.sourcePath === undefined
           ? undefined
@@ -424,7 +426,11 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
       const row = host().resolveRoleRow('speech')
       const audio = await requestSpeech(
         row,
-        { text: options.input.text, voice: options.input.voice },
+        {
+          text: options.input.text,
+          voice: options.input.voice,
+          outputPath: options.input.outputPath,
+        },
         { roots: workspaceRoots(), fileSize: existingFileSize, readFile: readExistingFile },
         cancellationSignal(token),
       )

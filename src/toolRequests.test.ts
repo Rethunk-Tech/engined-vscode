@@ -10,6 +10,7 @@ import {
   checkToolReadSize,
   checkVoiceFile,
   confirmationMessage,
+  generateImageWorkspacePaths,
   MAX_TOOL_READ_BYTES,
   MAX_VOICE_BYTES,
   refuseTranslate,
@@ -264,6 +265,25 @@ describe('request builders', () => {
     }
   })
 
+  test('an escaping output path throws before any door request', async () => {
+    let reads = 0
+    await expect(
+      requestSpeech(
+        piper,
+        { text: 'hello', voice: 'vc_already.wav', outputPath: '../out.wav' },
+        {
+          roots: ['/workspace/project'],
+          fileSize: async () => undefined,
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      ),
+    ).rejects.toThrow(PathEscapeError)
+    expect(reads).toBe(0)
+  })
+
   test('a voice path outside the workspace is refused before any upload', async () => {
     let reads = 0
     await expect(
@@ -327,6 +347,17 @@ describe('speak voice files', () => {
     await expect(
       checkVoiceFile('/workspace/project/Me.OGG', async () => MAX_VOICE_BYTES),
     ).resolves.toBe(true)
+  })
+})
+
+describe('generateImageWorkspacePaths', () => {
+  test('an escaping output path throws before a source path is considered', () => {
+    expect(() =>
+      generateImageWorkspacePaths(['/workspace/project'], {
+        outputPath: '../out.png',
+        sourcePath: 'src.png',
+      }),
+    ).toThrow(PathEscapeError)
   })
 })
 
