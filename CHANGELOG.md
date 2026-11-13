@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Tool writes refuse a dangling symlink instead of following it out of the workspace.
 - An edited workspace `engined.doors` list is not used until the user confirms it again.
 - A door-sent tool-call `index` can no longer pollute `Array.prototype` or stall the extension host.
+- Search and completions treat `.npmrc`, `.netrc`, `.pgpass`, `.pypirc`, `.git-credentials`, `.envrc`, `credentials*`, `*.p12` and `*.pfx` as secret files, matching names case-insensitively.
+- Ghost text in a secret file only uses a local route, and offers nothing when none is configured.
+- A workspace `engined.defaultModels.*` value that picks an off-machine route is not used until the user confirms that value.
+- The engine-events stream accepts `\r\n` and `\r` line endings and drops a stream whose unfinished frame passes 1 MiB.
 
 ### Changed
 
