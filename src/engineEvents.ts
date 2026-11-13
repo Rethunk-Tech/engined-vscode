@@ -5,6 +5,8 @@
  * `fetch`/reader loop and reconnect timer.
  */
 
+import { BYTES_PER_KIB } from './constants.ts'
+
 interface SseFrame {
   event: string
   /** The parsed JSON payload, or the raw string when it did not parse as JSON. */
@@ -42,7 +44,7 @@ function parseFrameBody(lines: string[]): SseFrame | undefined {
 }
 
 /** engined's largest frame is the `snapshot` of the whole engines list, a few KiB; this leaves two orders of magnitude of headroom. */
-export const MAX_SSE_PENDING_CHARS = 1024 * 1024
+export const MAX_SSE_PENDING_CHARS = BYTES_PER_KIB * BYTES_PER_KIB
 
 /**
  * `buffer` is everything decoded so far, including a previous call's
