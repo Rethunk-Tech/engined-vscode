@@ -11,8 +11,10 @@ import {
   refuseTranslate,
   requestSpeech,
   searchConfirmationMessage,
+  speakAction,
   ToolRouteError,
   TRANSLATE_UNAVAILABLE,
+  voiceUploadPath,
 } from './toolRequests.ts'
 
 const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
@@ -300,6 +302,27 @@ describe('confirmationMessage', () => {
       capabilities: {},
     }
     expect(confirmationMessage(remoteRow, 'Describe image')).toContain('leaves this machine')
+  })
+})
+
+describe('speak confirmation', () => {
+  const root = join('/', 'ws')
+
+  test('a voice that names a workspace file is resolved, so the dialog can name the upload', () => {
+    expect(voiceUploadPath('.env', [root])).toBe(join(root, '.env'))
+    expect(voiceUploadPath('secrets', [root])).toBe(join(root, 'secrets'))
+    expect(speakAction('.env')).toBe('Speak text, uploading voice file .env')
+  })
+
+  test('a handle, or a bare name with no folder open, uploads nothing', () => {
+    expect(voiceUploadPath('vc_abc', [root])).toBeUndefined()
+    expect(voiceUploadPath('af_heart', [])).toBeUndefined()
+    expect(voiceUploadPath(undefined, [root])).toBeUndefined()
+    expect(speakAction(undefined)).toBe('Speak text')
+  })
+
+  test('an escaping voice path throws before anything is read', () => {
+    expect(() => voiceUploadPath('../outside.wav', [root])).toThrow(PathEscapeError)
   })
 })
 

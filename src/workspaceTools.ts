@@ -25,7 +25,9 @@ import {
   refuseTranslate,
   requestSpeech,
   searchConfirmationMessage,
+  speakAction,
   ToolRouteError,
+  voiceUploadPath,
 } from './toolRequests.ts'
 
 /** What the tools need from the activation module: they stay free of its module state. */
@@ -380,6 +382,21 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
   },
 }
 
+/** The workspace-relative voice file `requestSpeech` would upload, as the dialog names it. */
+async function speakVoiceFile(voice: string | undefined): Promise<string | undefined> {
+  let absolute: string | undefined
+  try {
+    absolute = voiceUploadPath(voice, workspaceRoots())
+  } catch {
+    // The invoke call refuses an escaping path; the dialog just shows what was asked for.
+    return voice
+  }
+  if (absolute === undefined || (await readExistingFile(absolute)) === undefined) {
+    return undefined
+  }
+  return vscode.workspace.asRelativePath(vscode.Uri.file(absolute), false)
+}
+
 interface SpeakInput {
   text: string
   outputPath: string
@@ -411,7 +428,7 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
         title: 'Speak text',
         message: confirmationMessage(
           row,
-          'Speak text',
+          speakAction(await speakVoiceFile(options.input.voice)),
           await confirmationTarget(options.input.outputPath, true),
         ),
       },

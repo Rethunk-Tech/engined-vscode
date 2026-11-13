@@ -191,18 +191,38 @@ function uploadedHandle(uploaded: unknown): string {
  * by the handle; a bare name or an existing handle is left as the caller wrote it.
  * An escaping path throws `PathEscapeError` before any request.
  */
+/**
+ * The absolute workspace path `voice` would be read from and uploaded, or
+ * `undefined` for a handle, or a bare name with no folder open. Throws
+ * `PathEscapeError` for a path outside every root.
+ */
+export function voiceUploadPath(
+  voice: string | undefined,
+  roots: readonly string[],
+): string | undefined {
+  if (voice === undefined || isVoiceHandle(voice)) {
+    return undefined
+  }
+  if (roots.length === 0 && !isVoicePath(voice)) {
+    return undefined
+  }
+  return resolveWorkspacePath(roots, voice)
+}
+
+/** The speak confirmation's action, naming the workspace file the call uploads as its voice. */
+export function speakAction(voiceFile: string | undefined): string {
+  return voiceFile === undefined ? 'Speak text' : `Speak text, uploading voice file ${voiceFile}`
+}
+
 async function voiceForSpeech(
   voice: string | undefined,
   workspace: WorkspaceFiles,
   upload: (file: File) => Promise<unknown>,
 ): Promise<string | undefined> {
-  if (voice === undefined || isVoiceHandle(voice)) {
+  const absolute = voiceUploadPath(voice, workspace.roots)
+  if (voice === undefined || absolute === undefined) {
     return voice
   }
-  if (workspace.roots.length === 0 && !isVoicePath(voice)) {
-    return voice
-  }
-  const absolute = resolveWorkspacePath(workspace.roots, voice)
   const bytes = await workspace.readFile(absolute)
   if (bytes === undefined) {
     return voice
