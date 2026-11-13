@@ -294,6 +294,10 @@ export class SearchIndex {
     let content: string
     try {
       const bytes = await this.#host.readFile(uri)
+      if (bytes.length > MAX_FILE_BYTES) {
+        this.#removeFile(path)
+        return true
+      }
       if (looksBinary(bytes)) {
         this.#removeFile(path)
         this.#index.files[path] = mtime
