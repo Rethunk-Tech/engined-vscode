@@ -83,6 +83,30 @@ describe('readImageEvents', () => {
     expect(image).toEqual(IMAGE)
   })
 
+  test('a preview whose decoded image exceeds 32 KiB is ignored', async () => {
+    const huge = Buffer.alloc(32 * 1024 + 1).toString('base64')
+    const previews: ImagePreviewFrame[] = []
+    const stream = streamFromText(
+      [
+        'event: preview',
+        `data: ${JSON.stringify({ format: 'jpeg', image: huge })}`,
+        '',
+        'event: image',
+        `data: ${JSON.stringify(IMAGE)}`,
+        '',
+        '',
+      ].join('\n'),
+    )
+    expect(
+      await readImageEvents(
+        stream,
+        () => undefined,
+        (frame) => previews.push(frame),
+      ),
+    ).toEqual(IMAGE)
+    expect(previews).toEqual([])
+  })
+
   test('an error event throws after any preview already delivered', async () => {
     const previews: ImagePreviewFrame[] = []
     const stream = streamFromText(

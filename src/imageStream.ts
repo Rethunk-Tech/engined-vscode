@@ -51,6 +51,10 @@ export interface ImagePreviewFrame {
   format: 'jpeg' | 'png'
 }
 
+/** A `preview` event's `image` is at most 32 KiB decoded; anything larger is not a thumbnail. */
+const PREVIEW_MAX_KIB = 32
+const MAX_PREVIEW_BYTES = PREVIEW_MAX_KIB * BYTES_PER_KIB
+
 function imagePreviewFrame(data: unknown): ImagePreviewFrame | undefined {
   if (data === null || typeof data !== 'object' || !('image' in data) || !('format' in data)) {
     return undefined
@@ -60,6 +64,9 @@ function imagePreviewFrame(data: unknown): ImagePreviewFrame | undefined {
     return undefined
   }
   if (format !== 'jpeg' && format !== 'png') {
+    return undefined
+  }
+  if (Buffer.byteLength(image, 'base64') > MAX_PREVIEW_BYTES) {
     return undefined
   }
   return { image, format }
