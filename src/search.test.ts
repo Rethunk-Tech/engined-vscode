@@ -162,6 +162,20 @@ describe('isSecretFile', () => {
       'home/.ssh/id_rsa',
       'id_rsa.pub',
       'id_ed25519',
+      '.npmrc',
+      'home/.netrc',
+      'cert.p12',
+      'cert.PFX',
+      '.pgpass',
+      '.aws/credentials',
+      'credentials.json',
+      '.git-credentials',
+      '.pypirc',
+      '.envrc',
+      '.ENV',
+      'Server.PEM',
+      'ID_RSA',
+      'C:\\Users\\me\\.netrc',
     ]) {
       expect(isSecretFile(p)).toBe(true)
     }
