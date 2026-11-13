@@ -9,6 +9,7 @@ import * as vscode from 'vscode'
 import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks } from './config.ts'
 import type { ModelRole } from './defaultModels.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
+import { gitIgnored } from './gitIgnore.ts'
 
 export interface HostUri {
   readonly fsPath: string
@@ -52,6 +53,8 @@ export interface SearchHost {
     signal?: AbortSignal,
   ): ReturnType<typeof postRerank>
   defaultModel(role: ModelRole): string
+  /** The subset of `uris` that git ignores in their workspace folder, as `fsPath`s. */
+  ignored(uris: readonly HostUri[]): Promise<Set<string>>
   allowRemote(): boolean
   maxChunks(): number
 }
@@ -84,6 +87,28 @@ export const vscodeSearchHost: SearchHost = {
       1,
     )
     return found.length > 0
+  },
+  async ignored(uris) {
+    const byFolder = new Map<string, { root: string; rel: Map<string, string> }>()
+    for (const uri of uris) {
+      const folder = vscode.workspace.getWorkspaceFolder(asUri(uri))
+      if (folder === undefined) {
+        continue
+      }
+      const group = byFolder.get(folder.uri.fsPath) ?? { root: folder.uri.fsPath, rel: new Map() }
+      group.rel.set(vscode.workspace.asRelativePath(asUri(uri), false), uri.fsPath)
+      byFolder.set(folder.uri.fsPath, group)
+    }
+    const out = new Set<string>()
+    for (const { root, rel } of byFolder.values()) {
+      for (const hit of await gitIgnored(root, [...rel.keys()])) {
+        const fsPath = rel.get(hit)
+        if (fsPath !== undefined) {
+          out.add(fsPath)
+        }
+      }
+    }
+    return out
   },
   asRelativePath: (uri) => vscode.workspace.asRelativePath(asUri(uri), false),
   excludeSettings: () => [

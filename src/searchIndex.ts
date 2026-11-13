@@ -13,7 +13,14 @@ import { resolveDefaultModel } from './defaultModels.ts'
 import { describeError } from './describeError.ts'
 import type { EnginedModelRow } from './door.ts'
 import type { TextChunk } from './search.ts'
-import { chunkFile, mergeRerank, planIndexUpdate, searchableRows, topK } from './search.ts'
+import {
+  chunkFile,
+  isSecretFile,
+  mergeRerank,
+  planIndexUpdate,
+  searchableRows,
+  topK,
+} from './search.ts'
 import type { HostUri, SearchHost } from './searchHost.ts'
 
 const MAX_FILE_KIB = 256
@@ -216,7 +223,10 @@ export class SearchIndex {
 
   async #applyRefresh(row: EnginedModelRow, report?: (message: string) => void): Promise<void> {
     const exclude = this.#excludeGlob()
-    const uris = await this.#host.findFiles(exclude)
+    const found = await this.#host.findFiles(exclude)
+    const candidates = found.filter((u) => !isSecretFile(this.#host.asRelativePath(u)))
+    const ignored = await this.#host.ignored(candidates)
+    const uris = candidates.filter((u) => !ignored.has(u.fsPath))
     const current: { path: string; mtime: number }[] = []
     const infoByPath = new Map<string, { uri: HostUri; mtime: number }>()
     for (const uri of uris) {
@@ -355,8 +365,14 @@ export class SearchIndex {
     }
   }
 
-  /** Whether the workspace's exclude globs let `uri` through. */
+  /** Whether `uri` is neither secret-named nor gitignored, and the workspace's exclude globs let it through. */
   async #isIndexable(uri: HostUri): Promise<boolean> {
+    if (
+      isSecretFile(this.#host.asRelativePath(uri)) ||
+      (await this.#host.ignored([uri])).size > 0
+    ) {
+      return false
+    }
     return await this.#host.isWorkspaceFile(uri, this.#excludeGlob())
   }
 

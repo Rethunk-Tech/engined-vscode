@@ -52,6 +52,7 @@ function fakeHost(over: Partial<SearchHost> = {}) {
     },
     rerank: (_url, _request, signal) => rerankImpl(signal),
     defaultModel: () => '',
+    ignored: () => Promise.resolve(new Set<string>()),
     allowRemote: () => false,
     maxChunks: () => 100,
     ...over,
@@ -365,5 +366,44 @@ describe('SearchIndex.search cancellation', () => {
     const hits = await index.search('hello', 5)
     expect(hits.length).toBeGreaterThan(0)
     expect(logs.some((l) => l.includes('rerank failed'))).toBe(false)
+  })
+})
+
+describe('SearchIndex file filtering', () => {
+  beforeEach(() => {
+    embedCalls.length = 0
+    jest.useFakeTimers()
+  })
+
+  test('gitignored files and secret files are never embedded', async () => {
+    const { host } = fakeHost({
+      findFiles: () =>
+        Promise.resolve([
+          uri('/ws/a.txt'),
+          uri('/ws/.env'),
+          uri('/ws/dist/b.js'),
+          uri('/ws/k.pem'),
+        ]),
+      ignored: (uris) =>
+        Promise.resolve(
+          new Set(uris.filter((u) => u.fsPath.includes('/dist/')).map((u) => u.fsPath)),
+        ),
+    })
+    await built(host)
+    expect(embedCalls.length).toBe(1)
+    expect(embedCalls[0]).toBe(1)
+  })
+
+  test('a gitignored path arms nothing', async () => {
+    const { host, counts } = fakeHost({
+      ignored: (uris) => Promise.resolve(new Set(uris.map((u) => u.fsPath))),
+    })
+    const { index } = await built(host)
+    const before = counts.findFiles
+    index.onFileChanged(uri('/ws/x.log'), 'create')
+    await tick()
+    jest.advanceTimersByTime(5000)
+    await tick()
+    expect(counts.findFiles).toBe(before)
   })
 })
