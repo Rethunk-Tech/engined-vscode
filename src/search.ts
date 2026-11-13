@@ -150,7 +150,7 @@ export function mergeRerank<T>(
 }
 
 const SECRET_NAME =
-  /^(\.env(rc|\..*)?|.*\.(pem|key|p12|pfx)|id_(rsa|dsa|ecdsa|ed25519)(\..*)?|[._]netrc|\.npmrc|\.pypirc|\.pgpass|\.git-credentials|credentials(\..*)?)$/i
+  /^(\.env(rc|\..*)?|.*\.(pem|key|p12|pfx)|id_(rsa|dsa|ecdsa|ed25519)(\..*)?|[._]netrc|\.npmrc|\.pypirc|\.pgpass|\.git-credentials|credentials(\.(json|ya?ml|toml|ini|txt|csv|xml|conf))?)$/i
 
 /** Env files, credential stores, private keys and certificates by file name, `/` or `\` separated; their contents must not reach an embedding or completion route that leaves the machine. */
 export function isSecretFile(path: string): boolean {

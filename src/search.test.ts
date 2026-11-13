@@ -169,6 +169,10 @@ describe('isSecretFile', () => {
       '.pgpass',
       '.aws/credentials',
       'credentials.json',
+      'credentials.YAML',
+      'credentials.toml',
+      'credentials.ini',
+      'credentials.csv',
       '.git-credentials',
       '.pypirc',
       '.envrc',
@@ -179,7 +183,16 @@ describe('isSecretFile', () => {
     ]) {
       expect(isSecretFile(p)).toBe(true)
     }
-    for (const p of ['env.ts', 'src/keyboard.ts', 'README.md', 'environment.md']) {
+    for (const p of [
+      'env.ts',
+      'src/keyboard.ts',
+      'README.md',
+      'environment.md',
+      'src/credentials.ts',
+      'pkg/credentials.go',
+      'credentials.py',
+      'credentials.test.ts',
+    ]) {
       expect(isSecretFile(p)).toBe(false)
     }
   })
