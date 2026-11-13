@@ -1,4 +1,4 @@
-const DATA_PREFIX = 'data:'
+import { flushSseRest, parseSseChunk } from './engineEvents.ts'
 
 /**
  * The SSE reader for `/openai/v1/chat/completions`, ported from the SSE reader
@@ -58,17 +58,17 @@ interface ToolCallSlot {
   args: string
 }
 
-/** One SSE line's JSON payload, or `undefined` for anything that is not a data frame carrying JSON. */
-function parseDataLine(line: string): ChatChunk | undefined {
-  if (!line.startsWith(DATA_PREFIX)) {
-    return undefined
+/** A frame's JSON object payloads. A frame whose `data:` lines are not one JSON value (the door ended each line with a single newline) is read line by line; `[DONE]` and scalars yield nothing. */
+function frameChunks(data: unknown): ChatChunk[] {
+  if (typeof data === 'string') {
+    return data.split('\n').flatMap((line) => frameChunks(parseJson(line)))
   }
-  const payload = line.slice(DATA_PREFIX.length).trim()
-  if (payload.length === 0 || payload === '[DONE]') {
-    return undefined
-  }
+  return data !== null && typeof data === 'object' ? [data as ChatChunk] : []
+}
+
+function parseJson(text: string): unknown {
   try {
-    return JSON.parse(payload) as ChatChunk
+    return JSON.parse(text)
   } catch {
     return undefined
   }
@@ -120,23 +120,23 @@ export function buildCopilotUsage(usage: ChatUsage): CopilotUsage | undefined {
   }
 }
 
-/** Split on newlines, holding back a trailing partial line for the next chunk. */
-function splitLines(buffer: string): [string[], string] {
-  const lines = buffer.split('\n')
-  const rest = lines.pop() ?? ''
-  return [lines, rest]
-}
-
-function takeDataLine(
-  line: string,
+function takeFrame(
+  data: unknown,
   sink: StreamSink,
   calls: Map<number, ToolCallSlot>,
   usage: ChatUsage,
 ): void {
-  const chunk = parseDataLine(line)
-  if (chunk === undefined) {
-    return
+  for (const chunk of frameChunks(data)) {
+    takeChunk(chunk, sink, calls, usage)
   }
+}
+
+function takeChunk(
+  chunk: ChatChunk,
+  sink: StreamSink,
+  calls: Map<number, ToolCallSlot>,
+  usage: ChatUsage,
+): void {
   const delta = chunk.choices?.[0]?.delta
   if (delta?.content) {
     sink.text(delta.content)
@@ -171,15 +171,15 @@ export async function readChatStream(
   try {
     for (let r = await reader.read(); !r.done; r = await reader.read()) {
       buffer += decoder.decode(r.value, { stream: true })
-      const [lines, rest] = splitLines(buffer)
-      buffer = rest
-      for (const line of lines) {
-        takeDataLine(line, sink, calls, usage)
+      const parsed = parseSseChunk(buffer)
+      buffer = parsed.rest
+      for (const frame of parsed.frames) {
+        takeFrame(frame.data, sink, calls, usage)
       }
     }
     buffer += decoder.decode()
-    if (buffer.length > 0) {
-      takeDataLine(buffer, sink, calls, usage)
+    for (const frame of flushSseRest(buffer).frames) {
+      takeFrame(frame.data, sink, calls, usage)
     }
   } finally {
     try {

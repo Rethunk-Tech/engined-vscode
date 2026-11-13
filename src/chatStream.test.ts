@@ -153,3 +153,30 @@ describe('buildCopilotUsage', () => {
     })
   })
 })
+
+describe('readChatStream framing', () => {
+  const chunk = (content: string) =>
+    `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}`
+
+  test('reads CRLF and CR line endings', async () => {
+    for (const eol of ['\r\n', '\r']) {
+      const got: string[] = []
+      await readChatStream(
+        streamFromText(
+          `${chunk('a')}${eol}${eol}${chunk('b')}${eol}${eol}data: [DONE]${eol}${eol}`,
+        ),
+        { text: (d) => got.push(d) },
+      )
+      expect(got).toEqual(['a', 'b'])
+    }
+  })
+
+  test('refuses a frame that never ends instead of buffering it forever', async () => {
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(new TextEncoder().encode('x'.repeat(256 * 1024)))
+      },
+    })
+    await expect(readChatStream(endless, { text: () => undefined })).rejects.toThrow('exceeds')
+  })
+})

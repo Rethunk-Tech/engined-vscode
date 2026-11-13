@@ -49,6 +49,20 @@ function imageSse(): string {
 }
 
 describe('readImageEvents', () => {
+  test('carries a rendered image far past 1 MiB in one frame, in small chunks', async () => {
+    const big = { created: 1, data: [{ b64_json: 'A'.repeat(3 * 1024 * 1024) }] }
+    const bytes = new TextEncoder().encode(`event: image\r\ndata: ${JSON.stringify(big)}\r\n\r\n`)
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (let at = 0; at < bytes.length; at += 256 * 1024) {
+          controller.enqueue(bytes.subarray(at, at + 256 * 1024))
+        }
+        controller.close()
+      },
+    })
+    expect(await readImageEvents(stream, () => undefined)).toEqual(big)
+  })
+
   test('delivers inline previews in order and keeps the image event as the result', async () => {
     const lines: string[] = []
     const previews: ImagePreviewFrame[] = []

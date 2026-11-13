@@ -5,7 +5,12 @@
  * `onPreview`. A larger frame has `bytes` and no `image`, and changes nothing.
  */
 
+import { BYTES_PER_KIB } from './constants.ts'
 import { flushSseRest, parseSseChunk } from './engineEvents.ts'
+
+/** The final `image` event is a whole base64 render (up to 4096x4096, several per call), unlike engine-events frames; this only stops an unterminated frame from growing without bound. */
+const IMAGE_PENDING_MIB = 512
+const MAX_IMAGE_PENDING_CHARS = IMAGE_PENDING_MIB * BYTES_PER_KIB * BYTES_PER_KIB
 
 /** One sampler line the chat can show: `Rendering 2/8 node 4`, or `Rendering` when the frame names nothing. */
 function imageProgressLine(data: unknown): string {
@@ -142,12 +147,12 @@ export async function readImageEvents(
   try {
     for (let r = await reader.read(); !r.done; r = await reader.read()) {
       buffer += decoder.decode(r.value, { stream: true })
-      const parsed = parseSseChunk(buffer)
+      const parsed = parseSseChunk(buffer, MAX_IMAGE_PENDING_CHARS)
       buffer = parsed.rest
       await takeImageEvents(parsed.frames, onProgress, onPreview, image)
     }
     buffer += decoder.decode()
-    const flushed = flushSseRest(buffer)
+    const flushed = flushSseRest(buffer, MAX_IMAGE_PENDING_CHARS)
     await takeImageEvents(flushed.frames, onProgress, onPreview, image)
   } finally {
     try {

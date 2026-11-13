@@ -43,24 +43,24 @@ function parseFrameBody(lines: string[]): SseFrame | undefined {
   }
 }
 
-/** engined's largest frame is the `snapshot` of the whole engines list, a few KiB; this leaves two orders of magnitude of headroom. */
+/** Shared by every SSE reader that has no larger frame to carry (see `imageStream.ts`). engined's largest engine-events frame is the `snapshot` of the whole engines list, a few KiB; this leaves two orders of magnitude of headroom. */
 export const MAX_SSE_PENDING_CHARS = BYTES_PER_KIB * BYTES_PER_KIB
 
 /**
  * `buffer` is everything decoded so far, including a previous call's
  * `rest`. Lines end in `\r\n`, `\n` or `\r`, and frames are separated by
  * a blank line; anything after the last one is held back as `rest` for the
- * next chunk. Throws once `rest` outgrows `MAX_SSE_PENDING_CHARS`.
+ * next chunk. Throws once `rest` outgrows `maxPending`, which defaults to `MAX_SSE_PENDING_CHARS`.
  */
-export function parseSseChunk(buffer: string): SseParseResult {
+export function parseSseChunk(buffer: string, maxPending = MAX_SSE_PENDING_CHARS): SseParseResult {
   const parts = buffer.replace(/\r\n?/g, '\n').split('\n\n')
   let rest = parts.pop() ?? ''
   // A trailing CR may be the first half of a CRLF the next chunk completes.
   if (buffer.endsWith('\r')) {
     rest = `${rest.slice(0, -1)}\r`
   }
-  if (rest.length > MAX_SSE_PENDING_CHARS) {
-    throw new Error(`event stream frame exceeds ${MAX_SSE_PENDING_CHARS} characters`)
+  if (rest.length > maxPending) {
+    throw new Error(`event stream frame exceeds ${maxPending} characters`)
   }
   const frames: SseFrame[] = []
   for (const part of parts) {
@@ -76,11 +76,11 @@ export function parseSseChunk(buffer: string): SseParseResult {
 }
 
 /** `parseSseChunk` of a stream's leftover `rest`, treating EOF as a frame boundary. */
-export function flushSseRest(rest: string): SseParseResult {
+export function flushSseRest(rest: string, maxPending = MAX_SSE_PENDING_CHARS): SseParseResult {
   if (rest.trim() === '') {
     return { frames: [], rest: '' }
   }
-  return parseSseChunk(rest.endsWith('\n\n') ? rest : `${rest}\n\n`)
+  return parseSseChunk(rest.endsWith('\n\n') ? rest : `${rest}\n\n`, maxPending)
 }
 
 const DEFAULT_BASE_MS = 1000
