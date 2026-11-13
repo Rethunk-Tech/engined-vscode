@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `engined_search` discards a valid-JSON index file of the wrong shape and rebuilds it, instead of throwing on every search.
+
 ### Changed
 
 - The extension now requires VS Code 1.145 or newer.

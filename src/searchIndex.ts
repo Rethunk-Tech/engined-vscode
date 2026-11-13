@@ -49,6 +49,36 @@ function emptyIndex(): StoredIndex {
   return { files: {}, entries: [] }
 }
 
+/** Valid JSON of the wrong shape must be discarded like a corrupt file, or later `.entries.length` throws on every search. */
+function isStoredIndex(value: unknown): value is StoredIndex {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  const { files, entries, route } = value as Record<string, unknown>
+  if (route !== undefined && typeof route !== 'string') {
+    return false
+  }
+  if (typeof files !== 'object' || files === null || Array.isArray(files)) {
+    return false
+  }
+  return (
+    Array.isArray(entries) &&
+    entries.every((e) => {
+      if (typeof e !== 'object' || e === null) {
+        return false
+      }
+      const r = e as Record<string, unknown>
+      return (
+        typeof r.path === 'string' &&
+        typeof r.text === 'string' &&
+        typeof r.startLine === 'number' &&
+        typeof r.endLine === 'number' &&
+        Array.isArray(r.vector)
+      )
+    })
+  )
+}
+
 /** The first 512 bytes containing a NUL byte is treated as binary, the same heuristic `git` uses. */
 function looksBinary(bytes: Uint8Array): boolean {
   for (const byte of bytes.subarray(0, BINARY_SNIFF_BYTES)) {
@@ -95,7 +125,8 @@ export class SearchIndex {
   async #load(): Promise<void> {
     try {
       const bytes = await this.#host.readFile(this.#indexUri)
-      this.#index = JSON.parse(Buffer.from(bytes).toString('utf8')) as StoredIndex
+      const parsed: unknown = JSON.parse(Buffer.from(bytes).toString('utf8'))
+      this.#index = isStoredIndex(parsed) ? parsed : emptyIndex()
     } catch {
       this.#index = emptyIndex()
     }

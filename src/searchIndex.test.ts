@@ -252,6 +252,35 @@ describe('SearchIndex refresh', () => {
   })
 })
 
+describe('SearchIndex load', () => {
+  beforeEach(() => {
+    jest.useRealTimers()
+    embedCalls.length = 0
+  })
+
+  for (const bad of ['{}', '{"entries": 5}', '{"files":{},"entries":[1]}']) {
+    test(`a wrong-shape index file ${bad} is discarded and rebuilt`, async () => {
+      const { host } = fakeHost({
+        readFile: (u) =>
+          Promise.resolve(
+            u.fsPath.endsWith('search-index.json')
+              ? new TextEncoder().encode(bad)
+              : new TextEncoder().encode('hello world\n'),
+          ),
+      })
+      const index = new SearchIndex(
+        uri('/storage'),
+        () => [ROW],
+        () => undefined,
+        host,
+      )
+      const hits = await index.search('hello', 5)
+      expect(hits.length).toBeGreaterThan(0)
+      expect(embedCalls.length).toBeGreaterThan(0)
+    })
+  }
+})
+
 describe('SearchIndex.search cancellation', () => {
   beforeEach(() => {
     jest.useRealTimers()
