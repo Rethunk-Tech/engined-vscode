@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- `engined_speak` accepts only audio voice files (wav, mp3, flac, ogg, oga, opus, m4a, aac, webm) up to 20 MiB, and refuses anything else before the confirmation dialog without reading it.
 - `engined_search` discards a valid-JSON index file of the wrong shape and rebuilds it, instead of throwing on every search.
 - `engined_search` keeps skipping gitignored files when the workspace holds a git submodule.
 - Tool writes refuse a dangling symlink instead of following it out of the workspace.

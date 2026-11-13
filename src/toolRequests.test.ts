@@ -7,7 +7,9 @@ import {
   buildReadImageRequest,
   buildSpeakRequest,
   buildTranscribeRequest,
+  checkVoiceFile,
   confirmationMessage,
+  MAX_VOICE_BYTES,
   refuseTranslate,
   requestSpeech,
   searchConfirmationMessage,
@@ -183,6 +185,7 @@ describe('request builders', () => {
         { text: 'hello', voice: 'clips/me.wav' },
         {
           roots: ['/workspace/project'],
+          fileSize: async () => reference.length,
           readFile: async (absolute) => {
             expect(absolute).toBe(join('/workspace/project', 'clips/me.wav'))
             return reference
@@ -217,13 +220,14 @@ describe('request builders', () => {
       await requestSpeech(
         row,
         { text: 'hello', voice: 'af_heart' },
-        { roots, readFile: async () => undefined },
+        { roots, fileSize: async () => undefined, readFile: async () => undefined },
       )
       await requestSpeech(
         row,
         { text: 'hello', voice: 'af_heart' },
         {
           roots: [],
+          fileSize: async () => undefined,
           readFile: async () => {
             throw new Error('a bare name is not a path when no folder is open')
           },
@@ -234,6 +238,7 @@ describe('request builders', () => {
         row,
         { text: 'hello', voice: 'vc_already.wav' },
         {
+          fileSize: async () => undefined,
           roots,
           readFile: async () => {
             reads += 1
@@ -265,6 +270,7 @@ describe('request builders', () => {
         { text: 'hello', voice: '../secret.wav' },
         {
           roots: ['/workspace/project'],
+          fileSize: async () => undefined,
           readFile: async () => {
             reads += 1
             return new Uint8Array([1])
@@ -273,6 +279,52 @@ describe('request builders', () => {
       ),
     ).rejects.toThrow(PathEscapeError)
     expect(reads).toBe(0)
+  })
+})
+
+describe('speak voice files', () => {
+  test('a voice file that is not audio is refused without being read', async () => {
+    let reads = 0
+    await expect(
+      requestSpeech(
+        piper,
+        { text: 'hello', voice: '.env' },
+        {
+          roots: ['/workspace/project'],
+          fileSize: async () => 12,
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      ),
+    ).rejects.toThrow(ToolRouteError)
+    expect(reads).toBe(0)
+  })
+
+  test('a voice file over 20 MiB is refused without being read', async () => {
+    let reads = 0
+    await expect(
+      requestSpeech(
+        piper,
+        { text: 'hello', voice: 'clips/Big.WAV' },
+        {
+          roots: ['/workspace/project'],
+          fileSize: async () => MAX_VOICE_BYTES + 1,
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      ),
+    ).rejects.toThrow(ToolRouteError)
+    expect(reads).toBe(0)
+  })
+
+  test('a voice file of exactly 20 MiB passes the check', async () => {
+    await expect(
+      checkVoiceFile('/workspace/project/Me.OGG', async () => MAX_VOICE_BYTES),
+    ).resolves.toBe(true)
   })
 })
 

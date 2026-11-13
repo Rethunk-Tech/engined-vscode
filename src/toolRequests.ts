@@ -5,6 +5,7 @@
  * voice file has to be uploaded before the speech body can name it.
  */
 
+import { BYTES_PER_KIB } from './constants.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postForm, postJson } from './doorClient.ts'
 import { resolveWorkspacePath } from './pathGuard.ts'
@@ -153,8 +154,15 @@ export function buildSpeakRequest(
 
 const VOICE_UPLOAD_PATH = '/engined/v1/audio/voices'
 
+const MAX_VOICE_MIB = 20
+export const MAX_VOICE_BYTES = MAX_VOICE_MIB * BYTES_PER_KIB * BYTES_PER_KIB
+
+const VOICE_EXTENSIONS = ['wav', 'mp3', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'webm']
+
 interface WorkspaceFiles {
   roots: readonly string[]
+  /** Size in bytes of a regular file, or `undefined` when there is none. Never reads the content. */
+  fileSize: (absolutePath: string) => Promise<number | undefined>
   readFile: (absolutePath: string) => Promise<Uint8Array | undefined>
 }
 
@@ -214,6 +222,31 @@ export function speakAction(voiceFile: string | undefined): string {
   return voiceFile === undefined ? 'Speak text' : `Speak text, uploading voice file ${voiceFile}`
 }
 
+/**
+ * Whether `absolute` is an existing file that may be uploaded as a voice. Throws
+ * `ToolRouteError` for a file that is not audio or is over the cap; the size comes from
+ * a stat, so a refused file is never read.
+ */
+export async function checkVoiceFile(
+  absolute: string,
+  fileSize: WorkspaceFiles['fileSize'],
+): Promise<boolean> {
+  const size = await fileSize(absolute)
+  if (size === undefined) {
+    return false
+  }
+  const extension = absolute.slice(absolute.lastIndexOf('.') + 1).toLowerCase()
+  if (!(absolute.includes('.') && VOICE_EXTENSIONS.includes(extension))) {
+    throw new ToolRouteError(
+      `voice file must be audio (${VOICE_EXTENSIONS.join(', ')}); refusing ${voiceFileName(absolute)}`,
+    )
+  }
+  if (size > MAX_VOICE_BYTES) {
+    throw new ToolRouteError(`voice file is over the ${MAX_VOICE_MIB} MiB limit`)
+  }
+  return true
+}
+
 async function voiceForSpeech(
   voice: string | undefined,
   workspace: WorkspaceFiles,
@@ -221,6 +254,9 @@ async function voiceForSpeech(
 ): Promise<string | undefined> {
   const absolute = voiceUploadPath(voice, workspace.roots)
   if (voice === undefined || absolute === undefined) {
+    return voice
+  }
+  if (!(await checkVoiceFile(absolute, workspace.fileSize))) {
     return voice
   }
   const bytes = await workspace.readFile(absolute)

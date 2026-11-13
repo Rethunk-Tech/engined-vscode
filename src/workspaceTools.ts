@@ -21,6 +21,7 @@ import {
   buildReadImageRequest,
   buildTranscribeRequest,
   type ConfirmationTarget,
+  checkVoiceFile,
   confirmationMessage,
   refuseTranslate,
   requestSpeech,
@@ -58,6 +59,18 @@ async function readWorkspaceFile(path: string): Promise<Uint8Array> {
 }
 
 /** Bytes when `absolutePath` is a file; `undefined` when it is missing or not a file. */
+async function existingFileSize(absolutePath: string): Promise<number | undefined> {
+  try {
+    const stat = await vscode.workspace.fs.stat(vscode.Uri.file(absolutePath))
+    return stat.type === vscode.FileType.File ? stat.size : undefined
+  } catch (error) {
+    if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
+      return undefined
+    }
+    throw error
+  }
+}
+
 async function readExistingFile(absolutePath: string): Promise<Uint8Array | undefined> {
   const uri = vscode.Uri.file(absolutePath)
   let stat: vscode.FileStat
@@ -391,7 +404,7 @@ async function speakVoiceFile(voice: string | undefined): Promise<string | undef
     // The invoke call refuses an escaping path; the dialog just shows what was asked for.
     return voice
   }
-  if (absolute === undefined || (await readExistingFile(absolute)) === undefined) {
+  if (absolute === undefined || !(await checkVoiceFile(absolute, existingFileSize))) {
     return undefined
   }
   return vscode.workspace.asRelativePath(vscode.Uri.file(absolute), false)
@@ -410,7 +423,7 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
       const audio = await requestSpeech(
         row,
         { text: options.input.text, voice: options.input.voice },
-        { roots: workspaceRoots(), readFile: readExistingFile },
+        { roots: workspaceRoots(), fileSize: existingFileSize, readFile: readExistingFile },
         cancellationSignal(token),
       )
       await writeWorkspaceFile(options.input.outputPath, new Uint8Array(audio))
