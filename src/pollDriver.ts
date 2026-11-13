@@ -109,6 +109,7 @@ async function connectEngineEvents(s: Session, door: Door): Promise<void> {
       if (!controller.signal.aborted) {
         s.log(`engine events stream error (${door.name}): ${describeError(error)}`)
       }
+      await reader.cancel().catch(() => undefined)
     }
   } finally {
     try {

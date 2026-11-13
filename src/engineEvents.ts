@@ -41,14 +41,25 @@ function parseFrameBody(lines: string[]): SseFrame | undefined {
   }
 }
 
+/** engined's largest frame is the `snapshot` of the whole engines list, a few KiB; this leaves two orders of magnitude of headroom. */
+export const MAX_SSE_PENDING_CHARS = 1024 * 1024
+
 /**
  * `buffer` is everything decoded so far, including a previous call's
- * `rest`. Frames are separated by a blank line (`\n\n`); anything after the
- * last one is held back as `rest` for the next chunk.
+ * `rest`. Lines end in `\r\n`, `\n` or `\r`, and frames are separated by
+ * a blank line; anything after the last one is held back as `rest` for the
+ * next chunk. Throws once `rest` outgrows `MAX_SSE_PENDING_CHARS`.
  */
 export function parseSseChunk(buffer: string): SseParseResult {
-  const parts = buffer.split('\n\n')
-  const rest = parts.pop() ?? ''
+  const parts = buffer.replace(/\r\n?/g, '\n').split('\n\n')
+  let rest = parts.pop() ?? ''
+  // A trailing CR may be the first half of a CRLF the next chunk completes.
+  if (buffer.endsWith('\r')) {
+    rest = `${rest.slice(0, -1)}\r`
+  }
+  if (rest.length > MAX_SSE_PENDING_CHARS) {
+    throw new Error(`event stream frame exceeds ${MAX_SSE_PENDING_CHARS} characters`)
+  }
   const frames: SseFrame[] = []
   for (const part of parts) {
     if (part.trim().length === 0) {

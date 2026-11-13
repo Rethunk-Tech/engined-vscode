@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { backoffMs, flushSseRest, parseSseChunk } from './engineEvents.ts'
+import { backoffMs, flushSseRest, MAX_SSE_PENDING_CHARS, parseSseChunk } from './engineEvents.ts'
 
 describe('parseSseChunk', () => {
   test('parses one complete frame with a JSON payload', () => {
@@ -39,6 +39,30 @@ describe('parseSseChunk', () => {
   test('a frame with no data line at all is dropped', () => {
     const { frames } = parseSseChunk('event: ping\n\n')
     expect(frames).toEqual([])
+  })
+})
+
+describe('parseSseChunk line endings and limits', () => {
+  test('CRLF and bare CR end lines and frames, as the SSE spec allows', () => {
+    expect(parseSseChunk('event: a\r\ndata: 1\r\n\r\nevent: b\rdata: 2\r\r').frames).toEqual([
+      { event: 'a', data: 1 },
+      { event: 'b', data: 2 },
+    ])
+  })
+
+  test('a CRLF split across chunks is one line end, not a frame boundary', () => {
+    const first = parseSseChunk('event: a\r')
+    expect(first.frames).toEqual([])
+    const second = parseSseChunk(`${first.rest}\ndata: 1\r\n\r\n`)
+    expect(second.frames).toEqual([{ event: 'a', data: 1 }])
+    expect(second.rest).toBe('')
+  })
+
+  test('a frame that never ends past the cap is refused instead of buffered forever', () => {
+    expect(() => parseSseChunk(`data: ${'x'.repeat(MAX_SSE_PENDING_CHARS)}`)).toThrow()
+    expect(
+      parseSseChunk(`data: ${'x'.repeat(MAX_SSE_PENDING_CHARS - 10)}`).rest.length,
+    ).toBeGreaterThan(0)
   })
 })
 
