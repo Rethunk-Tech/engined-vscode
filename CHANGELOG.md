@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-11-12
+
 ### Fixed
 
 - `engined_speak` accepts only audio voice files (wav, mp3, flac, ogg, oga, opus, m4a, aac, webm) up to 20 MiB, and refuses anything else before the confirmation dialog without reading it.
