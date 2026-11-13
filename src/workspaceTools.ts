@@ -29,8 +29,8 @@ import {
   requestSpeech,
   searchConfirmationMessage,
   speakAction,
-  transcribeAction,
   ToolRouteError,
+  transcribeAction,
   voiceUploadPath,
 } from './toolRequests.ts'
 
@@ -55,7 +55,6 @@ function host(): ToolHost {
 function workspaceRoots(): string[] {
   return (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath)
 }
-
 async function readWorkspaceFile(path: string): Promise<Uint8Array> {
   const resolved = resolveWorkspacePath(workspaceRoots(), path)
   checkToolReadSize(await existingFileSize(resolved))
@@ -110,12 +109,7 @@ async function deleteWorkspaceFile(path: string): Promise<void> {
   }
 }
 
-/**
- * Show one inline preview while the picture renders. Tool `progress.report`
- * carries a message string and no image, so the frame is written to
- * `<outputPath>.preview.<format>` and opened beside the chat. A later frame
- * replaces that file. The caller removes it when the call ends.
- */
+/** Preview frames go to `<outputPath>.preview.<format>` and open beside the chat; the caller removes the file. */
 async function showImagePreview(
   outputPath: string,
   file: PreviewFile,
@@ -249,8 +243,7 @@ const generateImageTool: vscode.LanguageModelTool<GenerateImageInput> = {
       }
       const uri = await writeWorkspaceFile(options.input.outputPath, Buffer.from(png, 'base64'))
       await removePreviewFile(preview, deleteWorkspaceFile)
-      // The image is shown to the user, not returned to the model: a tool can't tell which
-      // model called it, and Copilot's backend fails the next turn fetching an image part.
+      // Shown to the user, not the model: Copilot's backend fails fetching an image part.
       await vscode.commands.executeCommand('vscode.open', uri, {
         preview: true,
         viewColumn: vscode.ViewColumn.Beside,
@@ -427,11 +420,7 @@ const speakTool: vscode.LanguageModelTool<SpeakInput> = {
       const row = host().resolveRoleRow('speech')
       const audio = await requestSpeech(
         row,
-        {
-          text: options.input.text,
-          voice: options.input.voice,
-          outputPath: options.input.outputPath,
-        },
+        { ...options.input },
         { roots: workspaceRoots(), fileSize: existingFileSize, readFile: readExistingFile },
         cancellationSignal(token),
       )

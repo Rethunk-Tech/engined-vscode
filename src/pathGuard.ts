@@ -87,7 +87,7 @@ export function resolveWorkspacePath(roots: readonly string[], requested: string
 
 /** Workspace-relative path as a confirmation dialog names it. With more than one folder, the folder name comes first so two `notes.md` files are not shown as the same path. */
 export function displayWorkspacePath(roots: readonly string[], absolute: string): string {
-  const normalizedRoots = roots.map((root) => resolve(root))
+  const normalizedRoots = roots.map((folder) => resolve(folder))
   const root = normalizedRoots.find((candidate) => isInside(absolute, candidate))
   if (root === undefined) {
     return absolute

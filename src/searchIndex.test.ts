@@ -212,20 +212,6 @@ describe('SearchIndex refresh', () => {
     expect(keys).toEqual([...new Set(keys)])
   })
 
-  test('a file that grew past the size cap between stat and read is not embedded', async () => {
-    const grown = new Uint8Array(257 * 1024).fill(97)
-    const { host } = fakeHost({
-      stat: () => Promise.resolve({ isFile: true, size: 12, mtime: 1 }),
-      readFile: (u) =>
-        u.fsPath.endsWith('search-index.json')
-          ? Promise.reject(new Error('no index yet'))
-          : Promise.resolve(grown),
-    })
-    embedCalls.length = 0
-    await built(host)
-    expect(embedCalls.length).toBe(0)
-  })
-
   test('a binary file is read once across two ensureBuilt calls', async () => {
     let reads = 0
     const { host } = fakeHost({
@@ -269,6 +255,30 @@ describe('SearchIndex refresh', () => {
     jest.advanceTimersByTime(2000)
     await tick()
     expect(counts.writes).toBe(writesAfterBuild + 1)
+  })
+})
+
+describe('SearchIndex size and teardown', () => {
+  beforeEach(() => {
+    embedCalls.length = 0
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  test('a file that grew past the size cap between stat and read is not embedded', async () => {
+    const grown = new Uint8Array(257 * 1024).fill(97)
+    const { host } = fakeHost({
+      stat: () => Promise.resolve({ isFile: true, size: 12, mtime: 1 }),
+      readFile: (u) =>
+        u.fsPath.endsWith('search-index.json')
+          ? Promise.reject(new Error('no index yet'))
+          : Promise.resolve(grown),
+    })
+    await built(host)
+    expect(embedCalls.length).toBe(0)
   })
 
   test('dispose cancels a pending save so teardown does not write', async () => {

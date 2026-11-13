@@ -17,9 +17,9 @@ import {
   requestSpeech,
   searchConfirmationMessage,
   speakAction,
-  transcribeAction,
   ToolRouteError,
   TRANSLATE_UNAVAILABLE,
+  transcribeAction,
   voiceUploadPath,
 } from './toolRequests.ts'
 
@@ -266,25 +266,6 @@ describe('request builders', () => {
     }
   })
 
-  test('an escaping output path throws before any door request', async () => {
-    let reads = 0
-    await expect(
-      requestSpeech(
-        piper,
-        { text: 'hello', voice: 'vc_already.wav', outputPath: '../out.wav' },
-        {
-          roots: ['/workspace/project'],
-          fileSize: async () => undefined,
-          readFile: async () => {
-            reads += 1
-            return new Uint8Array([1])
-          },
-        },
-      ),
-    ).rejects.toThrow(PathEscapeError)
-    expect(reads).toBe(0)
-  })
-
   test('a voice path outside the workspace is refused before any upload', async () => {
     let reads = 0
     await expect(
@@ -306,6 +287,25 @@ describe('request builders', () => {
 })
 
 describe('speak voice files', () => {
+  test('an escaping output path throws before any door request', async () => {
+    let reads = 0
+    await expect(
+      requestSpeech(
+        piper,
+        { text: 'hello', voice: 'vc_already.wav', outputPath: '../out.wav' },
+        {
+          roots: ['/workspace/project'],
+          fileSize: async () => undefined,
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      ),
+    ).rejects.toThrow(PathEscapeError)
+    expect(reads).toBe(0)
+  })
+
   test('a voice file that is not audio is refused without being read', async () => {
     let reads = 0
     await expect(

@@ -101,7 +101,9 @@ describe('readImageEvents', () => {
       await readImageEvents(
         stream,
         () => undefined,
-        (frame) => previews.push(frame),
+        (frame) => {
+          previews.push(frame)
+        },
       ),
     ).toEqual(IMAGE)
     expect(previews).toEqual([])
