@@ -14,7 +14,8 @@ export function gitIgnored(root: string, relPaths: readonly string[]): Promise<S
     return Promise.resolve(new Set())
   }
   return new Promise((resolve) => {
-    const child = spawn('git', ['-C', root, 'check-ignore', '-z', '--stdin'], {
+    // --no-index: with the index, one path inside a submodule aborts the whole batch (exit 128).
+    const child = spawn('git', ['-C', root, 'check-ignore', '--no-index', '-z', '--stdin'], {
       stdio: ['pipe', 'pipe', 'ignore'],
     })
     const chunks: Buffer[] = []

@@ -20,3 +20,30 @@ test('gitIgnored names the ignored paths, and nothing outside a repository', asy
   const plain = mkdtempSync(join(tmpdir(), 'engined-nogit-'))
   expect((await gitIgnored(plain, ['a.log'])).size).toBe(0)
 })
+
+test('gitIgnored still names ignored paths when the batch also holds a file inside a submodule', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'engined-gitignore-sub-'))
+  const git = (...args: string[]) =>
+    Bun.spawnSync(['git', '-c', 'user.name=t', '-c', 'user.email=t@t', '-C', repo, ...args])
+  git('init', '-q')
+  writeFileSync(join(repo, '.gitignore'), 'secrets.yml\n')
+  const sub = join(repo, 'vendor')
+  mkdirSync(sub)
+  Bun.spawnSync(['git', 'init', '-q', sub])
+  writeFileSync(join(sub, 'lib.ts'), 'x')
+  Bun.spawnSync(['git', '-c', 'user.name=t', '-c', 'user.email=t@t', '-C', sub, 'add', '.'])
+  Bun.spawnSync([
+    'git',
+    '-c',
+    'user.name=t',
+    '-c',
+    'user.email=t@t',
+    '-C',
+    sub,
+    'commit',
+    '-qm',
+    'x',
+  ])
+  git('add', 'vendor')
+  expect([...(await gitIgnored(repo, ['vendor/lib.ts', 'secrets.yml']))]).toEqual(['secrets.yml'])
+})
