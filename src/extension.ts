@@ -237,6 +237,7 @@ export function activate(context: vscode.ExtensionContext): void {
     new vscode.Disposable(() => {
       clearPollTimer(s)
       stopEngineEvents(s)
+      s.searchIndex.dispose()
     }),
   )
   s.background(connectAllEngineEvents(s))
@@ -261,4 +262,5 @@ export function deactivate(): void {
   clearPollTimer(session)
   stopEngineEvents(session)
   stopLoadingTimer(session)
+  session.searchIndex.dispose()
 }

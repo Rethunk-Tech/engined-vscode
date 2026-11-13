@@ -255,6 +255,17 @@ describe('SearchIndex refresh', () => {
     await tick()
     expect(counts.writes).toBe(writesAfterBuild + 1)
   })
+
+  test('dispose cancels a pending save so teardown does not write', async () => {
+    const { host, counts } = fakeHost()
+    const { index } = await built(host)
+    const writesAfterBuild = counts.writes
+    index.onFileChanged(uri('/ws/a.txt'), 'delete')
+    index.dispose()
+    jest.advanceTimersByTime(5000)
+    await tick()
+    expect(counts.writes).toBe(writesAfterBuild)
+  })
 })
 
 describe('SearchIndex load', () => {

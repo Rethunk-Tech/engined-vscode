@@ -404,6 +404,18 @@ export class SearchIndex {
     }
   }
 
+  /** Drop pending save/refresh timers. Safe to call more than once. */
+  dispose(): void {
+    if (this.#saveTimer !== undefined) {
+      clearTimeout(this.#saveTimer)
+      this.#saveTimer = undefined
+    }
+    if (this.#refreshTimer !== undefined) {
+      clearTimeout(this.#refreshTimer)
+      this.#refreshTimer = undefined
+    }
+  }
+
   async search(query: string, maxResults: number, signal?: AbortSignal): Promise<SearchHit[]> {
     await this.ensureBuilt()
     const row = this.#embeddingRow()
