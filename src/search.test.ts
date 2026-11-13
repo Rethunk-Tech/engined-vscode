@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import { compareCodeUnits } from './compareCodeUnits.ts'
 import {
+  allowRemoteFromInspect,
   chunkFile,
   cosineSimilarity,
+  isSecretFile,
   mergeRerank,
   planIndexUpdate,
   searchableRows,
@@ -147,5 +149,34 @@ describe('searchableRows', () => {
 
   test('keeps every row when remote is allowed', () => {
     expect(searchableRows(rows, true)).toHaveLength(3)
+  })
+})
+
+describe('isSecretFile', () => {
+  test('flags env files, keys and certificates by name, at any depth', () => {
+    for (const p of [
+      '.env',
+      'a/.env.local',
+      'x/server.pem',
+      'k.key',
+      'home/.ssh/id_rsa',
+      'id_rsa.pub',
+      'id_ed25519',
+    ]) {
+      expect(isSecretFile(p)).toBe(true)
+    }
+    for (const p of ['env.ts', 'src/keyboard.ts', 'README.md', 'environment.md']) {
+      expect(isSecretFile(p)).toBe(false)
+    }
+  })
+})
+
+describe('allowRemoteFromInspect', () => {
+  test('a workspace or folder true counts only once confirmed; user level is unchanged', () => {
+    expect(allowRemoteFromInspect({ workspaceValue: true }, false)).toBe(false)
+    expect(allowRemoteFromInspect({ workspaceFolderValue: true }, false)).toBe(false)
+    expect(allowRemoteFromInspect({ workspaceValue: true }, true)).toBe(true)
+    expect(allowRemoteFromInspect({ globalValue: true, workspaceValue: false }, false)).toBe(true)
+    expect(allowRemoteFromInspect({}, true)).toBe(false)
   })
 })

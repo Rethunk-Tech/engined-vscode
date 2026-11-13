@@ -26,7 +26,7 @@ import {
 } from './commands.ts'
 import { EnginedInlineCompletionProvider, trackActiveEditor } from './completionProvider.ts'
 import { COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES } from './completions.ts'
-import { confirmWorkspaceDoors, getDoors } from './config.ts'
+import { confirmWorkspaceAllowRemote, confirmWorkspaceDoors, getDoors } from './config.ts'
 import { DOOR_TIMEOUT_MS } from './constants.ts'
 import { describeError } from './describeError.ts'
 import { fetchAllDoors } from './doorClient.ts'
@@ -220,6 +220,9 @@ export function activate(context: vscode.ExtensionContext): void {
           }),
         )
       }
+      if (e.affectsConfiguration('engined.search.allowRemote')) {
+        s.background(confirmWorkspaceAllowRemote().then(() => undefined))
+      }
       if (e.affectsConfiguration('engined.defaultModels')) {
         renderStatusBar(s)
       }
@@ -230,6 +233,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   )
   s.background(connectAllEngineEvents(s))
+  s.background(confirmWorkspaceAllowRemote().then(() => undefined))
   s.background(
     confirmWorkspaceDoors().then((used) => {
       if (!used) {

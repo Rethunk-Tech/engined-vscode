@@ -9,12 +9,14 @@ import type { Door, ReasoningLevel } from './door.ts'
 import { doorsFromInspect, REASONING_LEVELS } from './door.ts'
 import type { SplitOptions } from './promptSplit.ts'
 import { DEFAULT_SPLIT } from './promptSplit.ts'
+import { allowRemoteFromInspect } from './search.ts'
 
 const DEFAULT_DOORS: Door[] = [{ name: 'local', url: 'http://127.0.0.1:29200' }]
 const DEFAULT_POLL_SECONDS = 30
 const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
 
 let workspaceDoorsConfirmed = false
+let workspaceAllowRemoteConfirmed = false
 
 function config(): vscode.WorkspaceConfiguration {
   return vscode.workspace.getConfiguration('engined')
@@ -39,6 +41,23 @@ export async function confirmWorkspaceDoors(): Promise<boolean> {
   )
   workspaceDoorsConfirmed = pick === 'Use workspace doors'
   return workspaceDoorsConfirmed
+}
+
+/** Same gate as `confirmWorkspaceDoors`, for a workspace or folder `engined.search.allowRemote: true`. */
+export async function confirmWorkspaceAllowRemote(): Promise<boolean> {
+  const inspected = config().inspect<boolean>('search.allowRemote')
+  const workspace = inspected?.workspaceValue ?? inspected?.workspaceFolderValue
+  if (workspace !== true) {
+    workspaceAllowRemoteConfirmed = false
+    return false
+  }
+  const pick = await vscode.window.showWarningMessage(
+    'This workspace sets engined.search.allowRemote. Using it lets this folder send its file contents to a non-local embedding or rerank route.',
+    { modal: true },
+    'Allow remote search',
+  )
+  workspaceAllowRemoteConfirmed = pick === 'Allow remote search'
+  return workspaceAllowRemoteConfirmed
 }
 
 /** `engined.doors`, or the single local default when unset/empty. Workspace/folder values need `confirmWorkspaceDoors`. */
@@ -105,7 +124,15 @@ const DEFAULT_SEARCH_MAX_CHUNKS = 20_000
 
 /** Whether `engined_search` may embed/rerank through a non-local route. Off by default -- workspace content otherwise never leaves the machine. */
 export function getSearchAllowRemote(): boolean {
-  return config().get<boolean>('search.allowRemote', false)
+  const inspected = config().inspect<boolean>('search.allowRemote')
+  return allowRemoteFromInspect(
+    {
+      globalValue: inspected?.globalValue,
+      workspaceValue: inspected?.workspaceValue,
+      workspaceFolderValue: inspected?.workspaceFolderValue,
+    },
+    workspaceAllowRemoteConfirmed,
+  )
 }
 
 export function getSearchMaxChunks(): number {

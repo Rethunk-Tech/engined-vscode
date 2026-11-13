@@ -148,3 +148,19 @@ export function mergeRerank<T>(
     .map((r) => candidates[r.index])
     .filter((item): item is T => item !== undefined)
 }
+
+const SECRET_NAME = /^(\.env(\..*)?|.*\.(pem|key)|id_(rsa|dsa|ecdsa|ed25519)(\..*)?)$/
+
+/** Env files, private keys and certificates by file name; indexing them would send their contents to an embedding route. */
+export function isSecretFile(path: string): boolean {
+  return SECRET_NAME.test(path.slice(path.lastIndexOf('/') + 1))
+}
+
+/** `engined.search.allowRemote`: a workspace or folder `true` counts only once the user confirmed it, because `.vscode/settings.json` could otherwise send workspace content to a remote route. */
+export function allowRemoteFromInspect(
+  inspected: { globalValue?: boolean; workspaceValue?: boolean; workspaceFolderValue?: boolean },
+  allowWorkspace: boolean,
+): boolean {
+  const workspace = inspected.workspaceValue ?? inspected.workspaceFolderValue
+  return workspace !== undefined && allowWorkspace ? workspace : (inspected.globalValue ?? false)
+}
