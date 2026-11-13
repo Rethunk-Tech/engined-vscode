@@ -64,7 +64,11 @@ describe('postChatCompletion', () => {
             }),
             {
               status: 429,
-              headers: { 'content-type': 'application/json', 'retry-after': '0' },
+              headers: {
+                'content-type': 'application/json',
+                'retry-after': '0',
+                connection: 'close',
+              },
             },
           )
         }
@@ -138,6 +142,7 @@ describe('postChatCompletion', () => {
             headers: {
               'content-type': 'application/json',
               'retry-after': new Date(Date.now() - 1000).toUTCString(),
+              connection: 'close',
             },
           })
         }
