@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - `engined_search` discards a valid-JSON index file of the wrong shape and rebuilds it, instead of throwing on every search.
+- `engined_search` keeps skipping gitignored files when the workspace holds a git submodule.
+- Tool writes refuse a dangling symlink instead of following it out of the workspace.
+- An edited workspace `engined.doors` list is not used until the user confirms it again.
+- A door-sent tool-call `index` can no longer pollute `Array.prototype` or stall the extension host.
 
 ### Changed
 
