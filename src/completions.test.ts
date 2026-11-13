@@ -3,6 +3,7 @@ import {
   buildCompletionsRequestBody,
   COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES,
   completionRequestAllowed,
+  completionRows,
   completionWaitingBehind,
   extractCompletionText,
   extractCompletionUsage,
@@ -286,5 +287,18 @@ describe('extractCompletionUsage', () => {
     expect(extractCompletionUsage({})).toBeUndefined()
     expect(extractCompletionUsage(undefined)).toBeUndefined()
     expect(extractCompletionUsage({ usage: {} })).toBeUndefined()
+  })
+})
+
+describe('completionRows', () => {
+  const rows = [{ id: 'local', egress: 'none' }, { id: 'remote', egress: 'cloud' }, { id: 'unset' }]
+
+  test('a secret file only reaches local routes', () => {
+    expect(completionRows(rows, 'app/.env').map((r) => r.id)).toEqual(['local'])
+    expect(completionRows(rows.slice(1), 'deploy/.NPMRC')).toEqual([])
+  })
+
+  test('any other file keeps every route', () => {
+    expect(completionRows(rows, 'src/env.ts')).toEqual(rows)
   })
 })

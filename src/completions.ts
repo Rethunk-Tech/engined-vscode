@@ -7,8 +7,17 @@
  */
 
 import type { ExtraFile } from './neighbourContext.ts'
+import { isSecretFile, searchableRows } from './search.ts'
 
 export const COMPLETIONS_PATH = '/openai/v1/completions'
+
+/** Routes ghost text may use in `path`: only local (`egress: none`) ones in a secret-named file, so its contents never leave the machine. */
+export function completionRows<T extends { egress?: string }>(
+  rows: readonly T[],
+  path: string,
+): T[] {
+  return searchableRows(rows, !isSecretFile(path))
+}
 
 /**
  * A `DocumentFilter[]` for `registerInlineCompletionItemProvider`. A

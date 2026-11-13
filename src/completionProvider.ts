@@ -7,6 +7,7 @@ import {
   COMPLETIONS_PATH,
   type CompletionCommentTokens,
   completionRequestAllowed,
+  completionRows,
   completionWaitingBehind,
   extractCompletionText,
   extractCompletionUsage,
@@ -136,17 +137,17 @@ export class EnginedInlineCompletionProvider implements vscode.InlineCompletionI
     if (vscode.window.activeTextEditor?.selection.isEmpty === false) {
       return undefined
     }
-    const completionModel = resolveDefaultModel(
-      s.poller.rows,
-      'completion',
-      getDefaultModel('completion'),
-    )
-    logUnusableIfChanged(
-      s.loggedUnusableReasons,
-      s.log,
-      'completion',
-      completionModel.unusableReason,
-    )
+    const rows = completionRows(s.poller.rows, vscode.workspace.asRelativePath(document.uri, false))
+    const completionModel = resolveDefaultModel(rows, 'completion', getDefaultModel('completion'))
+    // A secret file hides remote rows, so a remote configured id would be misreported as not installed.
+    if (rows.length === s.poller.rows.length) {
+      logUnusableIfChanged(
+        s.loggedUnusableReasons,
+        s.log,
+        'completion',
+        completionModel.unusableReason,
+      )
+    }
     const model = completionModel.row
     if (model === undefined) {
       return undefined
