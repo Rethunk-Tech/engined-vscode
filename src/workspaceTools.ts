@@ -29,6 +29,7 @@ import {
   requestSpeech,
   searchConfirmationMessage,
   speakAction,
+  transcribeAction,
   ToolRouteError,
   voiceUploadPath,
 } from './toolRequests.ts'
@@ -391,7 +392,7 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
         title: 'Transcribe audio',
         message: confirmationMessage(
           row,
-          'Transcribe audio',
+          transcribeAction(options.input.translate),
           await confirmationTarget(options.input.path, false),
         ),
       },

@@ -241,6 +241,11 @@ export function speakAction(voiceFile: string | undefined): string {
   return voiceFile === undefined ? 'Speak text' : `Speak text, uploading voice file ${voiceFile}`
 }
 
+/** The transcribe confirmation's action, naming translate when that is what the call will do. */
+export function transcribeAction(translate: boolean | undefined): string {
+  return translate === true ? 'Translate audio' : 'Transcribe audio'
+}
+
 /**
  * Whether `absolute` is an existing file that may be uploaded as a voice. Throws
  * `ToolRouteError` for a file that is not audio or is over the cap; the size comes from

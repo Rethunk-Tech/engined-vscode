@@ -17,6 +17,7 @@ import {
   requestSpeech,
   searchConfirmationMessage,
   speakAction,
+  transcribeAction,
   ToolRouteError,
   TRANSLATE_UNAVAILABLE,
   voiceUploadPath,
@@ -395,6 +396,14 @@ describe('confirmationMessage', () => {
       capabilities: {},
     }
     expect(confirmationMessage(remoteRow, 'Describe image')).toContain('leaves this machine')
+  })
+})
+
+describe('transcribe confirmation', () => {
+  test('names translate when that is what the call will do', () => {
+    expect(transcribeAction(undefined)).toBe('Transcribe audio')
+    expect(transcribeAction(false)).toBe('Transcribe audio')
+    expect(transcribeAction(true)).toBe('Translate audio')
   })
 })
 
