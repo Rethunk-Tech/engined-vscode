@@ -229,6 +229,20 @@ describe('usableDoors', () => {
     expect(usableDoors([local, bad])).toEqual([local])
   })
 
+  test('drops empty names and malformed entries without throwing', () => {
+    const ok: Door = { name: 'ok', url: 'http://10.0.0.5:29200' }
+    expect(
+      usableDoors([
+        local,
+        { name: '', url: 'http://10.0.0.5:29200' },
+        { name: '   ', url: 'http://10.0.0.5:29200' },
+        { name: 'x', url: '' },
+        { name: 'ok', url: 'http://10.0.0.5:29200' },
+      ]),
+    ).toEqual([local, ok])
+    expect(usableDoors([{ url: 'http://127.0.0.1:29200' } as Door, local])).toEqual([local])
+  })
+
   test('keeps http and https on any host; drops other schemes', () => {
     const httpsRemote: Door = { name: 'cloud', url: 'https://door.example:443' }
     const cases: { door: Door; keep: boolean }[] = [

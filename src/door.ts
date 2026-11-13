@@ -21,9 +21,16 @@ export function isAllowedDoorUrl(url: string): boolean {
   }
 }
 
-/** Drops slash-in-name doors (breaks `splitQualifiedId`) and URLs that are not allowed `http(s)`. */
+/** Drops slash-in-name doors (breaks `splitQualifiedId`), empty names, and URLs that are not allowed `http(s)`. */
 export function usableDoors(doors: readonly Door[]): Door[] {
-  return doors.filter((d) => !d.name.includes('/') && isAllowedDoorUrl(d.url))
+  return doors.filter(
+    (d) =>
+      typeof d.name === 'string' &&
+      d.name.trim() !== '' &&
+      !d.name.includes('/') &&
+      typeof d.url === 'string' &&
+      isAllowedDoorUrl(d.url),
+  )
 }
 
 /** `engined.doors` from VS Code `inspect`: workspace/folder values are used only after the user confirms. */
