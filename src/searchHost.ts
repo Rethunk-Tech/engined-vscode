@@ -11,6 +11,7 @@ import type { ModelRole } from './defaultModels.ts'
 import type { EnginedModelRow } from './door.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
 import { gitIgnored } from './gitIgnore.ts'
+import { resolveWorkspacePath } from './pathGuard.ts'
 
 export interface HostUri {
   readonly fsPath: string
@@ -32,6 +33,8 @@ export interface SearchHost {
   findFiles(exclude: string): Promise<HostUri[]>
   /** Whether `uri` is a workspace file that `exclude` lets through; false outside any workspace folder. */
   isWorkspaceFile(uri: HostUri, exclude: string): Promise<boolean>
+  /** False when `uri` is a symlink (or other path) whose target is outside every workspace folder. */
+  containedInWorkspace(uri: HostUri): boolean
   asRelativePath(uri: HostUri): string
   /** The `files.exclude` then `search.exclude` settings. */
   excludeSettings(): Record<string, boolean>[]
@@ -73,6 +76,15 @@ export const vscodeSearchHost: SearchHost = {
   },
   async findFiles(exclude) {
     return await vscode.workspace.findFiles('**/*', exclude)
+  },
+  containedInWorkspace(uri) {
+    const roots = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath)
+    try {
+      resolveWorkspacePath(roots, uri.fsPath)
+      return true
+    } catch {
+      return false
+    }
   },
   async isWorkspaceFile(uri, exclude) {
     const folder = vscode.workspace.getWorkspaceFolder(asUri(uri))

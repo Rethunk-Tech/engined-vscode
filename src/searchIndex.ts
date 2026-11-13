@@ -231,6 +231,9 @@ export class SearchIndex {
     const infoByPath = new Map<string, { uri: HostUri; mtime: number }>()
     for (const uri of uris) {
       try {
+        if (!this.#host.containedInWorkspace(uri)) {
+          continue
+        }
         const stat = await this.#host.stat(uri)
         if (!stat.isFile || stat.size > MAX_FILE_BYTES) {
           continue
@@ -340,7 +343,7 @@ export class SearchIndex {
     if (!this.#loaded) {
       return
     }
-    if (kind === 'delete') {
+    if (kind === 'delete' || !this.#host.containedInWorkspace(uri)) {
       this.#removeFile(this.#host.asRelativePath(uri))
       this.#scheduleSave()
       return
@@ -368,6 +371,7 @@ export class SearchIndex {
   /** Whether `uri` is neither secret-named nor gitignored, and the workspace's exclude globs let it through. */
   async #isIndexable(uri: HostUri): Promise<boolean> {
     if (
+      !this.#host.containedInWorkspace(uri) ||
       isSecretFile(this.#host.asRelativePath(uri)) ||
       (await this.#host.ignored([uri])).size > 0
     ) {

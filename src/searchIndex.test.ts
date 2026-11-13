@@ -43,6 +43,7 @@ function fakeHost(over: Partial<SearchHost> = {}) {
       return [uri('/ws/a.txt')]
     },
     isWorkspaceFile: () => Promise.resolve(true),
+    containedInWorkspace: () => true,
     asRelativePath: (u) => u.fsPath.replace('/ws/', ''),
     excludeSettings: () => [{ '**/node_modules': true, '**/skip': false }],
     withProgress: (_title, task) => task(() => undefined),
@@ -392,6 +393,23 @@ describe('SearchIndex file filtering', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+  })
+
+  test('a workspace symlink whose target is outside the folder is never read', async () => {
+    const reads: string[] = []
+    const { host } = fakeHost({
+      findFiles: () => Promise.resolve([uri('/ws/a.txt'), uri('/ws/link.txt')]),
+      containedInWorkspace: (u) => !u.fsPath.endsWith('link.txt'),
+      readFile: (u) => {
+        reads.push(u.fsPath)
+        return u.fsPath.endsWith('search-index.json')
+          ? Promise.reject(new Error('no index yet'))
+          : Promise.resolve(new TextEncoder().encode('hello world\n'))
+      },
+    })
+    await built(host)
+    expect(reads.some((p) => p.endsWith('link.txt'))).toBe(false)
+    expect(embedCalls.length).toBe(1)
   })
 
   test('gitignored files and secret files are never embedded', async () => {
