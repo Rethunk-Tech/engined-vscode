@@ -183,6 +183,11 @@ export async function readChatStream(
     }
   } finally {
     try {
+      await reader.cancel()
+    } catch {
+      // Already closed or cancelled.
+    }
+    try {
       reader.releaseLock()
     } catch {
       // The stream was already cancelled.

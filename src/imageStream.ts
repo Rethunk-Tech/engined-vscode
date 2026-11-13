@@ -163,6 +163,11 @@ export async function readImageEvents(
     await takeImageEvents(flushed.frames, onProgress, onPreview, image)
   } finally {
     try {
+      await reader.cancel()
+    } catch {
+      // Already closed or cancelled.
+    }
+    try {
       reader.releaseLock()
     } catch {
       // The stream was already cancelled.

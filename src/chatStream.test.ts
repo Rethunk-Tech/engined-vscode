@@ -179,4 +179,18 @@ describe('readChatStream framing', () => {
     })
     await expect(readChatStream(endless, { text: () => undefined })).rejects.toThrow('exceeds')
   })
+
+  test('cancels the body when a frame exceeds the pending cap', async () => {
+    let cancelled = false
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(new TextEncoder().encode('x'.repeat(256 * 1024)))
+      },
+      cancel() {
+        cancelled = true
+      },
+    })
+    await expect(readChatStream(endless, { text: () => undefined })).rejects.toThrow('exceeds')
+    expect(cancelled).toBe(true)
+  })
 })
