@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-11-12
+
+### Fixed
+
+- Confirmation dialogs name the workspace folder in multi-root workspaces, and name translate when a transcribe call asks for it.
+- Tools refuse output paths that escape the workspace before any door call, and refuse workspace file reads over 32 MiB.
+- `engined_search` skips files whose real path is outside the workspace folder, drops a file that grew past the size cap after it was checked, and cancels its index timers when the extension deactivates.
+- A streamed response whose pending frame exceeds the size cap is cancelled instead of left open, and image preview frames larger than 32 KiB are ignored.
+- Door entries with an empty name or a malformed shape are dropped from the configuration.
+
 ## [0.1.10] - 2026-11-12
 
 ### Fixed
