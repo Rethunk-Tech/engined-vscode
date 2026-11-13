@@ -5,8 +5,10 @@ import { fileURLToPath } from 'node:url'
 import { compareCodeUnits } from './compareCodeUnits.ts'
 import {
   DEFAULT_MODEL_ROLES,
+  defaultModelFromInspect,
   logUnusableIfChanged,
   type ModelRole,
+  pendingWorkspaceDefault,
   qualifyingRows,
   ROLE_PATH,
   resolveDefaultModel,
@@ -205,5 +207,59 @@ describe('logUnusableIfChanged', () => {
       'engined.defaultModels.ocr: busy',
       'engined.defaultModels.ocr: busy',
     ])
+  })
+})
+
+describe('workspace engined.defaultModels', () => {
+  const local = completionRows[0] as EnginedModelRow
+  const remote: EnginedModelRow = {
+    ...local,
+    id: '@/cloud/coder',
+    routeId: '@/cloud/coder',
+    egress: 'cloud',
+  }
+  const mixed = [local, remote]
+
+  test('a workspace value picking an off-machine route waits for confirmation of that exact value', () => {
+    const inspected = { globalValue: local.id, workspaceValue: remote.id }
+    expect(pendingWorkspaceDefault('completion', inspected, undefined, mixed)).toBe(remote.id)
+    expect(defaultModelFromInspect('completion', inspected, undefined, mixed)).toBe(local.id)
+    expect(defaultModelFromInspect('completion', inspected, 'other', mixed)).toBe(local.id)
+    expect(pendingWorkspaceDefault('completion', inspected, remote.id, mixed)).toBeUndefined()
+    expect(defaultModelFromInspect('completion', inspected, remote.id, mixed)).toBe(remote.id)
+  })
+
+  test('a folder value, or an empty one whose automatic pick is remote, is held too', () => {
+    expect(
+      defaultModelFromInspect('completion', { workspaceFolderValue: remote.id }, undefined, mixed),
+    ).toBe('')
+    expect(
+      pendingWorkspaceDefault(
+        'completion',
+        { globalValue: local.id, workspaceValue: '' },
+        undefined,
+        [remote, local],
+      ),
+    ).toBe('')
+  })
+
+  test('a local pick, an unknown id, or the route the user already picks needs no confirmation', () => {
+    expect(
+      defaultModelFromInspect('completion', { workspaceValue: local.id }, undefined, mixed),
+    ).toBe(local.id)
+    expect(
+      defaultModelFromInspect('completion', { workspaceValue: 'gone' }, undefined, mixed),
+    ).toBe('gone')
+    expect(
+      pendingWorkspaceDefault(
+        'completion',
+        { globalValue: remote.id, workspaceValue: remote.routeId },
+        undefined,
+        mixed,
+      ),
+    ).toBeUndefined()
+    expect(
+      defaultModelFromInspect('completion', { globalValue: remote.id }, undefined, mixed),
+    ).toBe(remote.id)
   })
 })

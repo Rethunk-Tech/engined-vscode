@@ -138,7 +138,11 @@ export class EnginedInlineCompletionProvider implements vscode.InlineCompletionI
       return undefined
     }
     const rows = completionRows(s.poller.rows, vscode.workspace.asRelativePath(document.uri, false))
-    const completionModel = resolveDefaultModel(rows, 'completion', getDefaultModel('completion'))
+    const completionModel = resolveDefaultModel(
+      rows,
+      'completion',
+      getDefaultModel('completion', s.poller.rows),
+    )
     // A secret file hides remote rows, so a remote configured id would be misreported as not installed.
     if (rows.length === s.poller.rows.length) {
       logUnusableIfChanged(

@@ -166,7 +166,7 @@ export class SearchIndex {
     return resolveDefaultModel(
       searchableRows(this.#rowsProvider(), this.#host.allowRemote()),
       'embedding',
-      this.#host.defaultModel('embedding'),
+      this.#host.defaultModel('embedding', this.#rowsProvider()),
     ).row
   }
 
@@ -175,7 +175,7 @@ export class SearchIndex {
     return resolveDefaultModel(
       searchableRows(this.#rowsProvider(), this.#host.allowRemote()),
       'rerank',
-      this.#host.defaultModel('rerank'),
+      this.#host.defaultModel('rerank', this.#rowsProvider()),
     ).row
   }
 

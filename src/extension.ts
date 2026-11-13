@@ -26,7 +26,12 @@ import {
 } from './commands.ts'
 import { EnginedInlineCompletionProvider, trackActiveEditor } from './completionProvider.ts'
 import { COMPLETIONS_DOCUMENT_SELECTOR_SCHEMES } from './completions.ts'
-import { confirmWorkspaceAllowRemote, confirmWorkspaceDoors, getDoors } from './config.ts'
+import {
+  confirmWorkspaceAllowRemote,
+  confirmWorkspaceDefaultModels,
+  confirmWorkspaceDoors,
+  getDoors,
+} from './config.ts'
 import { DOOR_TIMEOUT_MS } from './constants.ts'
 import { describeError } from './describeError.ts'
 import { fetchAllDoors } from './doorClient.ts'
@@ -75,6 +80,7 @@ function createSession(context: vscode.ExtensionContext): Session {
       created.doorReachable = poller.reachable
       renderStatusBar(created)
       modelsChanged.fire()
+      background(confirmWorkspaceDefaultModels(poller.rows).then(() => renderStatusBar(created)))
     },
   )
   const created: Session = {
@@ -225,6 +231,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       if (e.affectsConfiguration('engined.defaultModels')) {
         renderStatusBar(s)
+        s.background(confirmWorkspaceDefaultModels(s.poller.rows).then(() => renderStatusBar(s)))
       }
     }),
     new vscode.Disposable(() => {

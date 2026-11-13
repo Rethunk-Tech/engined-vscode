@@ -7,6 +7,7 @@
  */
 
 import type { EnginedModelRow } from './door.ts'
+import { isLocalEgress } from './status.ts'
 
 export type ModelRole =
   | 'image'
@@ -126,6 +127,53 @@ export function resolveDefaultModel(
     row: qualifying[0],
     unusableReason: unusableReasonFor(existing, configuredId, role, path),
   }
+}
+
+export interface DefaultModelInspect {
+  globalValue?: string
+  workspaceValue?: string
+  workspaceFolderValue?: string
+}
+
+/**
+ * The workspace or folder `engined.defaultModels.<role>` still awaiting the
+ * user's confirmation: one that resolves to an off-machine route the user's
+ * own value does not already pick, and is not the exact `confirmed` value.
+ * `.vscode/settings.json` could otherwise send prompts off the machine.
+ */
+export function pendingWorkspaceDefault(
+  role: ModelRole,
+  inspected: DefaultModelInspect,
+  confirmed: string | undefined,
+  rows: readonly EnginedModelRow[],
+): string | undefined {
+  const workspace = inspected.workspaceValue ?? inspected.workspaceFolderValue
+  if (workspace === undefined || workspace === confirmed) {
+    return undefined
+  }
+  const picked = resolveDefaultModel(rows, role, workspace).row
+  if (
+    picked === undefined ||
+    isLocalEgress(picked.egress) ||
+    picked === resolveDefaultModel(rows, role, inspected.globalValue ?? '').row
+  ) {
+    return undefined
+  }
+  return workspace
+}
+
+/** The `engined.defaultModels.<role>` value in effect: the user's own while a workspace value is pending confirmation. */
+export function defaultModelFromInspect(
+  role: ModelRole,
+  inspected: DefaultModelInspect,
+  confirmed: string | undefined,
+  rows: readonly EnginedModelRow[],
+): string {
+  const user = inspected.globalValue ?? ''
+  if (pendingWorkspaceDefault(role, inspected, confirmed, rows) !== undefined) {
+    return user
+  }
+  return inspected.workspaceValue ?? inspected.workspaceFolderValue ?? user
 }
 
 /** Logs an unusable configured id once per change, never once per call; `seen` remembers what was last logged per role. */

@@ -4,8 +4,14 @@
  */
 
 import * as vscode from 'vscode'
-import type { ModelRole } from './defaultModels.ts'
-import type { Door, ReasoningLevel } from './door.ts'
+import {
+  DEFAULT_MODEL_ROLES,
+  type DefaultModelInspect,
+  defaultModelFromInspect,
+  type ModelRole,
+  pendingWorkspaceDefault,
+} from './defaultModels.ts'
+import type { Door, EnginedModelRow, ReasoningLevel } from './door.ts'
 import { doorsFromInspect, REASONING_LEVELS } from './door.ts'
 import type { SplitOptions } from './promptSplit.ts'
 import { DEFAULT_SPLIT } from './promptSplit.ts'
@@ -18,6 +24,9 @@ const DEFAULT_REASONING_EFFORT: ReasoningLevel = 'medium'
 /** JSON of the workspace `engined.doors` value the user confirmed; an edited list needs asking again. */
 let confirmedWorkspaceDoors: string | undefined
 let workspaceAllowRemoteConfirmed = false
+/** Per role, the workspace `engined.defaultModels.*` value the user confirmed, and the last one asked about (so a poll does not re-ask a declined value). */
+const confirmedWorkspaceDefaults = new Map<ModelRole, string>()
+const askedWorkspaceDefaults = new Map<ModelRole, string>()
 
 function config(): vscode.WorkspaceConfiguration {
   return vscode.workspace.getConfiguration('engined')
@@ -146,9 +155,49 @@ export function getSearchMaxChunks(): number {
   return config().get<number>('search.maxChunks', DEFAULT_SEARCH_MAX_CHUNKS)
 }
 
-/** Empty string means "automatic" -- see `defaultModels.ts` `resolveDefaultModel`. */
-export function getDefaultModel(role: ModelRole): string {
-  return config().get<string>(`defaultModels.${role}`, '')
+function inspectDefaultModel(role: ModelRole): DefaultModelInspect {
+  const inspected = config().inspect<string>(`defaultModels.${role}`)
+  return {
+    globalValue: inspected?.globalValue,
+    workspaceValue: inspected?.workspaceValue,
+    workspaceFolderValue: inspected?.workspaceFolderValue,
+  }
+}
+
+/** Empty string means "automatic" -- see `defaultModels.ts` `resolveDefaultModel`. A workspace value that picks an off-machine route needs `confirmWorkspaceDefaultModels`. */
+export function getDefaultModel(role: ModelRole, rows: readonly EnginedModelRow[]): string {
+  return defaultModelFromInspect(
+    role,
+    inspectDefaultModel(role),
+    confirmedWorkspaceDefaults.get(role),
+    rows,
+  )
+}
+
+/** Same gate as `confirmWorkspaceDoors`, per role, for a workspace `engined.defaultModels.*` that resolves to a non-local route. */
+export async function confirmWorkspaceDefaultModels(
+  rows: readonly EnginedModelRow[],
+): Promise<void> {
+  for (const { role } of DEFAULT_MODEL_ROLES) {
+    const pending = pendingWorkspaceDefault(
+      role,
+      inspectDefaultModel(role),
+      confirmedWorkspaceDefaults.get(role),
+      rows,
+    )
+    if (pending === undefined || askedWorkspaceDefaults.get(role) === pending) {
+      continue
+    }
+    askedWorkspaceDefaults.set(role, pending)
+    const pick = await vscode.window.showWarningMessage(
+      `This workspace sets engined.defaultModels.${role} to "${pending}", a route that leaves this machine. Using it sends this folder's ${role} requests off the machine.`,
+      { modal: true },
+      'Use workspace route',
+    )
+    if (pick === 'Use workspace route') {
+      confirmedWorkspaceDefaults.set(role, pending)
+    }
+  }
 }
 
 export async function setDefaultModel(role: ModelRole, modelId: string): Promise<void> {

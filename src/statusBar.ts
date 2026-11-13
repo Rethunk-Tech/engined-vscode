@@ -37,7 +37,11 @@ function completionsPaused(s: Session): boolean {
   if (!(getCompletionsEnabled() && getCompletionsPauseOnContention())) {
     return false
   }
-  const { row } = resolveDefaultModel(s.poller.rows, 'completion', getDefaultModel('completion'))
+  const { row } = resolveDefaultModel(
+    s.poller.rows,
+    'completion',
+    getDefaultModel('completion', s.poller.rows),
+  )
   if (row === undefined) {
     return false
   }
@@ -139,7 +143,7 @@ function tooltipMarkdown(s: Session): vscode.MarkdownString {
       lastCompletion: s.lastCompletionCall,
       modelCount: s.poller.models.length,
       defaults: DEFAULT_MODEL_ROLES.map((r) => {
-        const configuredId = getDefaultModel(r.role)
+        const configuredId = getDefaultModel(r.role, s.poller.rows)
         const resolved = resolveDefaultModel(s.poller.rows, r.role, configuredId)
         return {
           label: r.popupLabel,

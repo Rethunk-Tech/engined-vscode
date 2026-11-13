@@ -8,6 +8,7 @@
 import * as vscode from 'vscode'
 import { getDefaultModel, getSearchAllowRemote, getSearchMaxChunks } from './config.ts'
 import type { ModelRole } from './defaultModels.ts'
+import type { EnginedModelRow } from './door.ts'
 import { postEmbeddings, postRerank } from './doorClient.ts'
 import { gitIgnored } from './gitIgnore.ts'
 
@@ -52,7 +53,7 @@ export interface SearchHost {
     request: Parameters<typeof postRerank>[1],
     signal?: AbortSignal,
   ): ReturnType<typeof postRerank>
-  defaultModel(role: ModelRole): string
+  defaultModel(role: ModelRole, rows: readonly EnginedModelRow[]): string
   /** The subset of `uris` that git ignores in their workspace folder, as `fsPath`s. */
   ignored(uris: readonly HostUri[]): Promise<Set<string>>
   allowRemote(): boolean

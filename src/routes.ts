@@ -12,7 +12,7 @@ export function resolveRoleRow(s: Session, role: ModelRole, path?: string): Engi
   const resolved: DefaultModelResolution = resolveDefaultModel(
     s.poller.rows,
     role,
-    getDefaultModel(role),
+    getDefaultModel(role, s.poller.rows),
     path,
   )
   logUnusableIfChanged(s.loggedUnusableReasons, s.log, role, resolved.unusableReason)
