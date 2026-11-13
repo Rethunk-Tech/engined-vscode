@@ -4,7 +4,7 @@
  * escape it with `..`, and never arrive already absolute outside one.
  */
 
-import { realpathSync } from 'node:fs'
+import { lstatSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, resolve, sep } from 'node:path'
 
 export class PathEscapeError extends Error {}
@@ -19,7 +19,7 @@ function isInside(candidate: string, root: string): boolean {
   return candidate === root || candidate.startsWith(root + sep)
 }
 
-/** `realpath` of `p` when it exists; otherwise the real existing prefix plus the missing tail. */
+/** `realpath` of `p` when it exists; otherwise the real existing prefix plus the missing tail. Throws on a dangling symlink. */
 function realpathExistingPrefix(p: string): string {
   let current = p
   const missing: string[] = []
@@ -29,6 +29,10 @@ function realpathExistingPrefix(p: string): string {
       const real = realpathSync(current)
       return missing.length === 0 ? real : resolve(real, ...missing.slice().reverse())
     } catch {
+      // A dangling link would be followed by the write, wherever its missing target lies.
+      if (lstatSync(current, { throwIfNoEntry: false }) !== undefined) {
+        throw new PathEscapeError(`"${current}" is a symlink whose target does not exist`)
+      }
       const parent = dirname(current)
       if (parent === current) {
         reachedRoot = true

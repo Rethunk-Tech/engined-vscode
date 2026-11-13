@@ -71,4 +71,18 @@ describe('resolveWorkspacePath', () => {
       rmSync(dir, { recursive: true, force: true })
     }
   })
+
+  test('rejects a dangling symlink whose missing target is outside the workspace', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pathGuard-'))
+    const root = join(dir, 'ws')
+    mkdirSync(root)
+    symlinkSync(join(dir, 'not-yet.txt'), join(root, 'out.png'))
+    symlinkSync(join(dir, 'no-dir'), join(root, 'outdir'))
+    try {
+      expect(() => resolveWorkspacePath([root], 'out.png')).toThrow(PathEscapeError)
+      expect(() => resolveWorkspacePath([root], 'outdir/a.png')).toThrow(PathEscapeError)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
 })
