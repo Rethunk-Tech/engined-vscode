@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, jest, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, jest, test } from 'bun:test'
 import type { EnginedModelRow } from './door.ts'
 import type { HostUri, SearchHost } from './searchHost.ts'
 import { SearchIndex } from './searchIndex.ts'
@@ -83,6 +83,10 @@ describe('SearchIndex refresh', () => {
     embedCalls.length = 0
     rerankImpl = () => Promise.resolve([])
     jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   test('file events before the index is built do nothing', async () => {
@@ -373,6 +377,10 @@ describe('SearchIndex file filtering', () => {
   beforeEach(() => {
     embedCalls.length = 0
     jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   test('gitignored files and secret files are never embedded', async () => {
