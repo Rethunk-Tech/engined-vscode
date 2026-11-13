@@ -74,11 +74,12 @@ function parseDataLine(line: string): ChatChunk | undefined {
   }
 }
 
-function stitchToolCalls(calls: ToolCallSlot[], parts: ToolCallDelta[]): void {
+// A Map, not an array: the door picks `index`, and "__proto__" or 2e9 must not reach Array.prototype or a sparse length.
+function stitchToolCalls(calls: Map<number, ToolCallSlot>, parts: ToolCallDelta[]): void {
   for (const part of parts) {
-    const at = part.index ?? 0
-    calls[at] ??= { id: '', name: '', args: '' }
-    const slot = calls[at]
+    const at = typeof part.index === 'number' ? part.index : 0
+    const slot = calls.get(at) ?? { id: '', name: '', args: '' }
+    calls.set(at, slot)
     slot.id = part.id ?? slot.id
     slot.name = part.function?.name ?? slot.name
     slot.args += part.function?.arguments ?? ''
@@ -129,7 +130,7 @@ function splitLines(buffer: string): [string[], string] {
 function takeDataLine(
   line: string,
   sink: StreamSink,
-  calls: ToolCallSlot[],
+  calls: Map<number, ToolCallSlot>,
   usage: ChatUsage,
 ): void {
   const chunk = parseDataLine(line)
@@ -164,7 +165,7 @@ export async function readChatStream(
 ): Promise<StitchedToolCall[]> {
   const reader = body.getReader()
   const decoder = new TextDecoder()
-  const calls: ToolCallSlot[] = []
+  const calls = new Map<number, ToolCallSlot>()
   const usage: ChatUsage = {}
   let buffer = ''
   try {
@@ -187,7 +188,9 @@ export async function readChatStream(
       // The stream was already cancelled.
     }
   }
-  return calls
+  return [...calls.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, c]) => c)
     .filter((c) => c.name.length > 0)
     .flatMap((c, i) => {
       const parsed = c.args === '' ? {} : parseArgs(c.args)

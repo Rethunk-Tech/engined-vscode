@@ -35,6 +35,17 @@ describe('readChatStream', () => {
     expect(calls).toEqual([])
   })
 
+  test('a door-sent tool-call index never reaches Array.prototype or sizes the call list', async () => {
+    const delta = (index: unknown, name: string) =>
+      `data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index, id: name, function: { name, arguments: '{}' } }] } }] })}\n\n`
+    const stream = streamFromText(delta('__proto__', 'polluter') + delta(2_000_000_000, 'far'))
+    const started = performance.now()
+    const calls = await readChatStream(stream, { text: () => undefined })
+    expect(performance.now() - started).toBeLessThan(1000)
+    expect(Object.hasOwn(Array.prototype, 'name')).toBe(false)
+    expect(calls.map((c) => c.name)).toEqual(['polluter', 'far'])
+  })
+
   test('ignores malformed data lines and ends cleanly', async () => {
     const stream = streamFromText('data: not json\n\ndata: [DONE]\n\n')
     const calls = await readChatStream(stream, { text: () => undefined })
