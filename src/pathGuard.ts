@@ -28,10 +28,12 @@ function realpathExistingPrefix(p: string): string {
     try {
       const real = realpathSync(current)
       return missing.length === 0 ? real : resolve(real, ...missing.slice().reverse())
-    } catch {
+    } catch (error) {
       // A dangling link would be followed by the write, wherever its missing target lies.
       if (lstatSync(current, { throwIfNoEntry: false }) !== undefined) {
-        throw new PathEscapeError(`"${current}" is a symlink whose target does not exist`)
+        throw new PathEscapeError(`"${current}" is a symlink whose target does not exist`, {
+          cause: error,
+        })
       }
       const parent = dirname(current)
       if (parent === current) {
