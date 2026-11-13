@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Search and completions treat `.npmrc`, `.netrc`, `.pgpass`, `.pypirc`, `.git-credentials`, `.envrc`, `credentials*`, `*.p12` and `*.pfx` as secret files, matching names case-insensitively.
 - Ghost text in a secret file only uses a local route, and offers nothing when none is configured.
 - A workspace `engined.defaultModels.*` value that picks an off-machine route is not used until the user confirms that value.
+- `engined_search` and completions no longer treat source files such as `credentials.ts` or `credentials.go` as secret; only `credentials` with no extension or a config/data extension is.
+- The chat and image streams read `\r\n` and `\r` line endings and drop a stream whose unfinished frame grows without bound (1 MiB for chat, 512 MiB for image, whose final frame is a whole render), as the engine-events stream already did.
 - The engine-events stream accepts `\r\n` and `\r` line endings and drops a stream whose unfinished frame passes 1 MiB.
 
 ### Changed
