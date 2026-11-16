@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import type { Door, EnginedModelInfo, EnginedModelRow } from './door.ts'
+import { serializeRows } from './door.ts'
 import { effectivePollSeconds, ModelPoller, type ModelsPoll } from './polling.ts'
+import { searchableRows } from './search.ts'
 
 const DOOR: Door = { name: 'local', url: 'http://127.0.0.1:29200' }
 
@@ -90,6 +92,50 @@ describe('ModelPoller', () => {
     await poller.pollNow()
     expect(fires).toBe(2)
     expect(poller.rows).toHaveLength(2)
+  })
+
+  test('an egress or probe change on a non-chat row updates the cached list', async () => {
+    const nomic = (egress: string): EnginedModelRow => ({
+      ...row('nomic'),
+      state: 'running',
+      serves: ['/openai/v1/embeddings'],
+      egress,
+    })
+    const stt = (quality: boolean): EnginedModelRow => ({
+      ...row('whisper'),
+      state: 'running',
+      serves: ['/openai/v1/audio/transcriptions'],
+      probe: { kind: 'translate', quality, detail: '', at: 't' },
+    })
+    const first = [nomic('none'), stt(true)]
+    const second = [nomic('openai'), stt(false)]
+    const serializeSame = serializeRows(first) === serializeRows(second)
+    let call = 0
+    let fires = 0
+    const poller = new ModelPoller(
+      () => Promise.resolve(call++ === 0 ? poll([], first) : poll([], second)),
+      () => {
+        fires += 1
+      },
+    )
+    await poller.pollNow()
+    await poller.pollNow()
+    const searchable = searchableRows(poller.rows, false)
+      .filter((r) => r.serves.includes('/openai/v1/embeddings'))
+      .map((r) => r.id)
+    expect({
+      egress: poller.rows.find((r) => r.id === 'nomic')?.egress,
+      fires,
+      serializeSame,
+      searchable,
+      sttQuality: poller.rows.find((r) => r.id === 'whisper')?.probe?.quality,
+    }).toEqual({
+      egress: 'openai',
+      fires: 2,
+      serializeSame: false,
+      searchable: [],
+      sttQuality: false,
+    })
   })
 })
 

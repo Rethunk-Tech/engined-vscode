@@ -13,6 +13,7 @@ import {
   qualifiedEngineIds,
   qualifyId,
   reasoningLevelsFor,
+  serializeRows,
   snapReasoningEffort,
   splitQualifiedId,
   usableDoors,
@@ -101,6 +102,29 @@ describe('mapAnswerableRows', () => {
   test('excludes unavailable rows the same way mapModels does', () => {
     const unavailable = { ...models.data[0], state: 'unavailable' }
     expect(mapAnswerableRows({ data: [unavailable] }, DOOR, 1)).toEqual([])
+  })
+})
+
+describe('serializeRows', () => {
+  test('an egress or probe change is a different list', () => {
+    const base: EnginedModelRow = {
+      id: 'nomic',
+      routeId: 'nomic',
+      door: DOOR,
+      tools: false,
+      serves: ['/openai/v1/embeddings'],
+      state: 'running',
+      egress: 'none',
+      capabilities: {},
+    }
+    expect(serializeRows([base])).not.toBe(serializeRows([{ ...base, egress: 'openai' }]))
+    const passing = {
+      ...base,
+      probe: { kind: 'translate', quality: true, detail: '', at: 't' },
+    }
+    expect(serializeRows([passing])).not.toBe(
+      serializeRows([{ ...passing, probe: { ...passing.probe, quality: false } }]),
+    )
   })
 })
 
