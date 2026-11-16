@@ -1,3 +1,7 @@
+# Detection has no bun audit convention; this is the shared audit-bun script CI's setup-bun run-audit runs.
+[gates.vuln]
+run = "bun /usr/local/src/com.github/Rethunk-Tech/gh-actions/audit-bun/audit.ts"
+
 # CI's `bun run ci` ends with a vsce package listing, which catches a manifest or .vscodeignore that would fail
 # `vsce package`. It reads the build output, so it follows the build.
 [gates.build]
