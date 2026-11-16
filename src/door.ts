@@ -228,6 +228,16 @@ function qualifyRow(raw: RawModelRow, door: Door, doorCount: number): EnginedMod
   return { ...raw, id: qualifyId(door.name, raw.id, doorCount), routeId: raw.id, door }
 }
 
+/** Skip null/non-object entries and rows with no `serves` so one bad `/models` item cannot drop the door. */
+function isWireRow(row: unknown): row is RawModelRow {
+  return (
+    typeof row === 'object' &&
+    row !== null &&
+    typeof (row as RawModelRow).id === 'string' &&
+    Array.isArray((row as RawModelRow).serves)
+  )
+}
+
 /** One row -> the model info the provider reports, or `undefined` for a row this extension does not offer as a chat model. */
 export function mapModelRow(row: EnginedModelRow): EnginedModelInfo | undefined {
   // `running` and `warming` are the same model in use; only `unavailable` cannot answer.
@@ -269,6 +279,7 @@ export function mapAnswerableRows(body: unknown, door: Door, doorCount: number):
     return []
   }
   return data
+    .filter(isWireRow)
     .filter((row) => row.state !== 'unavailable')
     .map((row) => qualifyRow(row, door, doorCount))
 }
@@ -296,6 +307,9 @@ export function mapModels(body: unknown, door: Door, doorCount: number): Engined
   }
   const mapped: EnginedModelInfo[] = []
   for (const row of data) {
+    if (!isWireRow(row)) {
+      continue
+    }
     const info = mapModelRow(qualifyRow(row, door, doorCount))
     if (info !== undefined) {
       mapped.push(info)

@@ -73,6 +73,22 @@ describe('mapModels', () => {
     expect(mapModels({}, DOOR, 1)).toEqual([])
   })
 
+  test('skips a null or serves-less row and keeps valid neighbors', () => {
+    const good = {
+      id: '@/llama/ornith',
+      tools: true,
+      serves: ['/openai/v1/chat/completions'],
+      state: 'installed',
+      capabilities: {},
+    }
+    const missingServes = { id: 'broken', tools: false, state: 'installed', capabilities: {} }
+    expect(mapAnswerableRows({ data: [null] }, DOOR, 1)).toEqual([])
+    expect(mapModels({ data: [null] }, DOOR, 1)).toEqual([])
+    const mixed = { data: [good, null, missingServes] }
+    expect(mapAnswerableRows(mixed, DOOR, 1).map((r) => r.id)).toEqual([good.id])
+    expect(mapModels(mixed, DOOR, 1).map((m) => m.id)).toEqual([good.id])
+  })
+
   test('keeps vision rows out of the chat picker even though they serve chat completions', () => {
     const chatIds = new Set(mapModels(models, DOOR, 1).map((m) => m.id))
     expect(chatIds.has('@/llama/vision')).toBe(false)
