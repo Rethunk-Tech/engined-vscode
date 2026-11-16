@@ -361,6 +361,7 @@ const transcribeTool: vscode.LanguageModelTool<TranscribeInput> = {
       const bytes = await readWorkspaceFile(options.input.path)
       const req = buildTranscribeRequest(row, {
         audio: new Blob([bytes]),
+        translate: options.input.translate,
       })
       const form = new FormData()
       form.set('model', req.form.model)
