@@ -22,6 +22,14 @@ describe('isExcluded', () => {
     expect(isExcluded('src/x.ts', ['**/node_modules/**'])).toBe(false)
   })
 
+  test('a pattern matching a directory excludes everything beneath it', () => {
+    expect(isExcluded('node_modules', ['**/node_modules'])).toBe(true)
+    expect(isExcluded('node_modules/lodash/index.js', ['**/node_modules'])).toBe(true)
+    expect(isExcluded('.git/config', ['.git'])).toBe(true)
+    expect(isExcluded('src/vendor/a.ts', ['**/vendor'])).toBe(true)
+    expect(isExcluded('src/node_modules.txt', ['**/node_modules'])).toBe(false)
+  })
+
   test('a plain top-level pattern only matches that segment', () => {
     expect(isExcluded('out/main.js', ['out/**'])).toBe(true)
     expect(isExcluded('src/out/main.js', ['out/**'])).toBe(false)

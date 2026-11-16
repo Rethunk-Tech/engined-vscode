@@ -46,7 +46,16 @@ function globToRegExp(pattern: string): RegExp {
 }
 
 export function isExcluded(relPath: string, excludeGlobs: readonly string[]): boolean {
-  return excludeGlobs.some((glob) => globToRegExp(glob).test(relPath))
+  // VS Code's defaults are bare directory patterns (`**/node_modules`, `.git`), so a
+  // match on any ancestor directory has to exclude the files beneath it.
+  const paths = [relPath]
+  for (let i = relPath.indexOf('/'); i !== -1; i = relPath.indexOf('/', i + 1)) {
+    paths.push(relPath.slice(0, i))
+  }
+  return excludeGlobs.some((glob) => {
+    const pattern = globToRegExp(glob.replace(/\/+$/, ''))
+    return paths.some((path) => pattern.test(path))
+  })
 }
 
 /** ~1500 chars around `offset`, or the file's head when there is no live cursor. */
