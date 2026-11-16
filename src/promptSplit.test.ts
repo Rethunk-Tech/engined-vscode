@@ -58,4 +58,15 @@ describe('splitAtBoundaries', () => {
       expect(p.length % 2).toBe(0)
     }
   })
+
+  test(
+    'chunkChars 1 still advances through a high surrogate',
+    () => {
+      const text = `hello 😀 world ${'x'.repeat(8)}`
+      const pieces = splitAtBoundaries(text, { chunkChars: 1, splitAboveChars: 1 })
+      expect(pieces.join('')).toBe(text)
+      expect(pieces.every((p) => p.length > 0)).toBe(true)
+    },
+    { timeout: 2000 },
+  )
 })

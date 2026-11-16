@@ -86,6 +86,13 @@ function safeHardCut(text: string, at: number): number {
   return code >= HIGH_SURROGATE_MIN && code <= HIGH_SURROGATE_MAX ? at - 1 : at
 }
 
+/** One Unicode code point after `start`, so a backed-up hard cut cannot stall the loop. */
+function codePointAfter(text: string, start: number): number {
+  const code = text.charCodeAt(start)
+  const pair = code >= HIGH_SURROGATE_MIN && code <= HIGH_SURROGATE_MAX && start + 1 < text.length
+  return start + (pair ? 2 : 1)
+}
+
 export function splitAtBoundaries(text: string, options: SplitOptions = DEFAULT_SPLIT): string[] {
   const { chunkChars } = options
   if (options.splitAboveChars <= 0 || text.length <= options.splitAboveChars || chunkChars <= 0) {
@@ -106,8 +113,10 @@ export function splitAtBoundaries(text: string, options: SplitOptions = DEFAULT_
       next += 1
     }
     const end = best === undefined ? safeHardCut(text, high) : best.at
-    out.push(text.slice(start, end))
-    start = end
+    // chunkChars 1 on a high surrogate backs the hard cut to `start`; still emit one code point.
+    const cut = end > start ? end : codePointAfter(text, start)
+    out.push(text.slice(start, cut))
+    start = cut
   }
   out.push(text.slice(start))
   return out
