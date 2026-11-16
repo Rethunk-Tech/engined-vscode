@@ -32,7 +32,7 @@ jobs:
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Set up Bun
-        uses: Rethunk-Tech/gh-actions/setup-bun@8b1855d0694508efbf7b94b1628a61e447da80f9 # v1.28
+        uses: Rethunk-Tech/gh-actions/setup-bun@71da648f666fb49a8e72d0576a4d8db97894ccaf # v1.29.1
         with:
           node-version: "24"
 
