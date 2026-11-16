@@ -6,20 +6,22 @@ import type { EnginedModelRow } from './door.ts'
 
 const tools = new Map<string, { invoke: (options: unknown, token: unknown) => Promise<unknown> }>()
 const vscodeState = { workspaceFolders: [] as { uri: { fsPath: string } }[] }
+const noopDispose = { dispose: () => undefined }
+
+function textPart(value: string) {
+  return { value }
+}
+function toolResult(content: unknown[]) {
+  return { content }
+}
+class FileSystemError extends Error {
+  code = 'FileNotFound'
+}
 
 mock.module('vscode', () => {
-  class LanguageModelTextPart {
-    constructor(readonly value: string) {}
-  }
-  class LanguageModelToolResult {
-    constructor(readonly content: unknown[]) {}
-  }
-  class FileSystemError extends Error {
-    code = 'FileNotFound'
-  }
   return {
-    LanguageModelTextPart,
-    LanguageModelToolResult,
+    LanguageModelTextPart: textPart,
+    LanguageModelToolResult: toolResult,
     FileSystemError,
     FileType: { File: 1 },
     Uri: { file: (fsPath: string) => ({ fsPath }) },
@@ -42,7 +44,7 @@ mock.module('vscode', () => {
         tool: { invoke: (options: unknown, token: unknown) => Promise<unknown> },
       ) => {
         tools.set(name, tool)
-        return { dispose() {} }
+        return noopDispose
       },
     },
     commands: { executeCommand: () => Promise.resolve() },
@@ -74,11 +76,9 @@ describe('engined_transcribe', () => {
     posted.length = 0
     tools.clear()
     vscodeState.workspaceFolders = [{ uri: { fsPath: root } }]
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
+    globalThis.fetch = (async (input: Parameters<typeof fetch>[0]) => {
       posted.push(String(input))
-      return new Response(JSON.stringify({ text: 'hola' }), {
-        headers: { 'content-type': 'application/json' },
-      })
+      return Response.json({ text: 'hola' })
     }) as typeof fetch
     registerTools({
       log: () => undefined,
@@ -102,7 +102,7 @@ describe('engined_transcribe', () => {
     }
     await transcribe.invoke(
       { input: { path: 'clip.wav', translate: true } },
-      { isCancellationRequested: false, onCancellationRequested: () => ({ dispose() {} }) },
+      { isCancellationRequested: false, onCancellationRequested: () => noopDispose },
     )
     const invokePassesTranslate = posted.some((url) =>
       url.endsWith('/openai/v1/audio/translations'),

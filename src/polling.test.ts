@@ -113,7 +113,11 @@ describe('ModelPoller', () => {
     let call = 0
     let fires = 0
     const poller = new ModelPoller(
-      () => Promise.resolve(call++ === 0 ? poll([], first) : poll([], second)),
+      () => {
+        const firstPoll = call === 0
+        call += 1
+        return Promise.resolve(firstPoll ? poll([], first) : poll([], second))
+      },
       () => {
         fires += 1
       },
