@@ -133,6 +133,48 @@ describe('readImageEvents', () => {
     ).rejects.toThrow('checkpoint missing')
     expect(previews).toEqual([{ image: JPEG, format: 'jpeg' }])
   })
+
+  test('progress, error, and preview fallbacks', async () => {
+    const lines: string[] = []
+    await expect(
+      readImageEvents(streamFromText('event: progress\ndata: null\n\n'), (line) => {
+        lines.push(line)
+      }),
+    ).rejects.toThrow('engined returned no image data')
+    expect(lines).toEqual(['Rendering'])
+
+    await expect(
+      readImageEvents(streamFromText('event: error\ndata: {"error":"oom"}\n\n'), () => undefined),
+    ).rejects.toThrow('oom')
+    await expect(
+      readImageEvents(streamFromText('event: error\ndata: {}\n\n'), () => undefined),
+    ).rejects.toThrow('image generation failed')
+
+    const previews: ImagePreviewFrame[] = []
+    expect(
+      await readImageEvents(
+        streamFromText(
+          [
+            'event: preview',
+            `data: ${JSON.stringify({ format: 'jpeg', image: '' })}`,
+            '',
+            'event: preview',
+            `data: ${JSON.stringify({ format: 'gif', image: JPEG })}`,
+            '',
+            'event: image',
+            `data: ${JSON.stringify(IMAGE)}`,
+            '',
+            '',
+          ].join('\n'),
+        ),
+        () => undefined,
+        (frame) => {
+          previews.push(frame)
+        },
+      ),
+    ).toEqual(IMAGE)
+    expect(previews).toEqual([])
+  })
 })
 
 describe('writePreviewFile', () => {
