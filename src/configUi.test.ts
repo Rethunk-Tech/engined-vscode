@@ -34,5 +34,8 @@ describe('resolveConfigUi', () => {
     expect(
       await resolveConfigUi(run({ stdout: 'http://127.0.0.1:29300/?token=abc extra\n' })),
     ).toEqual({ message: 'engined printed no config UI URL' })
+    expect(await resolveConfigUi(run({ stdout: 'http://[\n' }))).toEqual({
+      message: 'engined printed no config UI URL',
+    })
   })
 })
