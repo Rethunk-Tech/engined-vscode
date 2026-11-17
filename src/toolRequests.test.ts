@@ -266,6 +266,66 @@ describe('request builders', () => {
     }
   })
 
+  test('a voice file that disappears after the size check is sent as the path', async () => {
+    const paths: string[] = []
+    const bodies: unknown[] = []
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        paths.push(new URL(req.url).pathname)
+        bodies.push(await req.json())
+        return new Response(Uint8Array.from([1]), { headers: { 'content-type': 'audio/wav' } })
+      },
+    })
+    try {
+      const row: EnginedModelRow = {
+        ...piper,
+        door: { name: 'local', url: `http://127.0.0.1:${server.port}` },
+      }
+      await requestSpeech(
+        row,
+        { text: 'hello', voice: 'clips/me.wav' },
+        {
+          roots: ['/workspace/project'],
+          fileSize: async () => 4,
+          readFile: async () => undefined,
+        },
+      )
+      expect(paths).toEqual(['/openai/v1/audio/speech'])
+      expect(bodies).toEqual([{ model: '@/piper/local', input: 'hello', voice: 'clips/me.wav' }])
+    } finally {
+      await server.stop(true)
+    }
+  })
+
+  test('a non-audio speech reply is refused', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        return Response.json({ error: 'nope' })
+      },
+    })
+    try {
+      const row: EnginedModelRow = {
+        ...piper,
+        door: { name: 'local', url: `http://127.0.0.1:${server.port}` },
+      }
+      await expect(
+        requestSpeech(
+          row,
+          { text: 'hello', voice: 'af_heart' },
+          {
+            roots: ['/workspace/project'],
+            fileSize: async () => undefined,
+            readFile: async () => undefined,
+          },
+        ),
+      ).rejects.toThrow('engined returned no audio')
+    } finally {
+      await server.stop(true)
+    }
+  })
+
   test('a voice path outside the workspace is refused before any upload', async () => {
     let reads = 0
     await expect(
