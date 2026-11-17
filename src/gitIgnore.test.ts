@@ -34,6 +34,7 @@ test('gitIgnored names the ignored paths, and nothing outside a repository', asy
 
   const plain = scratchDir('engined-nogit-')
   expect((await gitIgnored(plain, ['a.log'])).size).toBe(0)
+  expect((await gitIgnored(repo, [])).size).toBe(0)
 })
 
 test('gitIgnored still names ignored paths when the batch also holds a file inside a submodule', async () => {
