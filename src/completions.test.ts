@@ -158,6 +158,18 @@ describe('completionWaitingBehind', () => {
         completion: { routeId },
         want: false,
       },
+      {
+        name: 'waiting role names no model',
+        engines: [{ id: engine, roles: [{ active: 0, waiting: 1 }] }],
+        completion: { engine, routeId },
+        want: true,
+      },
+      {
+        name: 'active role model equals the route id',
+        engines: [{ id: engine, roles: [{ active: 1, waiting: 1, model: routeId }] }],
+        completion: { engine, routeId },
+        want: false,
+      },
     ]
     for (const c of cases) {
       expect(completionWaitingBehind(c.engines, c.completion), c.name).toBe(c.want)
