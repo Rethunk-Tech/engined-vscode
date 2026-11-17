@@ -119,6 +119,11 @@ describe('mapAnswerableRows', () => {
     const unavailable = { ...models.data[0], state: 'unavailable' }
     expect(mapAnswerableRows({ data: [unavailable] }, DOOR, 1)).toEqual([])
   })
+
+  test('malformed body maps to an empty list rather than throwing', () => {
+    expect(mapAnswerableRows(undefined, DOOR, 1)).toEqual([])
+    expect(mapAnswerableRows({}, DOOR, 1)).toEqual([])
+  })
 })
 
 describe('serializeRows', () => {
@@ -336,6 +341,10 @@ describe('doorByName', () => {
   test('falls back to the first door when the name is undefined or unknown', () => {
     expect(doorByName([local, gpuBox], undefined)).toEqual(local)
     expect(doorByName([local, gpuBox], 'nonexistent')).toEqual(local)
+  })
+
+  test('throws when no doors are configured', () => {
+    expect(() => doorByName([], 'local')).toThrow('doorByName: no doors configured')
   })
 })
 
