@@ -9,6 +9,7 @@ import {
   emptyListedMessage,
   enginesViewMessage,
   formatResourceLine,
+  obtainResultText,
   onlyRemoteEngineIds,
   releaseHoldIds,
   stateIcon,
@@ -623,6 +624,17 @@ describe('stateIcon', () => {
   })
 })
 
+describe('obtainResultText', () => {
+  test('keeps a non-empty string or message and drops anything else', () => {
+    expect(obtainResultText('pulled')).toBe('pulled')
+    expect(obtainResultText('')).toBeUndefined()
+    expect(obtainResultText({ message: 'pulled' })).toBe('pulled')
+    expect(obtainResultText({ message: '' })).toBeUndefined()
+    expect(obtainResultText({ message: 1 })).toBeUndefined()
+    expect(obtainResultText(null)).toBeUndefined()
+  })
+})
+
 describe('formatResourceLine', () => {
   test('an error response becomes its one line', () => {
     expect(
@@ -640,6 +652,9 @@ describe('formatResourceLine', () => {
   test('both figures, 1024-based, one decimal from GiB up', () => {
     expect(formatResourceLine({ memory_bytes: 350_208, graphics_bytes: 30_026_362_880 })).toBe(
       'RAM 342 KiB · GPU 28.0 GiB',
+    )
+    expect(formatResourceLine({ memory_bytes: 10 * 1024 * 1024, graphics_bytes: null })).toBe(
+      'RAM 10 MiB',
     )
   })
 
