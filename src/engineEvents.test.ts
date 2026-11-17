@@ -64,6 +64,14 @@ describe('parseSseChunk line endings and limits', () => {
       parseSseChunk(`data: ${'x'.repeat(MAX_SSE_PENDING_CHARS - 10)}`).rest.length,
     ).toBeGreaterThan(0)
   })
+
+  test('a terminated frame over the cap is refused, not only an unterminated rest', () => {
+    const cap = 32
+    expect(() => parseSseChunk(`data: ${'x'.repeat(cap)}\n\n`, cap)).toThrow('exceeds')
+    expect(parseSseChunk(`data: ${'x'.repeat(8)}\n\n`, cap).frames).toEqual([
+      { event: 'message', data: 'x'.repeat(8) },
+    ])
+  })
 })
 
 describe('flushSseRest', () => {

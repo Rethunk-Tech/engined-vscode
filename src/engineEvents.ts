@@ -50,7 +50,8 @@ export const MAX_SSE_PENDING_CHARS = BYTES_PER_KIB * BYTES_PER_KIB
  * `buffer` is everything decoded so far, including a previous call's
  * `rest`. Lines end in `\r\n`, `\n` or `\r`, and frames are separated by
  * a blank line; anything after the last one is held back as `rest` for the
- * next chunk. Throws once `rest` outgrows `maxPending`, which defaults to `MAX_SSE_PENDING_CHARS`.
+ * next chunk. Throws once `rest` or any complete frame outgrows `maxPending`,
+ * which defaults to `MAX_SSE_PENDING_CHARS`.
  */
 export function parseSseChunk(buffer: string, maxPending = MAX_SSE_PENDING_CHARS): SseParseResult {
   const parts = buffer.replace(/\r\n?/g, '\n').split('\n\n')
@@ -64,6 +65,9 @@ export function parseSseChunk(buffer: string, maxPending = MAX_SSE_PENDING_CHARS
   }
   const frames: SseFrame[] = []
   for (const part of parts) {
+    if (part.length > maxPending) {
+      throw new Error(`event stream frame exceeds ${maxPending} characters`)
+    }
     if (part.trim().length === 0) {
       continue
     }
