@@ -92,4 +92,8 @@ describe('displayWorkspacePath', () => {
     expect(displayWorkspacePath(['/ws/one', '/ws/two'], '/ws/two/notes.md')).toBe('two/notes.md')
     expect(displayWorkspacePath(['/ws/one'], '/ws/one/notes.md')).toBe('notes.md')
   })
+
+  test('a path outside every root is shown as given', () => {
+    expect(displayWorkspacePath(['/ws/one'], '/elsewhere/notes.md')).toBe('/elsewhere/notes.md')
+  })
 })
