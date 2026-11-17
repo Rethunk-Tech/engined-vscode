@@ -128,6 +128,32 @@ describe('buildChatRequestBody', () => {
     expect(body.reasoning_effort).toBe('high')
   })
 
+  test('a text-and-image user message becomes multipart content', () => {
+    const model = modelInfo()
+    const body = buildChatRequestBody(
+      model,
+      [
+        {
+          role: 'user',
+          parts: [
+            { type: 'text', text: 'see ' },
+            { type: 'image', mimeType: 'image/png', base64: 'AAAA' },
+          ],
+        },
+      ],
+      { reasoningEffort: 'medium', reasoningEffortByModel: {} },
+    )
+    expect(body.messages).toEqual([
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'see ' },
+          { type: 'image_url', image_url: { url: 'data:image/png;base64,AAAA' } },
+        ],
+      },
+    ])
+  })
+
   test('a tool call/result pair becomes an assistant tool_calls message and a tool message', () => {
     const model = modelInfo()
     const body = buildChatRequestBody(
