@@ -18,38 +18,36 @@ class FileSystemError extends Error {
   code = 'FileNotFound'
 }
 
-mock.module('vscode', () => {
-  return {
-    LanguageModelTextPart: textPart,
-    LanguageModelToolResult: toolResult,
-    FileSystemError,
-    FileType: { File: 1 },
-    Uri: { file: (fsPath: string) => ({ fsPath }) },
-    ViewColumn: { Beside: 2 },
-    workspace: {
-      get workspaceFolders() {
-        return vscodeState.workspaceFolders
-      },
-      fs: {
-        readFile: async (uri: { fsPath: string }) => readFileSync(uri.fsPath),
-        stat: async (uri: { fsPath: string }) => {
-          const s = statSync(uri.fsPath)
-          return { type: 1, size: s.size }
-        },
+mock.module('vscode', () => ({
+  LanguageModelTextPart: textPart,
+  LanguageModelToolResult: toolResult,
+  FileSystemError,
+  FileType: { File: 1 },
+  Uri: { file: (fsPath: string) => ({ fsPath }) },
+  ViewColumn: { Beside: 2 },
+  workspace: {
+    get workspaceFolders() {
+      return vscodeState.workspaceFolders
+    },
+    fs: {
+      readFile: async (uri: { fsPath: string }) => readFileSync(uri.fsPath),
+      stat: async (uri: { fsPath: string }) => {
+        const s = statSync(uri.fsPath)
+        return { type: 1, size: s.size }
       },
     },
-    lm: {
-      registerTool: (
-        name: string,
-        tool: { invoke: (options: unknown, token: unknown) => Promise<unknown> },
-      ) => {
-        tools.set(name, tool)
-        return noopDispose
-      },
+  },
+  lm: {
+    registerTool: (
+      name: string,
+      tool: { invoke: (options: unknown, token: unknown) => Promise<unknown> },
+    ) => {
+      tools.set(name, tool)
+      return noopDispose
     },
-    commands: { executeCommand: () => Promise.resolve() },
-  }
-})
+  },
+  commands: { executeCommand: () => Promise.resolve() },
+}))
 
 const { registerTools } = await import('./workspaceTools.ts')
 
