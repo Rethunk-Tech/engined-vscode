@@ -266,6 +266,27 @@ describe('request builders', () => {
     }
   })
 
+  test('a voice path outside the workspace is refused before any upload', async () => {
+    let reads = 0
+    await expect(
+      requestSpeech(
+        piper,
+        { text: 'hello', voice: '../secret.wav' },
+        {
+          roots: ['/workspace/project'],
+          fileSize: async () => undefined,
+          readFile: async () => {
+            reads += 1
+            return new Uint8Array([1])
+          },
+        },
+      ),
+    ).rejects.toThrow(PathEscapeError)
+    expect(reads).toBe(0)
+  })
+})
+
+describe('speak voice files', () => {
   test('a voice file that disappears after the size check is sent as the path', async () => {
     const paths: string[] = []
     const bodies: unknown[] = []
@@ -326,27 +347,6 @@ describe('request builders', () => {
     }
   })
 
-  test('a voice path outside the workspace is refused before any upload', async () => {
-    let reads = 0
-    await expect(
-      requestSpeech(
-        piper,
-        { text: 'hello', voice: '../secret.wav' },
-        {
-          roots: ['/workspace/project'],
-          fileSize: async () => undefined,
-          readFile: async () => {
-            reads += 1
-            return new Uint8Array([1])
-          },
-        },
-      ),
-    ).rejects.toThrow(PathEscapeError)
-    expect(reads).toBe(0)
-  })
-})
-
-describe('speak voice files', () => {
   test('an escaping output path throws before any door request', async () => {
     let reads = 0
     await expect(
