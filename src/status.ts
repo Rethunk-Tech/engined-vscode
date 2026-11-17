@@ -44,7 +44,6 @@ export function formatSeconds(ms: number): string {
 export interface RouteHeaders {
   route?: string
   egress?: string
-  chain?: string
 }
 
 export interface RouteFallback {

@@ -251,15 +251,9 @@ export async function startModel(
   return data.data ?? []
 }
 
-/** `POST /engined/v1/engines/<id>/hold`, optionally for fewer than engined's own default seconds. */
-export async function holdEngine(
-  baseUrl: string,
-  id: string,
-  seconds?: number,
-  signal?: AbortSignal,
-): Promise<void> {
-  const query = seconds === undefined ? '' : `?seconds=${seconds}`
-  await postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/hold${query}`, {}, signal)
+/** `POST /engined/v1/engines/<id>/hold`. Duration is the door's own default. */
+export async function holdEngine(baseUrl: string, id: string, signal?: AbortSignal): Promise<void> {
+  await postJson(baseUrl, `/engined/v1/engines/${encodeURIComponent(id)}/hold`, {}, signal)
 }
 
 /** `POST /engined/v1/engines/<id>/unhold`: ends a hold early. */
@@ -298,7 +292,7 @@ function busyError(status: number, seconds: number): DoorHttpError {
   )
 }
 
-/** POST a chat completion. Non-2xx surfaces the door's own error text (never a generic status message) so the chat view shows what actually went wrong. Headers ride along so the caller can read `x-engined-route`/`-egress`/`-chain`, when engined sends them. A 429 from the agentic-launch cap retries once when `Retry-After` is at most 10 s. */
+/** POST a chat completion. Non-2xx surfaces the door's own error text (never a generic status message) so the chat view shows what actually went wrong. Headers ride along so the caller can read `x-engined-route`/`-egress`, when engined sends them. A 429 from the agentic-launch cap retries once when `Retry-After` is at most 10 s. */
 export async function postChatCompletion(
   baseUrl: string,
   body: unknown,

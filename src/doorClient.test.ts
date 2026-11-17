@@ -6,6 +6,7 @@ import {
   fetchAllDoors,
   fetchAllUsage,
   fetchEngineLogs,
+  holdEngine,
   obtainEngine,
   postChatCompletion,
   postImage,
@@ -282,6 +283,29 @@ describe('obtainEngine', () => {
       expect(pathname).toBe(`/engined/v1/engines/${encodeURIComponent('a/b')}/obtain`)
       expect(body).toBe('{}')
       expect(obtainResultText(data)).toBe('pulled a/b')
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
+describe('holdEngine', () => {
+  test('posts the encoded engine path with no duration query', async () => {
+    let method = ''
+    let href = ''
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        method = req.method
+        const url = new URL(req.url)
+        href = url.pathname + url.search
+        return Response.json({})
+      },
+    })
+    try {
+      await holdEngine(`http://127.0.0.1:${server.port}`, 'a/b')
+      expect(method).toBe('POST')
+      expect(href).toBe(`/engined/v1/engines/${encodeURIComponent('a/b')}/hold`)
     } finally {
       server.stop(true)
     }

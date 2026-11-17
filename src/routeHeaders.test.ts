@@ -27,4 +27,13 @@ describe('routeFromHeaders', () => {
       egress: 'none',
     })
   })
+
+  test('x-engined-chain is not a route', () => {
+    expect(
+      routeFromHeaders(new Headers({ 'x-engined-chain': '@/chain/main' }), {
+        id: 'local',
+        egress: 'none',
+      }),
+    ).toEqual({ route: 'local', egress: 'none' })
+  })
 })

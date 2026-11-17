@@ -21,7 +21,6 @@ export function routeFromHeaders(
     {
       route: headers.get('x-engined-route') ?? undefined,
       egress: headers.get('x-engined-egress') ?? undefined,
-      chain: headers.get('x-engined-chain') ?? undefined,
     },
     fallback,
   )
