@@ -23,12 +23,12 @@ jobs:
           persist-credentials: false
 
       - name: Set up Bun
-        uses: Rethunk-Tech/gh-actions/setup-bun@71da648f666fb49a8e72d0576a4d8db97894ccaf # v1.29.1
+        uses: Rethunk-Tech/gh-actions/setup-bun@d7c92df451d210ac9db9aa3d1fea9e8a1692e448 # v1.30
         with:
           node-version: "24"
 
       # `bun run ci` runs gate, which the runner does not have.
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version: stable
           cache: false
@@ -53,7 +53,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Bun
-        uses: Rethunk-Tech/gh-actions/setup-bun@71da648f666fb49a8e72d0576a4d8db97894ccaf # v1.29.1
+        uses: Rethunk-Tech/gh-actions/setup-bun@d7c92df451d210ac9db9aa3d1fea9e8a1692e448 # v1.30
         with:
           node-version: "24"
 
