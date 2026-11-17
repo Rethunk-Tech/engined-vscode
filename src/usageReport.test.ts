@@ -24,6 +24,20 @@ describe('todayUsageFromFetch', () => {
     const door = { name: 'local', url: 'http://127.0.0.1:29200' }
     expect(todayUsageFromFetch([{ door, status: 'unreachable' }])).toBeUndefined()
   })
+
+  test('ok doors fold into today totals and ignore unreachable siblings', () => {
+    const door = { name: 'local', url: 'http://127.0.0.1:29200' }
+    expect(
+      todayUsageFromFetch([
+        {
+          door,
+          status: 'ok',
+          rows: [row({ requests: 2, prompt_tokens: 9, completion_tokens: 3, cost_usd: 0.1 })],
+        },
+        { door, status: 'unreachable' },
+      ]),
+    ).toEqual({ requests: 2, promptTokens: 9, completionTokens: 3, costUsd: 0.1 })
+  })
 })
 
 describe('totalsFor', () => {
@@ -74,6 +88,13 @@ describe('formatTotalsLine', () => {
     const line = formatTotalsLine(totalsFor([row({ egress: undefined })]))
     expect(line).toContain('egress unknown')
   })
+
+  test('egress split names local vs remote percents', () => {
+    const line = formatTotalsLine(
+      totalsFor([row({ egress: 'none', requests: 4 }), row({ egress: 'lan', requests: 1 })]),
+    )
+    expect(line).toContain('local 80% / remote 20%')
+  })
 })
 
 describe('buildUsageReport', () => {
@@ -121,6 +142,23 @@ describe('buildUsageReport', () => {
     expect(localLine).toBeDefined()
     // gpu (9 requests) sorts before local (1 request).
     expect(routeSection.indexOf('gpu')).toBeLessThan(routeSection.indexOf('local'))
+  })
+
+  test('two rows on the same day merge in the per-day table', () => {
+    const report = buildUsageReport(
+      [
+        {
+          door: { name: 'local', url: 'http://x' },
+          status: 'ok',
+          rows: [
+            row({ date: '2026-01-02', requests: 1 }),
+            row({ date: '2026-01-02', requests: 2 }),
+          ],
+        },
+      ],
+      1,
+    )
+    expect(report).toContain('| 2026-01-02 | 3 |')
   })
 
   test('a 404 door shows the "not served" note without dropping other doors\' data', () => {
