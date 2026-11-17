@@ -234,6 +234,19 @@ describe('buildTooltip', () => {
     expect(multi).toContain('config not loaded: parse')
   })
 
+  test('all doors down and a missing default are named as such', () => {
+    const tooltip = buildTooltip({
+      ...baseInput,
+      doors: [
+        { name: 'a', url: 'http://a', reachable: false },
+        { name: 'b', url: 'http://b', reachable: false },
+      ],
+      defaults: [{ label: 'Image', resolvedName: undefined, configured: false }],
+    })
+    expect(tooltip).toContain('$(error) 0/2 doors reachable')
+    expect(tooltip).toContain('none available')
+  })
+
   test('more than one door renders a Doors table, one row per door', () => {
     const tooltip = buildTooltip({
       ...baseInput,
