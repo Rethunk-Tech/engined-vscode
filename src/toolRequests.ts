@@ -17,12 +17,12 @@ const IMAGE_SIDE_STEP = 8
 
 export class ToolRouteError extends Error {}
 
-export interface ImageGenerationRequest {
+interface ImageGenerationRequest {
   path: '/openai/v1/images/generations'
   body: { model: string; prompt: string; size?: string; response_format: 'b64_json' }
 }
 
-export interface ImageEditRequest {
+interface ImageEditRequest {
   path: '/openai/v1/images/edits'
   form: { model: string; prompt: string; image: Blob; response_format: 'b64_json' }
 }
@@ -70,7 +70,7 @@ export function buildImageRequest(
   }
 }
 
-export interface ReadImageRequest {
+interface ReadImageRequest {
   model: string
   messages: [
     {
@@ -105,7 +105,7 @@ export function buildReadImageRequest(
   }
 }
 
-export interface TranscribeRequest {
+interface TranscribeRequest {
   path: '/openai/v1/audio/transcriptions' | '/openai/v1/audio/translations'
   form: { model: string; file: Blob }
 }
@@ -137,7 +137,7 @@ export function buildTranscribeRequest(
   }
 }
 
-export interface SpeakRequest {
+interface SpeakRequest {
   path: '/openai/v1/audio/speech'
   body: { model: string; input: string; voice?: string }
 }

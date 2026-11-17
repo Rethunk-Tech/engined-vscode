@@ -29,14 +29,14 @@ interface ChatChunk {
   engined?: { cost_usd?: number }
 }
 
-export interface StitchedToolCall {
+interface StitchedToolCall {
   id: string
   name: string
   /** Parsed from the stitched JSON string; `{}` when the stream sent no arguments. Invalid JSON is dropped, not returned. */
   arguments: Record<string, unknown> | undefined
 }
 
-export interface ChatUsage {
+interface ChatUsage {
   promptTokens?: number
   completionTokens?: number
   costUsd?: number
@@ -44,7 +44,7 @@ export interface ChatUsage {
   cachedTokens?: number
 }
 
-export interface StreamSink {
+interface StreamSink {
   text: (delta: string) => void
   /** The final chunk's `usage` (from `stream_options.include_usage`), when the stream carried one. */
   usage?: (usage: ChatUsage) => void
@@ -98,7 +98,7 @@ function parseArgs(json: string): Record<string, unknown> | undefined {
 }
 
 /** The OpenAI usage shape Copilot's extension-model endpoint reads off a `LanguageModelDataPart` with mimeType `'usage'` (`CustomDataPartMimeTypes.Usage`). */
-export interface CopilotUsage {
+interface CopilotUsage {
   prompt_tokens: number
   completion_tokens: number
   total_tokens: number

@@ -14,7 +14,7 @@ interface SseFrame {
 }
 
 /** One `parseSseChunk` call's result: the frames it found, and the leftover text to prepend to the next chunk. */
-export interface SseParseResult {
+interface SseParseResult {
   frames: SseFrame[]
   rest: string
 }

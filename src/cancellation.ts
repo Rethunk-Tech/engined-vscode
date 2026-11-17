@@ -1,5 +1,5 @@
 /** The part of a `vscode.CancellationToken` the tools read; any token satisfies it. */
-export interface CancellationLike {
+interface CancellationLike {
   readonly isCancellationRequested: boolean
   onCancellationRequested(listener: () => void): unknown
 }

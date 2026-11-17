@@ -14,12 +14,12 @@ export interface SettingWrite {
 }
 
 /** A key's user-scope value before the switch; `undefined` means it was unset. */
-export interface SavedSetting {
+interface SavedSetting {
   readonly key: string
   readonly previous: unknown
 }
 
-export interface PlanModel {
+interface PlanModel {
   readonly id: string
   readonly name: string
 }

@@ -15,7 +15,7 @@ export interface FingerprintInput {
   tools: string
 }
 
-export interface Fingerprint {
+interface Fingerprint {
   messageCount: number
   totalChars: number
   toolsHash: string

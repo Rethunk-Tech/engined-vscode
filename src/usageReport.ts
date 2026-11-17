@@ -16,7 +16,7 @@ function addKnown(total: number | undefined, addend: number | undefined): number
   return addend === undefined ? total : (total ?? 0) + addend
 }
 
-export interface UsageTotals {
+interface UsageTotals {
   requests: number
   ok: number
   failed: number

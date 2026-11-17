@@ -30,7 +30,7 @@ interface PlainTool {
   inputSchema?: unknown
 }
 
-export interface ChatRequestOptions {
+interface ChatRequestOptions {
   tools?: PlainTool[]
   /** `true` when the caller's `toolMode` is `Required`; `false`/absent maps to no `tool_choice`. */
   toolChoiceRequired?: boolean
@@ -59,7 +59,7 @@ interface OpenAiMessage {
   tool_call_id?: string
 }
 
-export interface OpenAiChatRequestBody {
+interface OpenAiChatRequestBody {
   model: string
   messages: OpenAiMessage[]
   stream: true

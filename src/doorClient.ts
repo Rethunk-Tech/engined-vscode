@@ -123,7 +123,7 @@ async function fetchModels(
   }
 }
 
-export interface DoorsPoll extends ModelsPoll {
+interface DoorsPoll extends ModelsPoll {
   /** One entry per configured door, in `doors`' own order -- the status popup's one reachability line per door. */
   doorStatus: DoorReachability[]
 }
@@ -177,7 +177,7 @@ export async function fetchEngineLogs(
   return body.lines ?? []
 }
 
-export interface EngineResources {
+interface EngineResources {
   memory_bytes: number | null
   graphics_bytes: number | null
 }
@@ -230,7 +230,7 @@ export async function postTokenize(
   )
 }
 
-export interface StartRow {
+interface StartRow {
   address: string
   engine: string
   upstream: string | null

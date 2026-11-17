@@ -46,7 +46,7 @@ const SUFFIX_LIMIT = 2000
 const MAX_TOKENS = 64
 const STOP = ['\n']
 
-export interface CompletionsRequestBody {
+interface CompletionsRequestBody {
   model: string
   prompt: string
   suffix: string
@@ -94,7 +94,7 @@ export function extractCompletionText(reply: unknown): string | undefined {
   return trimmed === '' ? undefined : trimmed
 }
 
-export interface CompletionUsage {
+interface CompletionUsage {
   promptTokens?: number
   completionTokens?: number
 }

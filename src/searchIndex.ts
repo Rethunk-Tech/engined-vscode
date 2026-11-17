@@ -44,7 +44,7 @@ interface StoredIndex {
   entries: IndexEntry[]
 }
 
-export interface SearchHit {
+interface SearchHit {
   path: string
   /** 1-indexed, inclusive -- what an editor jump-to-line expects. */
   startLine: number

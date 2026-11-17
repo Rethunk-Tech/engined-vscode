@@ -7,7 +7,7 @@ export interface CliRun {
   code: number
 }
 
-export type ConfigUiResult = { url: string } | { message: string }
+type ConfigUiResult = { url: string } | { message: string }
 
 export const ENABLE_CONFIGSVC_COMMAND = 'systemctl --user enable --now engined-configsvc.service'
 

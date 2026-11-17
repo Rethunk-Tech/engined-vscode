@@ -41,12 +41,12 @@ export function formatSeconds(ms: number): string {
   return seconds >= 10 ? `${Math.round(seconds)}s` : `${seconds.toFixed(1)}s`
 }
 
-export interface RouteHeaders {
+interface RouteHeaders {
   route?: string
   egress?: string
 }
 
-export interface RouteFallback {
+interface RouteFallback {
   id: string
   egress?: string
 }
@@ -159,7 +159,7 @@ export interface TodayUsage {
 /** `vscode.ColorThemeKind`, collapsed to the two palettes a static SVG meter needs (a high-contrast theme reads fine off the dark palette). */
 export type ThemeKind = 'light' | 'dark'
 
-export interface TooltipInput {
+interface TooltipInput {
   /** One entry per configured `engined.doors` door. */
   doors: readonly DoorLine[]
   modelCount: number

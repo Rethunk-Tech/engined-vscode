@@ -49,7 +49,7 @@ export class TokenCountCache {
   }
 }
 
-export type TokenizeFetcher = (model: string, content: string) => Promise<number>
+type TokenizeFetcher = (model: string, content: string) => Promise<number>
 
 /**
  * Not served, or the door call fails/is cancelled -> the chars/3 estimate

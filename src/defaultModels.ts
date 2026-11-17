@@ -31,7 +31,7 @@ export const ROLE_PATH: Record<ModelRole, string> = {
   rerank: '/openai/v1/rerank',
 }
 
-export interface DefaultModelRoleInfo {
+interface DefaultModelRoleInfo {
   role: ModelRole
   /** `engined: Choose Default Models`' role-picker label. */
   chooserLabel: string

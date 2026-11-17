@@ -90,7 +90,7 @@ export function cosineSimilarity(a: readonly number[], b: readonly number[]): nu
   return dot / Math.sqrt(magA * magB)
 }
 
-export interface ScoredEntry<T> {
+interface ScoredEntry<T> {
   item: T
   score: number
 }
@@ -107,12 +107,12 @@ export function topK<T>(
     .slice(0, k)
 }
 
-export interface IndexedFile {
+interface IndexedFile {
   path: string
   mtime: number
 }
 
-export interface IndexUpdatePlan {
+interface IndexUpdatePlan {
   /** New or changed-mtime files needing an (re-)embed. */
   toEmbed: string[]
   /** Indexed files that no longer exist in the workspace. */

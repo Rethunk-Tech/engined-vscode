@@ -35,7 +35,7 @@ import {
 } from './toolRequests.ts'
 
 /** What the tools need from the activation module: they stay free of its module state. */
-export interface ToolHost {
+interface ToolHost {
   log: (line: string) => void
   resolveRoleRow: (role: ModelRole, path?: string) => EnginedModelRow
   searchIndex: () => SearchIndex
