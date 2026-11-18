@@ -596,7 +596,7 @@
     "@types/node": "^26.6.6",
     "@types/vscode": "1.146.0",
     "@vscode/vsce": "^4.1.1",
-    "fast-check": "^4.10.2",
+    "fast-check": "^4.10.3",
     "typescript": "^7.0.2"
   },
   "overrides": {
