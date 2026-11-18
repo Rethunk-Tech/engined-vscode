@@ -34,7 +34,7 @@ jobs:
       - name: Set up Bun
         uses: Rethunk-Tech/gh-actions/setup-bun@d7c92df451d210ac9db9aa3d1fea9e8a1692e448 # v1.30
         with:
-          node-version: "24"
+          node-version: "26"
           run-audit: "true"
 
       - name: Gate

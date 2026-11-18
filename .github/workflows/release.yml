@@ -25,7 +25,7 @@ jobs:
       - name: Set up Bun
         uses: Rethunk-Tech/gh-actions/setup-bun@d7c92df451d210ac9db9aa3d1fea9e8a1692e448 # v1.30
         with:
-          node-version: "24"
+          node-version: "26"
 
       # `bun run ci` runs gate, which the runner does not have.
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
@@ -55,7 +55,7 @@ jobs:
       - name: Set up Bun
         uses: Rethunk-Tech/gh-actions/setup-bun@d7c92df451d210ac9db9aa3d1fea9e8a1692e448 # v1.30
         with:
-          node-version: "24"
+          node-version: "26"
 
       # dist/ is not committed; this job's checkout has none until it builds.
       - name: Build
