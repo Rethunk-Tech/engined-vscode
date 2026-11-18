@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { type CliRun, resolveConfigUi } from './configUi.ts'
+import { type CliRun, resolveConfigUi, runEnginedConfigsvcUrl } from './configUi.ts'
 
 const run = (r: Partial<CliRun>) => async (): Promise<CliRun> => ({
   stdout: '',
@@ -38,4 +38,13 @@ describe('resolveConfigUi', () => {
       message: 'engined printed no config UI URL',
     })
   })
+
+  test('the real engined CLI either yields a URL or an explanation', async () => {
+    const result = await resolveConfigUi(runEnginedConfigsvcUrl)
+    expect(result).toEqual(
+      'url' in result
+        ? { url: expect.stringMatching(/^https?:\/\//) }
+        : { message: expect.stringMatching(/./) },
+    )
+  }, 20_000)
 })

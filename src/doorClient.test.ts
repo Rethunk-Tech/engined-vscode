@@ -6,16 +6,25 @@ import {
   fetchAllDoors,
   fetchAllUsage,
   fetchEngineLogs,
+  fetchEngineResources,
+  fetchEngines,
   holdEngine,
   obtainEngine,
+  openEngineEventsStream,
   postChatCompletion,
+  postEmbeddings,
+  postForm,
   postImage,
   postRerank,
+  postTokenize,
+  startModel,
+  stopEngine,
+  unholdEngine,
 } from './doorClient.ts'
 import { obtainResultText, toEngineNodes } from './engineTree.ts'
 
 describe('doorErrorMessage', () => {
-  test('reads a flat string and an OpenAI error object', () => {
+  test('reads a string or OpenAI message and ignores anything else', () => {
     expect(doorErrorMessage('"llama" is not running')).toBe('"llama" is not running')
     expect(
       doorErrorMessage({
@@ -33,6 +42,8 @@ describe('doorErrorMessage', () => {
       ).message,
     ).toBe('stopped')
     expect(new DoorHttpError(502, 'gateway timeout').message).toBe('gateway timeout')
+    expect(doorErrorMessage({ message: 1 })).toBeUndefined()
+    expect(doorErrorMessage(null)).toBeUndefined()
   })
 })
 
@@ -191,6 +202,81 @@ describe('postChatCompletion', () => {
     } finally {
       door.stop(true)
       attacker.stop(true)
+    }
+  })
+})
+
+describe('postChatCompletion busy and empty replies', () => {
+  test('a 429 with no usable Retry-After fails immediately with a zero-second hint', async () => {
+    let hits = 0
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        hits += 1
+        const retryAfter = hits === 1 ? '' : 'not-a-date'
+        return new Response(JSON.stringify({ error: { message: 'Too many requests' } }), {
+          status: 429,
+          headers: { 'content-type': 'application/json', 'retry-after': retryAfter },
+        })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    const body = { model: 'x', messages: [] }
+    try {
+      await expect(
+        postChatCompletion(base, body, new AbortController().signal),
+      ).rejects.toMatchObject({ status: 429, message: agenticBusyMessage(0) })
+      await expect(
+        postChatCompletion(base, body, new AbortController().signal),
+      ).rejects.toMatchObject({ status: 429, message: agenticBusyMessage(0) })
+      expect(hits).toBe(2)
+    } finally {
+      server.stop(true)
+    }
+  })
+
+  test('aborting during a 429 wait cancels the retry', async () => {
+    const ac = new AbortController()
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        return new Response(JSON.stringify({ error: { message: 'Too many requests' } }), {
+          status: 429,
+          headers: { 'content-type': 'application/json', 'retry-after': '1' },
+        })
+      },
+    })
+    try {
+      const pending = postChatCompletion(
+        `http://127.0.0.1:${server.port}`,
+        { model: 'x', messages: [] },
+        ac.signal,
+      )
+      await Bun.sleep(20)
+      ac.abort()
+      await expect(pending).rejects.toThrow()
+    } finally {
+      server.stop(true)
+    }
+  })
+
+  test('a successful chat reply with no body is an error', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        return new Response(null, { status: 204 })
+      },
+    })
+    try {
+      await expect(
+        postChatCompletion(
+          `http://127.0.0.1:${server.port}`,
+          { model: 'x', messages: [] },
+          new AbortController().signal,
+        ),
+      ).rejects.toBeInstanceOf(DoorHttpError)
+    } finally {
+      server.stop(true)
     }
   })
 })
@@ -479,24 +565,64 @@ describe('postImage', () => {
       await server.stop(true)
     }
   })
+
+  test('a 204 event-stream is a missing body; a non-JSON reply is the raw bytes', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const path = new URL(req.url).pathname
+        if (path.endsWith('/bytes')) {
+          return new Response(new Uint8Array([9, 8]), { headers: { 'content-type': 'image/png' } })
+        }
+        return new Response(null, { status: 204, headers: { 'content-type': 'text/event-stream' } })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    try {
+      await expect(
+        postImage(
+          base,
+          '/openai/v1/images/generations',
+          { json: { prompt: 'x' } },
+          {
+            onProgress: () => undefined,
+          },
+        ),
+      ).rejects.toThrow('engined returned no image data')
+      const bytes = await postImage(
+        base,
+        '/openai/v1/images/generations/bytes',
+        { json: {} },
+        {
+          onProgress: () => undefined,
+        },
+      )
+      expect(bytes).toBeInstanceOf(ArrayBuffer)
+    } finally {
+      server.stop(true)
+    }
+  })
 })
 
 describe('postRerank', () => {
-  test('a 200 with no results array is a failure, not an empty ranking', async () => {
+  test('a results array is the ranking; a missing array is a failure, not empty', async () => {
     const server = Bun.serve({
       port: 0,
-      fetch() {
+      fetch(req) {
+        if (new URL(req.url).pathname.startsWith('/ok/')) {
+          return Response.json({ results: [{ index: 0, score: 1 }] })
+        }
         return Response.json({})
       },
     })
+    const base = `http://127.0.0.1:${server.port}`
     try {
-      await expect(
-        postRerank(`http://127.0.0.1:${server.port}`, {
-          model: 'r',
-          query: 'q',
-          documents: ['a'],
-        }),
-      ).rejects.toThrow('missing results')
+      await expect(postRerank(base, { model: 'r', query: 'q', documents: ['a'] })).rejects.toThrow(
+        'missing results',
+      )
+      expect(await postRerank(`${base}/ok`, { model: 'r', query: 'q', documents: ['a'] })).toEqual([
+        { index: 0, score: 1 },
+      ])
     } finally {
       server.stop(true)
     }
@@ -517,6 +643,215 @@ describe('fetchAllUsage', () => {
         1,
       )
       expect(row?.status).toBe('unreachable')
+    } finally {
+      server.stop(true)
+    }
+  })
+
+  test('a 404 is unsupported, a 500 or a down door is unreachable, and a data array is kept', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const { pathname } = new URL(req.url)
+        if (pathname.startsWith('/u404/')) {
+          return new Response('no', { status: 404 })
+        }
+        if (pathname.startsWith('/u500/')) {
+          return new Response('no', { status: 500 })
+        }
+        return Response.json({
+          data: [
+            { date: '2026-01-01', route: 'chat', requests: 1, ok: 1, failed: 0, duration_ms: 2 },
+          ],
+        })
+      },
+    })
+    const port = server.port
+    try {
+      const [unsupported, failed, ok, down] = await fetchAllUsage(
+        [
+          { name: 'missing', url: `http://127.0.0.1:${port}/u404` },
+          { name: 'fail', url: `http://127.0.0.1:${port}/u500` },
+          { name: 'ok', url: `http://127.0.0.1:${port}` },
+          { name: 'down', url: 'http://127.0.0.1:1' },
+        ],
+        1,
+      )
+      expect(unsupported?.status).toBe('unsupported')
+      expect(failed?.status).toBe('unreachable')
+      expect(ok).toMatchObject({
+        status: 'ok',
+        rows: [{ date: '2026-01-01', route: 'chat', requests: 1 }],
+      })
+      expect(down?.status).toBe('unreachable')
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
+describe('fetchEngineResources', () => {
+  test('a stopped engine 404 is the error text; garbage or a bare 500 still throw', async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const id = decodeURIComponent(new URL(req.url).pathname.split('/')[4] ?? '')
+        if (id === 'stopped') {
+          return Response.json({ error: { message: 'not running' } }, { status: 404 })
+        }
+        if (id === 'flat') {
+          return Response.json({ error: 'stopped' }, { status: 404 })
+        }
+        if (id === 'ok') {
+          return Response.json({ memory_bytes: 1, graphics_bytes: null })
+        }
+        if (id === 'garbage') {
+          return new Response('not-json', { status: 404 })
+        }
+        return Response.json({ state: 'busy' }, { status: 500 })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    try {
+      expect(await fetchEngineResources(base, 'stopped')).toEqual({ error: 'not running' })
+      expect(await fetchEngineResources(base, 'flat')).toEqual({ error: 'stopped' })
+      expect(await fetchEngineResources(base, 'ok')).toEqual({
+        memory_bytes: 1,
+        graphics_bytes: null,
+      })
+      await expect(fetchEngineResources(base, 'garbage')).rejects.toMatchObject({
+        status: 404,
+        message: 'not-json',
+      })
+      await expect(fetchEngineResources(base, 'fail')).rejects.toMatchObject({ status: 500 })
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
+describe('postEmbeddings', () => {
+  test('an empty batch is not posted; rows land in input order and out-of-range indexes are dropped', async () => {
+    let hits = 0
+    const server = Bun.serve({
+      port: 0,
+      fetch() {
+        hits += 1
+        return Response.json({
+          data: [
+            { embedding: [9], index: 1 },
+            { embedding: [8], index: 99 },
+            { embedding: [7], index: 0 },
+          ],
+        })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    try {
+      expect(await postEmbeddings(base, 'e', [])).toEqual([])
+      expect(hits).toBe(0)
+      expect(await postEmbeddings(base, 'e', ['a', 'b'])).toEqual([[7], [9]])
+      expect(hits).toBe(1)
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
+describe('door JSON posts', () => {
+  test('JSON posts unwrap tokens, empty lists, and missing log lines', async () => {
+    const paths: string[] = []
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const { pathname } = new URL(req.url)
+        paths.push(pathname)
+        if (pathname.includes('/tokenize')) {
+          return Response.json({ tokens: 4 })
+        }
+        if (pathname.includes('/start')) {
+          return Response.json({})
+        }
+        if (pathname.startsWith('/e503/')) {
+          return new Response('nope', { status: 503 })
+        }
+        if (pathname.endsWith('/engines')) {
+          return Response.json({ engines: [] })
+        }
+        if (pathname.endsWith('/logs')) {
+          return pathname.includes('/missing/')
+            ? new Response('gone', { status: 404 })
+            : Response.json({})
+        }
+        if (pathname.endsWith('/stop')) {
+          return new Response('nope', { status: 500 })
+        }
+        return new Response(new Uint8Array([1]), { headers: { 'content-type': 'text/plain' } })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    const encoded = encodeURIComponent('a/b')
+    try {
+      expect(await postTokenize(base, 'm', 'hello')).toBe(4)
+      expect(await startModel(base, 'm')).toEqual([])
+      expect(await fetchEngines(base)).toEqual({ engines: [] })
+      await expect(fetchEngines(`${base}/e503`)).rejects.toMatchObject({ status: 503 })
+      expect(await fetchEngineLogs(base, 'a/b', 10)).toEqual([])
+      await expect(fetchEngineLogs(base, 'missing', 10)).rejects.toMatchObject({
+        status: 404,
+        message: 'gone',
+      })
+      await expect(stopEngine(base, 'a/b')).rejects.toMatchObject({ status: 500 })
+      await unholdEngine(base, 'a/b')
+      expect(paths).toContain(`/engined/v1/engines/${encoded}/stop`)
+      expect(paths).toContain(`/engined/v1/engines/${encoded}/unhold`)
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
+describe('door form posts and events', () => {
+  test('form posts keep JSON or bytes; events need a live stream', async () => {
+    let eventHits = 0
+    const server = Bun.serve({
+      port: 0,
+      fetch(req) {
+        const { pathname } = new URL(req.url)
+        if (pathname.endsWith('/events')) {
+          eventHits += 1
+          return eventHits > 1
+            ? new Response('nope', { status: 503 })
+            : new Response('data: {}\n\n', {
+                status: 200,
+                headers: { 'content-type': 'text/event-stream' },
+              })
+        }
+        if (pathname.endsWith('/form-bytes')) {
+          return new Response(new Uint8Array([1, 2]), {
+            headers: { 'content-type': 'audio/mpeg' },
+          })
+        }
+        if (pathname.endsWith('/form-fail')) {
+          return new Response('nope', { status: 400 })
+        }
+        return Response.json({ text: 'hi' })
+      },
+    })
+    const base = `http://127.0.0.1:${server.port}`
+    try {
+      expect(await postForm(base, '/form-json', new FormData())).toEqual({ text: 'hi' })
+      const bytes = await postForm(base, '/form-bytes', new FormData())
+      expect(bytes).toBeInstanceOf(ArrayBuffer)
+      await expect(postForm(base, '/form-fail', new FormData())).rejects.toMatchObject({
+        status: 400,
+        message: 'nope',
+      })
+      const stream = await openEngineEventsStream(base, new AbortController().signal)
+      expect(stream).toBeInstanceOf(ReadableStream)
+      await expect(
+        openEngineEventsStream(base, new AbortController().signal),
+      ).rejects.toMatchObject({ status: 503 })
     } finally {
       server.stop(true)
     }
