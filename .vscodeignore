@@ -15,3 +15,10 @@ scripts/**
 media/icon.svg
 media/readme/**
 tmp/**
+.doc-scrub.json
+.gate.toml
+.gitleaks.toml
+canon.toml
+knip.json
+osv-scanner.toml
+*.tsbuildinfo

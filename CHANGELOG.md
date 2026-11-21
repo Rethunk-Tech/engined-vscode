@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The VSIX no longer ships repo tooling config (`.gate.toml`, `canon.toml`, `knip.json` and friends) or `tsconfig.tsbuildinfo`.
+- README and HUMANS.md: one install line, the real VS Code minimum (1.146.0), and `gate` in place of a `bun run ci` script that does not exist.
+
 ## [0.2.0] - 2026-11-21
 
 ### Fixed
