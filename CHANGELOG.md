@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-21
+
 ### Fixed
 
 - Obtain on an engine row works: the door reports `missing`, the menu matches the comma-joined context value, and a failed obtain shows an error instead of "obtained".
