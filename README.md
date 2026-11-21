@@ -17,7 +17,7 @@ The extension only ever talks to `engined.doors`; no request goes anywhere else,
 
 ## Quick start
 
-Install the extension from the Marketplace (`rethunk-tech.engined-vscode`), or run `code --install-extension engined-vscode-0.2.0.vsix` with the `.vsix` from the [latest GitHub release](https://github.com/Rethunk-Tech/engined-vscode/releases/latest). Then start engined:
+Install the extension from the Marketplace (`rethunk-tech.engined-vscode`), or run `code --install-extension engined-vscode-<version>.vsix` with the `.vsix` from the [latest GitHub release](https://github.com/Rethunk-Tech/engined-vscode/releases/latest). Then start engined:
 
 ```bash
 systemctl --user start engined && curl http://127.0.0.1:29200/openai/v1/models
