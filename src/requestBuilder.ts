@@ -161,7 +161,7 @@ function sortKeysDeep(value: unknown): unknown {
 /**
  * Build the request body, or throw when the caller asked for tools/tool_choice
  * against a row that cannot forward them -- the door refuses that request
- * itself (engined src/responses.ts:133-147), so this never sends it.
+ * itself (`ModelRow.tools` in engined src/responses.ts), so this never sends it.
  */
 export function buildChatRequestBody(
   model: EnginedModelInfo,
