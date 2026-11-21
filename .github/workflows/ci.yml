@@ -28,7 +28,7 @@ jobs:
 
       - name: Install gate
         run: |
-          go install github.com/Rethunk-Tech/rethunk-gate-cli/cmd/gate@v0.6.7
+          go install github.com/Rethunk-Tech/rethunk-gate-cli/cmd/gate@v0.9.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Set up Bun
