@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A streamed response with an oversized complete SSE frame is refused instead of read.
+- `engined_transcribe` passes `translate` through to the transcribe request.
+- A door's malformed `/models` rows are skipped instead of dropping the whole door, and egress and probe changes now count as a model-list change.
+- Completions treat a directory exclude pattern as excluding its children, and a hard prompt split always advances a whole code point.
+
 ## [0.1.11] - 2026-11-12
 
 ### Fixed
