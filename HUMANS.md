@@ -13,7 +13,7 @@ Building the extension from source: see Prerequisites and Build below. Uninstall
 ## Prerequisites
 
 - [Bun](https://bun.sh) 1.4.x
-- VS Code ≥ 1.140.0 (see `engines.vscode` in `package.json`)
+- VS Code ≥ 1.146.0 (see `engines.vscode` in `package.json`)
 - engined running locally, or reachable via Remote-SSH
 
 ## Build
@@ -29,7 +29,7 @@ bun run build   # dist/extension.cjs
 bun run test       # bun test, no VS Code host required
 bun run typecheck
 bun run lint
-bun run ci          # gate (lint, typecheck, test, build, workflows, vsce ls)
+gate                # (lint, typecheck, test, build, workflows, vsce ls)
 ```
 
 ## Run inside VS Code
