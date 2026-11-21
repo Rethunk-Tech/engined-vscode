@@ -587,8 +587,7 @@
     "test": "bun test",
     "package": "bunx @vscode/vsce package --no-dependencies",
     "smoke": "node scripts/smoke.cjs",
-    "setup-hooks": "lefthook install",
-    "ci": "gate"
+    "setup-hooks": "lefthook install"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",

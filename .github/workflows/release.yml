@@ -27,7 +27,6 @@ jobs:
         with:
           node-version: "26"
 
-      # `bun run ci` runs gate, which the runner does not have.
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version: stable
@@ -39,7 +38,7 @@ jobs:
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Lint, typecheck, test, build
-        run: bun run ci
+        run: gate
 
   publish:
     needs: check
