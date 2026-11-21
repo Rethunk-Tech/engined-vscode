@@ -106,7 +106,8 @@ function unusableReasonFor(
 /**
  * The configured id if it still qualifies for `role`, else the first
  * qualifying row (the automatic pick), with a reason string when the
- * configured id fell through to automatic.
+ * configured id fell through to automatic. The automatic pick prefers a row the
+ * door marks `default`.
  */
 export function resolveDefaultModel(
   rows: readonly EnginedModelRow[],
@@ -115,8 +116,9 @@ export function resolveDefaultModel(
   path: string = ROLE_PATH[role],
 ): DefaultModelResolution {
   const qualifying = qualifyingRows(rows, role, path)
+  const automatic = qualifying.find((row) => row.default === true) ?? qualifying[0]
   if (configuredId === '') {
-    return { row: qualifying[0] }
+    return { row: automatic }
   }
   const configured = qualifying.find((row) => matchesConfigured(row, configuredId))
   if (configured !== undefined) {
@@ -124,7 +126,7 @@ export function resolveDefaultModel(
   }
   const existing = rows.find((row) => matchesConfigured(row, configuredId))
   return {
-    row: qualifying[0],
+    row: automatic,
     unusableReason: unusableReasonFor(existing, configuredId, role, path),
   }
 }

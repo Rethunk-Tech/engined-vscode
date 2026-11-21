@@ -116,6 +116,12 @@ describe('resolveDefaultModel: completion', () => {
     expect(resolveDefaultModel(completionRows, 'completion', '').row?.id).toBe('@/llama/ornith')
   })
 
+  test('the automatic pick prefers the row the door marks default', () => {
+    const marked = completionRows.map((row) => ({ ...row, default: row.id === '@/llama/second' }))
+    expect(resolveDefaultModel(marked, 'completion', '').row?.id).toBe('@/llama/second')
+    expect(resolveDefaultModel(marked, 'completion', '@/gone').row?.id).toBe('@/llama/second')
+  })
+
   test('configured id wins even when it is completions-only (never chat)', () => {
     expect(resolveDefaultModel(completionRows, 'completion', '@/llama/second').row?.id).toBe(
       '@/llama/second',

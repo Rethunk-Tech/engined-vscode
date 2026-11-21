@@ -151,6 +151,8 @@ interface RawModelRow {
   role?: string
   vision?: string
   translate?: boolean
+  /** True on the one route per engine the door preselects. Absent elsewhere. */
+  default?: boolean
   /** Latest translation/rerank quality verdict. Absent means none recorded since the door started, never a pass. */
   probe?: { kind: string; quality: boolean; detail: string; at: string }
   /** Hop strings as written, including `@/<chain-id>`. Absent on a non-chain row. */
