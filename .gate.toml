@@ -10,3 +10,6 @@ serial = true
 [gates.vsce]
 run = "bunx @vscode/vsce ls --no-dependencies >/dev/null"
 serial = true
+
+[gates.knip]
+run = "bunx knip"

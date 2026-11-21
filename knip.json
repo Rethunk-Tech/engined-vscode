@@ -1,4 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/extension.ts", "src/**/*.test.ts"]
+  "entry": ["src/extension.ts", "src/**/*.test.ts"],
+  "project": ["src/**/*.ts"],
+  "ignoreBinaries": ["gate", "lefthook", "engined"]
 }
