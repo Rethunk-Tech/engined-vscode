@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   agenticBusyMessage,
   DoorHttpError,
@@ -9,7 +11,6 @@ import {
   fetchEngineResources,
   fetchEngines,
   holdEngine,
-  obtainEngine,
   openEngineEventsStream,
   postChatCompletion,
   postEmbeddings,
@@ -21,7 +22,8 @@ import {
   stopEngine,
   unholdEngine,
 } from './doorClient.ts'
-import { obtainResultText, toEngineNodes } from './engineTree.ts'
+import { toEngineNodes } from './engineTree.ts'
+import { obtainEngine } from './obtainEngine.ts'
 
 describe('doorErrorMessage', () => {
   test('reads a string or OpenAI message and ignores anything else', () => {
@@ -323,52 +325,67 @@ describe('fetchAllDoors', () => {
 })
 
 describe('obtainEngine', () => {
-  test('posts the encoded engine path and a missing row offers Obtain', async () => {
+  const sse = (exitCode: number) =>
+    `event: step\ndata: {"step":0,"command":"x"}\n\nevent: exit\ndata: {"exitCode":${exitCode},"steps":1}\n\n`
+
+  test('a missing row offers Obtain through the package.json menu patterns', () => {
     const door = { name: 'local', url: 'http://127.0.0.1:29200' }
     const nodes = toEngineNodes(
       {
         engines: [
-          {
-            id: 'llama',
-            kind: 'openai-http',
-            state: 'unavailable',
-            missing: true,
-            fix: 'pull',
-          },
+          { id: 'llama', kind: 'openai-http', state: 'unavailable', missing: true, fix: 'pull' },
           { id: 'whisper', kind: 'openai-http', state: 'installed', missing: true },
-          { id: 'comfy', kind: 'openai-http', state: 'failed', fix: 'start', missing: true },
           { id: 'tts', kind: 'openai-http', state: 'unavailable', fix: 'enable' },
+          { id: 'plain', kind: 'openai-http', state: 'installed' },
         ],
       },
       { heldIds: new Set(), door, doorCount: 1 },
     )
-    expect(nodes.find((n) => n.id === 'llama')?.contextValue).toBe(
-      'engine-unavailable,engine-can-obtain',
-    )
-    expect(nodes.find((n) => n.id === 'whisper')?.contextValue).toBe('engine,engine-can-obtain')
-    expect(nodes.find((n) => n.id === 'comfy')?.contextValue).toBe(
-      'engine,engine-has-fix,engine-can-obtain',
-    )
-    expect(nodes.find((n) => n.id === 'tts')?.contextValue).toBe('engine-unavailable')
+    const manifest = JSON.parse(
+      readFileSync(join(import.meta.dir, '..', 'package.json'), 'utf8'),
+    ) as {
+      contributes: { menus: { 'view/item/context': { command: string; when: string }[] } }
+    }
+    const menus = manifest.contributes.menus['view/item/context']
+    const offered = (command: string, contextValue: string): boolean =>
+      menus
+        .filter((m) => m.command === command)
+        .some((m) => {
+          const pattern = /viewItem =~ \/(.+?)\//.exec(m.when)?.[1]
+          return pattern !== undefined && new RegExp(pattern).test(contextValue)
+        })
+    const value = (id: string) => nodes.find((n) => n.id === id)?.contextValue ?? ''
+    expect(offered('engined.obtainEngine', value('llama'))).toBe(true)
+    expect(offered('engined.obtainEngine', value('whisper'))).toBe(true)
+    expect(offered('engined.obtainEngine', value('tts'))).toBe(false)
+    expect(offered('engined.stopEngine', value('whisper'))).toBe(true)
+    expect(offered('engined.stopEngine', value('llama'))).toBe(false)
+    expect(offered('engined.copyFixCommand', value('tts'))).toBe(true)
+    expect(offered('engined.stopEngine', value('plain'))).toBe(true)
+  })
 
+  test('posts the encoded engine path, and a non-zero exit event is an error', async () => {
     let method = ''
     let pathname = ''
     let body = ''
+    let exitCode = 0
     const server = Bun.serve({
       port: 0,
       async fetch(req) {
         method = req.method
         pathname = new URL(req.url).pathname
         body = await req.text()
-        return Response.json({ message: 'pulled a/b' })
+        return new Response(sse(exitCode), { headers: { 'content-type': 'text/event-stream' } })
       },
     })
     try {
-      const data = await obtainEngine(`http://127.0.0.1:${server.port}`, 'a/b')
+      const url = `http://127.0.0.1:${server.port}`
+      await obtainEngine(url, 'a/b')
       expect(method).toBe('POST')
       expect(pathname).toBe(`/engined/v1/engines/${encodeURIComponent('a/b')}/obtain`)
       expect(body).toBe('{}')
-      expect(obtainResultText(data)).toBe('pulled a/b')
+      exitCode = 2
+      await expect(obtainEngine(url, 'a/b')).rejects.toThrow('obtain exited with code 2')
     } finally {
       server.stop(true)
     }

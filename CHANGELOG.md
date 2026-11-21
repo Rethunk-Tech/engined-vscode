@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Obtain on an engine row works: the door reports `missing`, the menu matches the comma-joined context value, and a failed obtain shows an error instead of "obtained".
+- A change to any wire field of a model row, such as role, vision, tools or capabilities, now counts as a model-list change.
 - A streamed response with an oversized complete SSE frame is refused instead of read.
 - `engined_transcribe` passes `translate` through to the transcribe request.
 - A door's malformed `/models` rows are skipped instead of dropping the whole door, and egress and probe changes now count as a model-list change.

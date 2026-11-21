@@ -286,17 +286,8 @@ export function mapAnswerableRows(body: unknown, door: Door, doorCount: number):
 
 /** A stable string a poll can diff `mapAnswerableRows`' output against, ignoring key order. */
 export function serializeRows(rows: readonly EnginedModelRow[]): string {
-  // egress and probe decide local-search eligibility and translation; id/state/serves
-  // can stay put while those flip, and the poller must not keep the stale row.
-  return JSON.stringify(
-    rows.map((r) => ({
-      id: r.id,
-      state: r.state,
-      serves: r.serves,
-      egress: r.egress,
-      probe: r.probe,
-    })),
-  )
+  // The whole wire row: any field the door sends can change what a consumer picks, and the door handle is not wire.
+  return JSON.stringify(rows.map(({ door: _door, ...wire }) => wire))
 }
 
 /** The full `/openai/v1/models` response body -> the models this extension exposes. */

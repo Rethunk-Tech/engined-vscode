@@ -13,13 +13,7 @@ import type { CompletionEngineContention } from './completions.ts'
 import { DOOR_TIMEOUT_MS, MS_PER_SECOND } from './constants.ts'
 import { describeError } from './describeError.ts'
 import { copyFixText, type Door, type EnginedModelRow } from './door.ts'
-import {
-  fetchEngineLogs,
-  fetchEngineResources,
-  fetchEngines,
-  obtainEngine,
-  stopEngine,
-} from './doorClient.ts'
+import { fetchEngineLogs, fetchEngineResources, fetchEngines, stopEngine } from './doorClient.ts'
 import type {
   DoorGroupNote,
   DoorListOutcome,
@@ -30,12 +24,12 @@ import {
   doorGroupNote,
   enginesViewMessage,
   formatResourceLine,
-  obtainResultText,
   onlyRemoteEngineIds,
   toEngineNodes,
   truncateLogLines,
 } from './engineTree.ts'
 import { pollLogFollow } from './logFollow.ts'
+import { obtainEngine } from './obtainEngine.ts'
 
 const LOG_TAIL = 500
 const NO_NOTE: DoorGroupNote = {}
@@ -335,10 +329,8 @@ export class EngineExplorer implements vscode.TreeDataProvider<EngineTreeItem> {
           cancellable: true,
         },
         async (_progress, token) => {
-          const text = obtainResultText(
-            await obtainEngine(node.door.url, node.rawId, cancellationSignal(token)),
-          )
-          vscode.window.showInformationMessage(text ?? `engined: obtained "${node.id}"`)
+          await obtainEngine(node.door.url, node.rawId, cancellationSignal(token))
+          vscode.window.showInformationMessage(`engined: obtained "${node.id}"`)
         },
       )
     } catch (error) {

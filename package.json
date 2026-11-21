@@ -463,67 +463,67 @@
       "view/item/context": [
         {
           "command": "engined.showEngineLogs",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "inline@1"
         },
         {
           "command": "engined.followEngineLogs",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "inline@1.5"
         },
         {
           "command": "engined.warmEngine",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "inline@2"
         },
         {
           "command": "engined.stopEngine",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "inline@3"
         },
         {
           "command": "engined.showEngineLogs",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "engined@1"
         },
         {
           "command": "engined.followEngineLogs",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "engined@1.5"
         },
         {
           "command": "engined.warmEngine",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "engined@2"
         },
         {
           "command": "engined.holdEngine",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "engined@3"
         },
         {
           "command": "engined.releaseHoldEngine",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "engined@4"
         },
         {
           "command": "engined.stopEngine",
-          "when": "view == engined.engines && viewItem == engine",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine(,|$)/",
           "group": "engined@5"
         },
         {
           "command": "engined.copyFixCommand",
-          "when": "view == engined.engines && (viewItem == engine-unavailable || viewItem == engine-has-fix)",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine-unavailable(,|$)/",
           "group": "engined@1"
         },
         {
           "command": "engined.obtainEngine",
-          "when": "view == engined.engines && viewItem == engine-can-obtain",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine-can-obtain(,|$)/",
           "group": "inline@1"
         },
         {
           "command": "engined.obtainEngine",
-          "when": "view == engined.engines && viewItem == engine-can-obtain",
+          "when": "view == engined.engines && viewItem =~ /(^|,)engine-can-obtain(,|$)/",
           "group": "engined@0"
         }
       ],

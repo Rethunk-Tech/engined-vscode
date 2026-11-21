@@ -50,8 +50,7 @@ interface EngineRow {
   /** Requests holding this engine open. Audio engines report this without `roles`. */
   active_leases?: number
   /**
-   * Last start or stop failure. Shown only while `state` is `failed` or
-   * `unavailable`. Absent, or present on any other state, adds nothing.
+   * Last start or stop failure. Shown only while `state` is `unavailable`. Absent, or present on any other state, adds nothing.
    */
   last_error?: string
   /**
@@ -181,9 +180,6 @@ export function onlyRemoteEngineIds(
 
 function engineContextValue(engine: EngineRow): string {
   const tokens: string[] = [engine.state === 'unavailable' ? 'engine-unavailable' : 'engine']
-  if (engine.state === 'failed' && engine.fix !== undefined && engine.fix !== '') {
-    tokens.push('engine-has-fix')
-  }
   if (engine.missing === true) {
     tokens.push('engine-can-obtain')
   }
@@ -230,7 +226,7 @@ export interface EngineNode {
   label: string
   description: string
   tooltip: string
-  /** Drives the `view/item/context` `when` clauses in `package.json` -- `engine-unavailable` gets Copy Fix only, `engine` gets warm/stop, `engine,engine-has-fix` gets both, and `engine-can-obtain` is appended when the image/artifact is missing. */
+  /** Drives the `view/item/context` `when` clauses in `package.json` -- `engine-unavailable` gets Copy Fix only, `engine` gets warm/stop, and `engine-can-obtain` is appended when the image/artifact is missing. */
   contextValue: string
   icon: string
   fix: string | undefined
@@ -264,24 +260,13 @@ function supersededLabel(superseded: string | undefined): string | undefined {
   return superseded === undefined ? undefined : `config stale ${superseded}`
 }
 
-/** A failed or unavailable engine's `last_error`. Any other state, or an absent field, adds nothing. */
+/** An unavailable engine's `last_error`. Any other state, or an absent field, adds nothing. */
 function lastErrorLabel(engine: EngineRow): string | undefined {
-  if (engine.state !== 'failed' && engine.state !== 'unavailable') {
+  if (engine.state !== 'unavailable') {
     return undefined
   }
   const error = engine.last_error
   return error === undefined || error.length === 0 ? undefined : error
-}
-
-/**
- * The category note, except a `failed` engine that would otherwise read as
- * idle: it is not waiting to start on demand, and `last_error` is the note.
- */
-function rowNote(engine: EngineRow, category: EngineCategory): string | undefined {
-  if (engine.state === 'failed' && category === 'idle') {
-    return undefined
-  }
-  return noteFor(category, engine.fix)
 }
 
 function waitingTotal(roles: readonly EngineRole[] | undefined): number {
@@ -440,18 +425,6 @@ export function releaseHoldIds(
   return [...new Set([...sessionHeld, ...listedHeld])].sort((a, b) => Number(a > b) - Number(a < b))
 }
 
-/** Door obtain JSON `{message}` (or a bare string), or `undefined` when there is nothing to show. */
-export function obtainResultText(data: unknown): string | undefined {
-  if (typeof data === 'string') {
-    return data === '' ? undefined : data
-  }
-  if (data !== null && typeof data === 'object' && 'message' in data) {
-    const { message } = data as { message: unknown }
-    return typeof message === 'string' && message !== '' ? message : undefined
-  }
-  return undefined
-}
-
 /** Warm/Hold empty-state text, or `undefined` when the picker should open. */
 export function emptyListedMessage(kind: 'models' | 'engines', count: number): string | undefined {
   return count === 0 ? `engined: no ${kind} are listed` : undefined
@@ -501,7 +474,7 @@ export function toEngineNodes(
     const id = qualifyId(door.name, engine.id, doorCount)
     const heldUntil = futureInstant(engine.held_until, now)
     const category = categorize(engine, isRemote(engine.id))
-    const note = rowNote(engine, category)
+    const note = noteFor(category, engine.fix)
     const waiting = waitingTotal(engine.roles)
     const description = [
       engine.kind,

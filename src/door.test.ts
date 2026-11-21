@@ -143,6 +143,9 @@ describe('serializeRows', () => {
       ...base,
       probe: { kind: 'translate', quality: true, detail: '', at: 't' },
     }
+    expect(serializeRows([base])).not.toBe(
+      serializeRows([{ ...base, role: 'vision', vision: 'x' }]),
+    )
     expect(serializeRows([passing])).not.toBe(
       serializeRows([{ ...passing, probe: { ...passing.probe, quality: false } }]),
     )

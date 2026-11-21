@@ -9,7 +9,6 @@ import {
   emptyListedMessage,
   enginesViewMessage,
   formatResourceLine,
-  obtainResultText,
   onlyRemoteEngineIds,
   releaseHoldIds,
   stateIcon,
@@ -287,19 +286,17 @@ describe('missing engines response', () => {
 })
 
 describe('engine contextValue and remote ids', () => {
-  test('a failed engine with a non-empty fix offers Copy Fix without losing engine actions', () => {
+  test('only an unavailable engine drops the engine actions', () => {
     const nodes = toEngineNodes(
       {
         engines: [
-          { id: 'llama', kind: 'openai-http', state: 'failed', fix: 'engined start llama' },
-          { id: 'whisper', kind: 'openai-http', state: 'failed' },
+          { id: 'llama', kind: 'openai-http', state: 'unavailable', fix: 'engined start llama' },
           { id: 'comfy', kind: 'openai-http', state: 'running', fix: 'unused' },
         ],
       },
       { heldIds: new Set(), door: DOOR, doorCount: 1 },
     )
-    expect(nodes.find((n) => n.id === 'llama')?.contextValue).toBe('engine,engine-has-fix')
-    expect(nodes.find((n) => n.id === 'whisper')?.contextValue).toBe('engine')
+    expect(nodes.find((n) => n.id === 'llama')?.contextValue).toBe('engine-unavailable')
     expect(nodes.find((n) => n.id === 'comfy')?.contextValue).toBe('engine')
   })
 
@@ -371,7 +368,7 @@ describe('probe verdicts', () => {
         {
           id: 'bad',
           kind: 'openai-http',
-          state: 'failed',
+          state: 'unavailable',
           last_error: 'boom',
           probes: [failing, { ...failing, address: 'a:2' }],
         },
@@ -388,7 +385,7 @@ describe('probe verdicts', () => {
     const by = (id: string) => nodes.find((n) => n.id === id)
     expect(by('run')?.description).toBe('openai-http · running · rerank probe failed')
     expect(by('run')?.tooltip).toContain(`rerank probe failed at a:1: order wrong (${at})`)
-    expect(by('bad')?.description).toBe('openai-http · failed · boom · rerank probe failed')
+    expect(by('bad')?.description).toBe('openai-http · unavailable · boom · rerank probe failed')
     expect(by('bad')?.tooltip.match(/probe failed at/g)?.length).toBe(2)
     expect(by('ok')?.description).toBe(by('none')?.description)
     expect(by('ok')?.tooltip).toBe(by('none')?.tooltip)
@@ -396,13 +393,13 @@ describe('probe verdicts', () => {
 })
 
 describe('last error', () => {
-  test('a failed engine shows last_error; a running engine without the field does not', () => {
+  test('an unavailable engine shows last_error; a running engine without the field does not', () => {
     const response: EnginesListResponse = {
       engines: [
         {
           id: 'llama',
           kind: 'openai-http',
-          state: 'failed',
+          state: 'unavailable',
           last_error: 'container is not running',
         },
         { id: 'comfy', kind: 'openai-http', state: 'running' },
@@ -413,7 +410,7 @@ describe('last error', () => {
           fix: 'set disable = false',
           last_error: 'container is not running',
         },
-        { id: 'whisper', kind: 'openai-http', state: 'failed', last_error: '' },
+        { id: 'whisper', kind: 'openai-http', state: 'unavailable', last_error: '' },
         {
           id: 'kokoro',
           kind: 'tts',
@@ -424,7 +421,7 @@ describe('last error', () => {
     }
     const nodes = toEngineNodes(response, { heldIds: new Set(), door: DOOR, doorCount: 1 })
     const llama = nodes.find((n) => n.id === 'llama')
-    expect(llama?.description).toBe('openai-http · failed · container is not running')
+    expect(llama?.description).toBe('openai-http · unavailable · container is not running')
     expect(llama?.tooltip).toContain('container is not running')
     expect(llama?.description).not.toContain('held')
     expect(llama?.description).not.toContain('idle')
@@ -438,7 +435,7 @@ describe('last error', () => {
     expect(openai?.tooltip).toContain('container is not running')
     expect(openai?.tooltip).toContain('set disable = false')
     const whisper = nodes.find((n) => n.id === 'whisper')
-    expect(whisper?.description).toBe('openai-http · failed')
+    expect(whisper?.description).toBe('openai-http · unavailable')
     expect(whisper?.description).not.toContain('container is not running')
     const kokoro = nodes.find((n) => n.id === 'kokoro')
     expect(kokoro?.description).toBe('tts · running')
@@ -621,17 +618,6 @@ describe('stateIcon', () => {
     expect(stateIcon('unavailable')).toBe('error')
     expect(stateIcon('installed')).toBe('circle-outline')
     expect(stateIcon('something-new')).toBe('circle-outline')
-  })
-})
-
-describe('obtainResultText', () => {
-  test('keeps a non-empty string or message and drops anything else', () => {
-    expect(obtainResultText('pulled')).toBe('pulled')
-    expect(obtainResultText('')).toBeUndefined()
-    expect(obtainResultText({ message: 'pulled' })).toBe('pulled')
-    expect(obtainResultText({ message: '' })).toBeUndefined()
-    expect(obtainResultText({ message: 1 })).toBeUndefined()
-    expect(obtainResultText(null)).toBeUndefined()
   })
 })
 
