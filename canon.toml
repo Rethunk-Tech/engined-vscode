@@ -3,5 +3,5 @@ reconciled = "canon v0.1.0-poc"
 [deviations]
 # `vscode` is injected by the extension host, so no package.json dependency can declare it
 # (@types/vscode is the dev-time stand-in), and the whole API is reached through one namespace.
-"ts-biome-00006 correctness/noUndeclaredDependencies" = "the vscode module is provided by the extension host"
-"ts-biome-00006 performance/noNamespaceImport" = "the vscode API is consumed as a namespace"
+"ts-biome-00006 correctness/noUndeclaredDependencies src/**" = "the vscode module is provided by the extension host"
+"ts-biome-00006 performance/noNamespaceImport src/**" = "the vscode API is consumed as a namespace"
