@@ -34,7 +34,7 @@ jobs:
 
       - name: Install gate
         run: |
-          go install github.com/Rethunk-Tech/rethunk-gate-cli/cmd/gate@v0.10.1
+          go install github.com/Rethunk-Tech/rethunk-gate-cli/cmd/gate@v0.10.6
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Lint, typecheck, test, build
